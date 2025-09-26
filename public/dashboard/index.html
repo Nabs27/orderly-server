@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Dashboard - Restaurant</title>
+	<link rel="stylesheet" href="/dashboard/styles.css" />
+</head>
+<body>
+	<header>
+		<h1>Commandes en temps réel</h1>
+	</header>
+	<main>
+		<section>
+			<h2>Commandes</h2>
+			<ul id="orders"></ul>
+		</section>
+		<section>
+			<h2>Demandes de facture</h2>
+			<ul id="bills"></ul>
+		</section>
+		<section>
+			<h2>Services</h2>
+			<ul id="services"></ul>
+		</section>
+	</main>
+
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="/dashboard/main.js"></script>
+</body>
+</html>
+
+

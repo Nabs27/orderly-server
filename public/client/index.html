@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Le Caméléon Fizz — Menu</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="/client/styles.css" />
+</head>
+<body>
+	<header>
+		<div class="brand">
+			<h1>Le Caméléon Fizz</h1>
+			<small>Menu digital</small>
+		</div>
+		<label>
+			Table:
+			<input id="table-input" type="text" placeholder="Ex: A3" />
+		</label>
+		<button id="cart-button" aria-label="Panier" class="cart-btn"></button>
+	</header>
+
+	<main>
+		<section class="menu">
+			<h2>Menu</h2>
+			<div class="group-tabs" id="group-tabs"></div>
+			<div class="filters" id="type-filters"></div>
+			<div id="menu-sections"></div>
+		</section>
+		<section class="history-card">
+			<h2>Historique</h2>
+			<div id="running-total" class="running-total"></div>
+			<div id="history" class="history"></div>
+		</section>
+		<!-- Section panier retirée: remplacée par un tiroir -->
+	</main>
+
+	<!-- Barre mobile sticky pour action rapide -->
+	<div id="mobile-cta" class="mobile-cta">
+		<div class="label">Total</div>
+		<div class="value" id="mobile-total">0.00 TND</div>
+		<button id="mobile-submit">Valider</button>
+	</div>
+
+	<!-- Tiroir Panier -->
+	<div id="cart-drawer" class="cart-drawer hidden">
+		<div class="cart-drawer-panel">
+			<div class="drawer-header">
+				<h3>Votre panier</h3>
+				<button id="close-cart" aria-label="Fermer">✕</button>
+			</div>
+			<ul id="cart-list"></ul>
+			<div class="drawer-total">
+				<span>Total:</span>
+				<strong id="total-price">0.00 TND</strong>
+			</div>
+			<textarea id="notes" placeholder="Notes (sans oignons, etc.)"></textarea>
+			<div class="drawer-actions">
+				<button id="submit-order">Valider la commande</button>
+				<button id="request-bill" class="secondary">Demander la facture</button>
+			</div>
+			<div id="feedback" class="feedback"></div>
+		</div>
+		<div class="cart-drawer-backdrop"></div>
+	</div>
+
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="/client/main.js"></script>
+</body>
+</html>
+
+

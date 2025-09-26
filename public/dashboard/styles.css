@@ -1,0 +1,15 @@
+body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #fafafa; }
+header { padding: 12px 16px; background: #333; color: #fff; }
+main { padding: 16px; }
+ul { list-style: none; padding: 0; margin: 0; }
+.order { background: #fff; margin-bottom: 12px; padding: 12px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.order .header { display: flex; justify-content: space-between; align-items: center; }
+.order .items { margin: 8px 0; }
+.order .notes { margin: 8px 0; padding: 8px; background: #fff8e1; border-left: 3px solid #f59e0b; border-radius: 4px; }
+.order .footer { display: flex; justify-content: space-between; align-items: center; }
+.status { padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; }
+.status.nouvelle { background: #e3f2fd; color: #1565c0; }
+.status.traitee { background: #e8f5e9; color: #2e7d32; }
+button { padding: 6px 10px; cursor: pointer; }
+
+

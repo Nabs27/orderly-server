@@ -1,0 +1,19 @@
+node_modules/
+public/client/*.map
+npm-debug.log*
+yarn-*.log*
+
+# cache traductions (facultatif)
+data/translations/
+
+# ignorer le projet Flutter (déploiement serveur uniquement)
+flutter_les_emirs/
+
+# IDE/OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# env
+.env
