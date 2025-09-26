@@ -16,10 +16,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Page d'accueil → redirection vers le client
-app.get('/', (req, res) => {
-    return res.redirect('/client/');
-});
+// Racine: simple ping texte pour API
+app.get('/', (req, res) => res.send('API OK'));
 
 // Healthcheck simple
 app.get('/health', (req, res) => res.send('ok'));
