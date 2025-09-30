@@ -344,7 +344,10 @@ io.on('connection', (socket) => {
 
 // HTTP reset pour tests automatisés (non production)
 app.post('/dev/reset', (req, res) => {
-    if (process.env.NODE_ENV === 'production') {
+    const allowHeaderKey = (process.env.DEV_RESET_KEY && req.headers['x-reset-key'] === process.env.DEV_RESET_KEY);
+    const allowEnv = String(process.env.ALLOW_DEV_RESET || '') === '1';
+    const allow = (process.env.NODE_ENV !== 'production') || allowEnv || allowHeaderKey;
+    if (!allow) {
         return res.status(403).json({ error: 'Forbidden in production' });
     }
     orders = []; nextOrderId = 1; bills = []; nextBillId = 1; serviceRequests = []; nextServiceId = 1;
