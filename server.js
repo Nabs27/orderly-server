@@ -342,6 +342,16 @@ io.on('connection', (socket) => {
 	});
 });
 
+// HTTP reset pour tests automatisés (non production)
+app.post('/dev/reset', (req, res) => {
+    if (process.env.NODE_ENV === 'production') {
+        return res.status(403).json({ error: 'Forbidden in production' });
+    }
+    orders = []; nextOrderId = 1; bills = []; nextBillId = 1; serviceRequests = []; nextServiceId = 1;
+    console.log('[dev] état serveur réinitialisé via HTTP');
+    return res.json({ ok: true });
+});
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
 	console.log(`Serveur démarré sur http://localhost:${PORT}`);
