@@ -701,7 +701,12 @@ RÈGLES IMPORTANTES :
 4. "available" est toujours true par défaut
 5. Conserve les noms EXACTS des plats du menu (ne traduis pas, ne modifie pas)
 6. Si le prix n'est pas clair, mets 0
-7. Retourne UNIQUEMENT le JSON valide, sans texte avant/après
+7. IMPORTANT: Si un article a des variantes séparées par " / " (ex: "Coca / Fanta / Sprite"), crée un article SÉPARÉ pour chaque variante avec le même prix
+8. Exemples de séparation :
+   - "Coca / Fanta / Sprite" → 3 articles: "Coca", "Fanta", "Sprite"
+   - "Jus (Orange / Citron)" → 2 articles: "Jus Orange", "Jus Citron"
+   - "Pastis 51 / Ricard" → 2 articles: "Pastis 51", "Ricard"
+9. Retourne UNIQUEMENT le JSON valide, sans texte avant/après
 
 TEXTE DU MENU :
 ${extractedText}`;
