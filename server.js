@@ -573,6 +573,11 @@ app.patch('/api/admin/menu/:restaurantId/items/:itemId', authAdmin, async (req, 
 		if (!found) return res.status(404).json({ error: 'Article introuvable' });
 		await fsp.writeFile(menuPath, JSON.stringify(menu, null, 2), 'utf8');
 		await clearTranslationsCache(restaurantId);
+		
+		// 🔥 Émettre événement Socket.IO pour mise à jour temps réel
+		io.emit('menu:updated', { restaurantId, itemId, updates });
+		console.log(`[menu] item ${itemId} updated, event emitted`);
+		
 		return res.json({ ok: true });
 	} catch (e) {
 		console.error('[admin] update item error', e);
