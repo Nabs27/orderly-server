@@ -5,6 +5,9 @@ const { Server } = require('socket.io');
 const fs = require('fs');
 const path = require('path');
 const fsp = fs.promises;
+const multer = require('multer');
+const pdfParse = require('pdf-parse');
+const OpenAI = require('openai');
 
 const app = express();
 const server = http.createServer(app);
@@ -51,12 +54,12 @@ app.get('/menu/:restaurantId', async (req, res) => {
         const menu = JSON.parse(src);
         if (lng === 'fr') {
             console.log('[menu] lng=fr, return source menu without translation');
-            return res.json(augmentWithOriginal(menu));
+            return res.json(filterAvailableItems(augmentWithOriginal(menu)));
         }
 
         const translated = await getTranslatedMenuWithCache(menu, restaurantId, lng, sourceMTime, forceRefresh);
         console.log('[menu] translated menu served');
-        return res.json(translated);
+        return res.json(filterAvailableItems(translated));
     } catch (e) {
         console.error('menu translate error', e);
         return res.status(500).json({ error: 'Erreur chargement menu' });
@@ -179,6 +182,17 @@ function augmentWithOriginal(menu) {
         }
     }
     return out;
+}
+
+// Filtrer les items non disponibles (available: false)
+function filterAvailableItems(menu) {
+    const filtered = JSON.parse(JSON.stringify(menu));
+    for (const cat of filtered.categories || []) {
+        cat.items = (cat.items || []).filter(it => it.available !== false);
+    }
+    // Retirer les catégories vides
+    filtered.categories = (filtered.categories || []).filter(cat => (cat.items || []).length > 0);
+    return filtered;
 }
 
 // In-memory storage
@@ -353,6 +367,375 @@ app.post('/dev/reset', (req, res) => {
     orders = []; nextOrderId = 1; bills = []; nextBillId = 1; serviceRequests = []; nextServiceId = 1;
     console.log('[dev] état serveur réinitialisé via HTTP');
     return res.json({ ok: true });
+});
+
+// ========================================
+// 🔐 ADMIN API - Authentication simple
+// ========================================
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123'; // À changer en production !
+
+function authAdmin(req, res, next) {
+	const token = req.headers['x-admin-token'];
+	if (token !== ADMIN_PASSWORD) {
+		return res.status(401).json({ error: 'Non autorisé' });
+	}
+	next();
+}
+
+app.post('/api/admin/login', (req, res) => {
+	const { password } = req.body || {};
+	if (password === ADMIN_PASSWORD) {
+		return res.json({ token: ADMIN_PASSWORD, ok: true });
+	}
+	return res.status(401).json({ error: 'Mot de passe incorrect' });
+});
+
+// ========================================
+// 📂 ADMIN API - Gestion Restaurants
+// ========================================
+app.get('/api/admin/restaurants', authAdmin, async (req, res) => {
+	try {
+		const restaurantsDir = path.join(__dirname, 'data', 'restaurants');
+		await ensureDir(restaurantsDir);
+		const dirs = await fsp.readdir(restaurantsDir, { withFileTypes: true });
+		const restaurants = [];
+		for (const dir of dirs) {
+			if (!dir.isDirectory()) continue;
+			const menuPath = path.join(restaurantsDir, dir.name, 'menu.json');
+			try {
+				const content = await fsp.readFile(menuPath, 'utf8');
+				const menu = JSON.parse(content);
+				restaurants.push({
+					id: dir.name,
+					name: menu.restaurant?.name || dir.name,
+					currency: menu.restaurant?.currency || 'TND',
+					categoriesCount: (menu.categories || []).length,
+					itemsCount: (menu.categories || []).reduce((sum, cat) => sum + (cat.items || []).length, 0)
+				});
+			} catch {}
+		}
+		return res.json(restaurants);
+	} catch (e) {
+		console.error('[admin] list restaurants error', e);
+		return res.status(500).json({ error: 'Erreur serveur' });
+	}
+});
+
+app.post('/api/admin/restaurants', authAdmin, async (req, res) => {
+	try {
+		const { id, name, currency } = req.body || {};
+		if (!id || !name) return res.status(400).json({ error: 'ID et nom requis' });
+		const restaurantDir = path.join(__dirname, 'data', 'restaurants', id);
+		await ensureDir(restaurantDir);
+		const menuPath = path.join(restaurantDir, 'menu.json');
+		const exists = await fsp.access(menuPath).then(() => true).catch(() => false);
+		if (exists) return res.status(409).json({ error: 'Restaurant déjà existant' });
+		const newMenu = {
+			restaurant: { id, name, currency: currency || 'TND' },
+			categories: []
+		};
+		await fsp.writeFile(menuPath, JSON.stringify(newMenu, null, 2), 'utf8');
+		console.log(`[admin] created restaurant ${id}`);
+		return res.status(201).json({ ok: true, id });
+	} catch (e) {
+		console.error('[admin] create restaurant error', e);
+		return res.status(500).json({ error: 'Erreur création restaurant' });
+	}
+});
+
+// ========================================
+// 📝 ADMIN API - Gestion Menu (CRUD)
+// ========================================
+app.get('/api/admin/menu/:restaurantId', authAdmin, async (req, res) => {
+	try {
+		const { restaurantId } = req.params;
+		const menuPath = path.join(__dirname, 'data', 'restaurants', restaurantId, 'menu.json');
+		const content = await fsp.readFile(menuPath, 'utf8').catch(() => null);
+		if (!content) return res.status(404).json({ error: 'Menu introuvable' });
+		const menu = JSON.parse(content);
+		return res.json(menu);
+	} catch (e) {
+		console.error('[admin] get menu error', e);
+		return res.status(500).json({ error: 'Erreur chargement menu' });
+	}
+});
+
+app.patch('/api/admin/menu/:restaurantId', authAdmin, async (req, res) => {
+	try {
+		const { restaurantId } = req.params;
+		const { menu } = req.body || {};
+		if (!menu) return res.status(400).json({ error: 'Menu requis' });
+		const menuPath = path.join(__dirname, 'data', 'restaurants', restaurantId, 'menu.json');
+		await fsp.writeFile(menuPath, JSON.stringify(menu, null, 2), 'utf8');
+		console.log(`[admin] updated menu for ${restaurantId}`);
+		// Vider les traductions en cache pour forcer une retraduction
+		await clearTranslationsCache(restaurantId);
+		return res.json({ ok: true });
+	} catch (e) {
+		console.error('[admin] update menu error', e);
+		return res.status(500).json({ error: 'Erreur sauvegarde menu' });
+	}
+});
+
+// Ajouter une catégorie
+app.post('/api/admin/menu/:restaurantId/categories', authAdmin, async (req, res) => {
+	try {
+		const { restaurantId } = req.params;
+		const { name, group } = req.body || {};
+		if (!name) return res.status(400).json({ error: 'Nom requis' });
+		const menuPath = path.join(__dirname, 'data', 'restaurants', restaurantId, 'menu.json');
+		const content = await fsp.readFile(menuPath, 'utf8');
+		const menu = JSON.parse(content);
+		const exists = (menu.categories || []).find(c => c.name === name);
+		if (exists) return res.status(409).json({ error: 'Catégorie déjà existante' });
+		menu.categories = menu.categories || [];
+		menu.categories.push({ name, group: group || 'food', items: [] });
+		await fsp.writeFile(menuPath, JSON.stringify(menu, null, 2), 'utf8');
+		await clearTranslationsCache(restaurantId);
+		return res.status(201).json({ ok: true });
+	} catch (e) {
+		console.error('[admin] add category error', e);
+		return res.status(500).json({ error: 'Erreur ajout catégorie' });
+	}
+});
+
+// Supprimer une catégorie
+app.delete('/api/admin/menu/:restaurantId/categories/:categoryName', authAdmin, async (req, res) => {
+	try {
+		const { restaurantId, categoryName } = req.params;
+		const menuPath = path.join(__dirname, 'data', 'restaurants', restaurantId, 'menu.json');
+		const content = await fsp.readFile(menuPath, 'utf8');
+		const menu = JSON.parse(content);
+		menu.categories = (menu.categories || []).filter(c => c.name !== decodeURIComponent(categoryName));
+		await fsp.writeFile(menuPath, JSON.stringify(menu, null, 2), 'utf8');
+		await clearTranslationsCache(restaurantId);
+		return res.json({ ok: true });
+	} catch (e) {
+		console.error('[admin] delete category error', e);
+		return res.status(500).json({ error: 'Erreur suppression catégorie' });
+	}
+});
+
+// Ajouter un item
+app.post('/api/admin/menu/:restaurantId/items', authAdmin, async (req, res) => {
+	try {
+		const { restaurantId } = req.params;
+		const { categoryName, name, price, type } = req.body || {};
+		if (!categoryName || !name || price == null) {
+			return res.status(400).json({ error: 'Catégorie, nom et prix requis' });
+		}
+		const menuPath = path.join(__dirname, 'data', 'restaurants', restaurantId, 'menu.json');
+		const content = await fsp.readFile(menuPath, 'utf8');
+		const menu = JSON.parse(content);
+		const cat = (menu.categories || []).find(c => c.name === categoryName);
+		if (!cat) return res.status(404).json({ error: 'Catégorie introuvable' });
+		// Générer un ID unique (max ID + 1)
+		const allIds = (menu.categories || []).flatMap(c => (c.items || []).map(i => i.id || 0));
+		const maxId = allIds.length > 0 ? Math.max(...allIds) : 1000;
+		const newId = maxId + 1;
+		cat.items = cat.items || [];
+		cat.items.push({
+			id: newId,
+			name,
+			price: Number(price),
+			type: type || cat.name,
+			available: true // Par défaut disponible
+		});
+		await fsp.writeFile(menuPath, JSON.stringify(menu, null, 2), 'utf8');
+		await clearTranslationsCache(restaurantId);
+		return res.status(201).json({ ok: true, id: newId });
+	} catch (e) {
+		console.error('[admin] add item error', e);
+		return res.status(500).json({ error: 'Erreur ajout article' });
+	}
+});
+
+// Modifier un item
+app.patch('/api/admin/menu/:restaurantId/items/:itemId', authAdmin, async (req, res) => {
+	try {
+		const { restaurantId, itemId } = req.params;
+		const updates = req.body || {};
+		const menuPath = path.join(__dirname, 'data', 'restaurants', restaurantId, 'menu.json');
+		const content = await fsp.readFile(menuPath, 'utf8');
+		const menu = JSON.parse(content);
+		let found = false;
+		for (const cat of (menu.categories || [])) {
+			const item = (cat.items || []).find(i => String(i.id) === String(itemId));
+			if (item) {
+				if (updates.name != null) item.name = updates.name;
+				if (updates.price != null) item.price = Number(updates.price);
+				if (updates.type != null) item.type = updates.type;
+				if (updates.available != null) item.available = Boolean(updates.available);
+				found = true;
+				break;
+			}
+		}
+		if (!found) return res.status(404).json({ error: 'Article introuvable' });
+		await fsp.writeFile(menuPath, JSON.stringify(menu, null, 2), 'utf8');
+		await clearTranslationsCache(restaurantId);
+		return res.json({ ok: true });
+	} catch (e) {
+		console.error('[admin] update item error', e);
+		return res.status(500).json({ error: 'Erreur modification article' });
+	}
+});
+
+// Supprimer un item
+app.delete('/api/admin/menu/:restaurantId/items/:itemId', authAdmin, async (req, res) => {
+	try {
+		const { restaurantId, itemId } = req.params;
+		const menuPath = path.join(__dirname, 'data', 'restaurants', restaurantId, 'menu.json');
+		const content = await fsp.readFile(menuPath, 'utf8');
+		const menu = JSON.parse(content);
+		for (const cat of (menu.categories || [])) {
+			cat.items = (cat.items || []).filter(i => String(i.id) !== String(itemId));
+		}
+		await fsp.writeFile(menuPath, JSON.stringify(menu, null, 2), 'utf8');
+		await clearTranslationsCache(restaurantId);
+		return res.json({ ok: true });
+	} catch (e) {
+		console.error('[admin] delete item error', e);
+		return res.status(500).json({ error: 'Erreur suppression article' });
+	}
+});
+
+async function clearTranslationsCache(restaurantId) {
+	try {
+		const translationsDir = path.join(__dirname, 'data', 'translations');
+		const files = await fsp.readdir(translationsDir).catch(() => []);
+		for (const f of files) {
+			if (f.startsWith(`${restaurantId}_`)) {
+				await fsp.unlink(path.join(translationsDir, f)).catch(() => {});
+			}
+		}
+		console.log(`[admin] cleared translations cache for ${restaurantId}`);
+	} catch {}
+}
+
+// ========================================
+// 📤 ADMIN API - Upload & Parsing (PDF/Image → JSON)
+// ========================================
+const upload = multer({
+	storage: multer.memoryStorage(),
+	limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+	fileFilter: (req, file, cb) => {
+		const allowed = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+		if (allowed.includes(file.mimetype)) {
+			cb(null, true);
+		} else {
+			cb(new Error('Format non supporté (PDF, JPG, PNG uniquement)'));
+		}
+	}
+});
+
+app.post('/api/admin/parse-menu', authAdmin, upload.single('file'), async (req, res) => {
+	try {
+		if (!req.file) return res.status(400).json({ error: 'Fichier requis' });
+		const { restaurantId, restaurantName, currency } = req.body || {};
+		if (!restaurantId || !restaurantName) {
+			return res.status(400).json({ error: 'restaurantId et restaurantName requis' });
+		}
+
+		console.log(`[admin] parsing menu file: ${req.file.originalname} (${req.file.mimetype})`);
+		
+		let extractedText = '';
+		
+		// Si PDF: extraction avec pdf-parse
+		if (req.file.mimetype === 'application/pdf') {
+			const data = await pdfParse(req.file.buffer);
+			extractedText = data.text;
+		} 
+		// Si image: pour l'instant juste une simulation (OCR nécessiterait Tesseract.js ou Vision API)
+		else {
+			return res.status(501).json({ 
+				error: 'OCR image pas encore implémenté. Utilisez un PDF ou implémentez Tesseract.js/Google Vision',
+				hint: 'Pour images, ajouter tesseract.js ou appeler Google Vision API'
+			});
+		}
+
+		if (!extractedText || extractedText.trim().length < 10) {
+			return res.status(400).json({ error: 'Aucun texte extrait du fichier' });
+		}
+
+		console.log(`[admin] extracted ${extractedText.length} chars, calling DeepSeek for parsing...`);
+
+		// Appel à DeepSeek V3.1 via OpenAI SDK (compatible avec openrouter.ai)
+		const openai = new OpenAI({
+			baseURL: 'https://openrouter.ai/api/v1',
+			apiKey: process.env.OPENROUTER_API_KEY || '', // Clé OpenRouter pour DeepSeek
+			defaultHeaders: {
+				'HTTP-Referer': 'https://orderly-server.app',
+				'X-Title': 'Orderly Menu Parser'
+			}
+		});
+
+		const prompt = `Tu es un expert en parsing de menus de restaurant. Transforme le texte ci-dessous en JSON structuré selon ce format EXACT (respecte la structure, les noms de champs et les types) :
+
+{
+  "restaurant": {
+    "id": "${restaurantId}",
+    "name": "${restaurantName}",
+    "currency": "${currency || 'TND'}"
+  },
+  "categories": [
+    {
+      "name": "Nom de la catégorie",
+      "group": "food",
+      "items": [
+        {
+          "id": 1001,
+          "name": "Nom du plat",
+          "price": 12.50,
+          "type": "Type du plat",
+          "available": true
+        }
+      ]
+    }
+  ]
+}
+
+RÈGLES IMPORTANTES :
+1. "group" peut être : "food" (plats), "drinks" (boissons soft), ou "spirits" (alcools)
+2. Les IDs doivent commencer à 1001 et s'incrémenter (1002, 1003...)
+3. "type" décrit la sous-catégorie (ex: "Entrée froide", "Plat tunisien", "Boisson froide")
+4. "available" est toujours true par défaut
+5. Conserve les noms EXACTS des plats du menu (ne traduis pas, ne modifie pas)
+6. Si le prix n'est pas clair, mets 0
+7. Retourne UNIQUEMENT le JSON valide, sans texte avant/après
+
+TEXTE DU MENU :
+${extractedText}`;
+
+		const completion = await openai.chat.completions.create({
+			model: 'deepseek/deepseek-chat-v3.1:free',
+			messages: [{ role: 'user', content: prompt }],
+			temperature: 0.1, // Faible pour précision
+			max_tokens: 8000
+		});
+
+		const responseText = completion.choices[0]?.message?.content || '';
+		console.log(`[admin] DeepSeek response length: ${responseText.length}`);
+
+		// Extraire le JSON (parfois il y a du texte avant/après)
+		const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+		if (!jsonMatch) {
+			console.error('[admin] No JSON found in response:', responseText.substring(0, 200));
+			return res.status(500).json({ error: 'Impossible d\'extraire le JSON de la réponse IA' });
+		}
+
+		const parsedMenu = JSON.parse(jsonMatch[0]);
+		
+		// Validation basique
+		if (!parsedMenu.restaurant || !parsedMenu.categories) {
+			return res.status(500).json({ error: 'JSON invalide (structure incorrecte)' });
+		}
+
+		console.log(`[admin] Successfully parsed menu with ${parsedMenu.categories.length} categories`);
+		return res.json({ ok: true, menu: parsedMenu });
+	} catch (e) {
+		console.error('[admin] parse menu error', e);
+		return res.status(500).json({ error: e.message || 'Erreur parsing menu' });
+	}
 });
 
 const PORT = process.env.PORT || 3000;
