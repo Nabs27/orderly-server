@@ -184,10 +184,8 @@ function augmentWithOriginal(menu) {
     return out;
 }
 
-// Les items avec available: false restent visibles mais affichent "Indisponible"
-// On ne les filtre PLUS, ils sont juste marqués
+// Ne pas filtrer les items indisponibles: le client décide d'afficher "Indisponible"
 function filterAvailableItems(menu) {
-    // Avant on filtrait, maintenant on garde tout
     return menu;
 }
 
