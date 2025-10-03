@@ -184,15 +184,11 @@ function augmentWithOriginal(menu) {
     return out;
 }
 
-// Filtrer les items non disponibles (available: false)
+// Les items avec available: false restent visibles mais affichent "Indisponible"
+// On ne les filtre PLUS, ils sont juste marqués
 function filterAvailableItems(menu) {
-    const filtered = JSON.parse(JSON.stringify(menu));
-    for (const cat of filtered.categories || []) {
-        cat.items = (cat.items || []).filter(it => it.available !== false);
-    }
-    // Retirer les catégories vides
-    filtered.categories = (filtered.categories || []).filter(cat => (cat.items || []).length > 0);
-    return filtered;
+    // Avant on filtrait, maintenant on garde tout
+    return menu;
 }
 
 // In-memory storage
