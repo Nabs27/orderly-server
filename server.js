@@ -184,9 +184,14 @@ function augmentWithOriginal(menu) {
     return out;
 }
 
-// Ne pas filtrer les items indisponibles: le client décide d'afficher "Indisponible"
+// Filtrer uniquement les produits MASQUÉS (hidden=true). Les indisponibles restent visibles.
 function filterAvailableItems(menu) {
-    return menu;
+    const out = JSON.parse(JSON.stringify(menu));
+    for (const cat of out.categories || []) {
+        cat.items = (cat.items || []).filter(it => it.hidden !== true);
+    }
+    out.categories = (out.categories || []).filter(cat => (cat.items || []).length > 0);
+    return out;
 }
 
 // In-memory storage
@@ -560,6 +565,7 @@ app.patch('/api/admin/menu/:restaurantId/items/:itemId', authAdmin, async (req, 
 				if (updates.price != null) item.price = Number(updates.price);
 				if (updates.type != null) item.type = updates.type;
 				if (updates.available != null) item.available = Boolean(updates.available);
+				if (updates.hidden != null) item.hidden = Boolean(updates.hidden);
 				found = true;
 				break;
 			}
