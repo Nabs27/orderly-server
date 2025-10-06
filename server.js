@@ -364,9 +364,22 @@ app.post('/dev/reset', (req, res) => {
     if (!allow) {
         return res.status(403).json({ error: 'Forbidden in production' });
     }
-    orders = []; nextOrderId = 1; bills = []; nextBillId = 1; serviceRequests = []; nextServiceId = 1;
-    console.log('[dev] état serveur réinitialisé via HTTP');
-    return res.json({ ok: true });
+    
+    const { table, clearConsumption } = req.body || {};
+    
+    if (clearConsumption && table) {
+        // Vider seulement la consommation d'une table spécifique
+        orders = orders.filter(o => String(o.table) !== String(table));
+        bills = bills.filter(b => String(b.table) !== String(table));
+        serviceRequests = serviceRequests.filter(s => String(s.table) !== String(table));
+        console.log(`[dev] consommation table ${table} vidée`);
+        return res.json({ ok: true, message: `Consommation table ${table} vidée` });
+    } else {
+        // Reset complet
+        orders = []; nextOrderId = 1; bills = []; nextBillId = 1; serviceRequests = []; nextServiceId = 1;
+        console.log('[dev] état serveur réinitialisé via HTTP');
+        return res.json({ ok: true });
+    }
 });
 
 // ========================================
