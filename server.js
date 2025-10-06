@@ -404,12 +404,23 @@ app.get('/api/admin/restaurants', authAdmin, async (req, res) => {
 			try {
 				const content = await fsp.readFile(menuPath, 'utf8');
 				const menu = JSON.parse(content);
+				// compter masqués/indisponibles
+				let hiddenCount = 0, unavailableCount = 0, itemsCount = 0;
+				for (const cat of (menu.categories || [])) {
+					for (const it of (cat.items || [])) {
+						itemsCount++;
+						if (it.hidden === true) hiddenCount++;
+						if (it.available === false) unavailableCount++;
+					}
+				}
 				restaurants.push({
 					id: dir.name,
 					name: menu.restaurant?.name || dir.name,
 					currency: menu.restaurant?.currency || 'TND',
 					categoriesCount: (menu.categories || []).length,
-					itemsCount: (menu.categories || []).reduce((sum, cat) => sum + (cat.items || []).length, 0)
+					itemsCount,
+					hiddenCount,
+					unavailableCount
 				});
 			} catch {}
 		}
