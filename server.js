@@ -8,6 +8,7 @@ const fsp = fs.promises;
 const multer = require('multer');
 const pdfParse = require('pdf-parse');
 const OpenAI = require('openai');
+const PDFDocument = require('pdfkit');
 
 const app = express();
 const server = http.createServer(app);
@@ -756,6 +757,157 @@ ${extractedText}`;
 	} catch (e) {
 		console.error('[admin] parse menu error', e);
 		return res.status(500).json({ error: e.message || 'Erreur parsing menu' });
+	}
+});
+
+// ========================================
+// 📄 ADMIN API - Génération Factures PDF
+// ========================================
+app.post('/api/admin/generate-invoice', authAdmin, async (req, res) => {
+	try {
+		const { billId, company, items, total, amountPerPerson, covers, paymentMode, date } = req.body || {};
+		
+		if (!company?.name || !items || !Array.isArray(items)) {
+			return res.status(400).json({ error: 'Données facture incomplètes' });
+		}
+
+		console.log(`[admin] generating invoice PDF for bill ${billId}, company: ${company.name}`);
+
+		// Créer le dossier invoices s'il n'existe pas
+		const invoicesDir = path.join(__dirname, 'public', 'invoices');
+		await ensureDir(invoicesDir);
+
+		// Générer le nom du fichier PDF
+		const timestamp = Date.now();
+		const filename = `facture_${billId}_${timestamp}.pdf`;
+		const filepath = path.join(invoicesDir, filename);
+
+		// Créer le PDF
+		const doc = new PDFDocument({ margin: 50 });
+		const stream = fs.createWriteStream(filepath);
+		doc.pipe(stream);
+
+		// En-tête
+		doc.fontSize(20).text('FACTURE', { align: 'center' });
+		doc.fontSize(12).text(`Table: ${billId}`, { align: 'center' });
+		doc.fontSize(10).text(`Date: ${new Date(date).toLocaleDateString('fr-FR')}`, { align: 'center' });
+		doc.moveDown(2);
+
+		// Informations restaurant
+		doc.fontSize(14).text('LES EMIRS - Port El Kantaoui', { align: 'center' });
+		doc.fontSize(10).text('Restaurant & Bar', { align: 'center' });
+		doc.moveDown(2);
+
+		// Informations client
+		doc.fontSize(12).text('FACTURÉ À:', { underline: true });
+		doc.fontSize(10).text(company.name);
+		if (company.address) doc.text(company.address);
+		if (company.phone) doc.text(`Tél: ${company.phone}`);
+		if (company.email) doc.text(`Email: ${company.email}`);
+		if (company.taxNumber) doc.text(`N° Fiscal: ${company.taxNumber}`);
+		doc.moveDown(2);
+
+		// Détail des articles
+		doc.fontSize(12).text('DÉTAIL DE LA CONSOMMATION:', { underline: true });
+		doc.moveDown(0.5);
+
+		let yPosition = doc.y;
+		doc.text('Article', 50, yPosition);
+		doc.text('Qté', 300, yPosition);
+		doc.text('Prix', 350, yPosition);
+		doc.text('Total', 450, yPosition);
+		
+		// Ligne de séparation
+		doc.moveTo(50, yPosition + 15).lineTo(550, yPosition + 15).stroke();
+		doc.moveDown(1);
+
+		// Articles
+		for (const item of items) {
+			const name = item.name || 'Article';
+			const qty = item.quantity || 1;
+			const price = item.price || 0;
+			const subtotal = price * qty;
+
+			doc.text(name, 50);
+			doc.text(qty.toString(), 300);
+			doc.text(`${price.toFixed(3)} TND`, 350);
+			doc.text(`${subtotal.toFixed(3)} TND`, 450);
+			doc.moveDown(0.5);
+		}
+
+		doc.moveDown(1);
+		
+		// Ligne de séparation
+		doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+		doc.moveDown(0.5);
+
+		// Totaux
+		doc.text('TOTAL:', 350);
+		doc.text(`${total.toFixed(3)} TND`, 450);
+		
+		if (covers > 1) {
+			doc.moveDown(0.5);
+			doc.text(`Nombre de personnes: ${covers}`, 350);
+			doc.text(`Par personne: ${amountPerPerson.toFixed(3)} TND`, 450);
+		}
+
+		doc.moveDown(2);
+
+		// Mode de paiement
+		doc.text(`Mode de paiement: ${paymentMode}`, { align: 'center' });
+		doc.moveDown(1);
+
+		// Pied de page
+		doc.fontSize(8).text('Merci pour votre visite !', { align: 'center' });
+		doc.text('Restaurant Les Emirs - Port El Kantaoui', { align: 'center' });
+
+		// Finaliser le PDF
+		doc.end();
+
+		// Attendre que le fichier soit écrit
+		await new Promise((resolve, reject) => {
+			stream.on('finish', resolve);
+			stream.on('error', reject);
+		});
+
+		const invoiceData = {
+			billId,
+			company,
+			items,
+			total,
+			amountPerPerson,
+			covers,
+			paymentMode,
+			date,
+			pdfGenerated: true,
+			pdfUrl: `/invoices/${filename}`,
+			pdfPath: filepath
+		};
+
+		console.log(`[admin] invoice PDF generated: ${filename}`);
+		return res.json({ ok: true, invoice: invoiceData });
+	} catch (e) {
+		console.error('[admin] generate invoice error', e);
+		return res.status(500).json({ error: 'Erreur génération facture' });
+	}
+});
+
+// Endpoint pour vider la consommation d'une table spécifique
+app.post('/api/admin/clear-table-consumption', authAdmin, (req, res) => {
+	try {
+		const { table } = req.body || {};
+		if (!table) return res.status(400).json({ error: 'Table requise' });
+		
+		// Filtrer les commandes pour ne garder que celles des autres tables
+		orders = orders.filter(o => String(o.table) !== String(table));
+		bills = bills.filter(b => String(b.table) !== String(table));
+		serviceRequests = serviceRequests.filter(s => String(s.table) !== String(table));
+		
+		console.log(`[admin] cleared consumption for table ${table}`);
+		return res.json({ ok: true, message: `Consommation table ${table} vidée` });
+	} catch (e) {
+		console.error('[admin] clear table consumption error', e);
+		return res.status(500).json({ error: 'Erreur vidage table' });
 	}
 });
 
