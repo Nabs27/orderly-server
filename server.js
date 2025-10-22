@@ -378,9 +378,19 @@ app.post('/orders', (req, res) => {
 		const itemsTotal = items.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity || 1)), 0);
 		
 		if (noteId === 'main' || !noteId) {
-			// Ajouter à la note principale
-			existingOrder.mainNote.items.push(...items);
-			existingOrder.mainNote.total += itemsTotal;
+			// Ajouter à la note principale (éviter les doublons)
+			for (const newItem of items) {
+				const existingItem = existingOrder.mainNote.items.find(item => item.id === newItem.id);
+				if (existingItem) {
+					// Article existe déjà, augmenter la quantité
+					existingItem.quantity += newItem.quantity;
+				} else {
+					// Nouvel article, l'ajouter
+					existingOrder.mainNote.items.push(newItem);
+				}
+			}
+			// Recalculer le total de la note principale
+			existingOrder.mainNote.total = existingOrder.mainNote.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 		} else {
 			// Ajouter à une sous-note existante ou créer une nouvelle
 			let targetSubNote = existingOrder.subNotes.find(n => n.id === noteId);
@@ -396,11 +406,23 @@ app.post('/orders', (req, res) => {
 				};
 				existingOrder.subNotes.push(targetSubNote);
 			}
-			targetSubNote.items.push(...items);
-			targetSubNote.total += itemsTotal;
+			// Ajouter intelligemment aux sous-notes (éviter les doublons)
+			for (const newItem of items) {
+				const existingItem = targetSubNote.items.find(item => item.id === newItem.id);
+				if (existingItem) {
+					// Article existe déjà, augmenter la quantité
+					existingItem.quantity += newItem.quantity;
+				} else {
+					// Nouvel article, l'ajouter
+					targetSubNote.items.push(newItem);
+				}
+			}
+			// Recalculer le total de la sous-note
+			targetSubNote.total = targetSubNote.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 		}
 		
-		existingOrder.total += itemsTotal;
+		// Recalculer le total global de la commande
+		existingOrder.total = existingOrder.mainNote.total + existingOrder.subNotes.reduce((sum, note) => sum + note.total, 0);
 		existingOrder.updatedAt = new Date().toISOString();
 		
 		console.log('[orders] Articles ajoutés à commande existante:', existingOrder.id, 'total:', itemsTotal);
