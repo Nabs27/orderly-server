@@ -378,19 +378,9 @@ app.post('/orders', (req, res) => {
 		const itemsTotal = items.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity || 1)), 0);
 		
 		if (noteId === 'main' || !noteId) {
-			// Ajouter à la note principale (éviter les doublons)
-			for (const newItem of items) {
-				const existingItem = existingOrder.mainNote.items.find(item => item.id === newItem.id);
-				if (existingItem) {
-					// Article existe déjà, augmenter la quantité
-					existingItem.quantity += newItem.quantity;
-				} else {
-					// Nouvel article, l'ajouter
-					existingOrder.mainNote.items.push(newItem);
-				}
-			}
-			// Recalculer le total de la note principale
-			existingOrder.mainNote.total = existingOrder.mainNote.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+			// 🆕 CORRECTION: Remplacer les articles au lieu de les ajouter
+			existingOrder.mainNote.items = items; // Remplacer complètement la liste
+			existingOrder.mainNote.total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 		} else {
 			// Ajouter à une sous-note existante ou créer une nouvelle
 			let targetSubNote = existingOrder.subNotes.find(n => n.id === noteId);
