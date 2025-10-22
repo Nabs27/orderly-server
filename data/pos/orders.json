@@ -1,0 +1,3236 @@
+[
+  {
+    "id": 1,
+    "table": "13",
+    "server": "MOHAMED",
+    "covers": 4,
+    "notes": "",
+    "status": "active",
+    "consumptionConfirmed": false,
+    "createdAt": "2025-10-19T17:57:00.000Z",
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 4,
+      "items": [
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 8
+        },
+        {
+          "id": 10000,
+          "name": "Eau Minérale",
+          "price": 4,
+          "quantity": 2
+        },
+        {
+          "id": 1002,
+          "name": "Salade César",
+          "price": 26,
+          "quantity": 1
+        },
+        {
+          "id": 10000,
+          "name": "Coca",
+          "price": 5,
+          "quantity": 1
+        },
+        {
+          "id": 1003,
+          "name": "Carpaccio de Bœuf à l'Huile de Truffe",
+          "price": 35,
+          "quantity": 1
+        },
+        {
+          "id": 1105,
+          "name": "Seiches Grillées",
+          "price": 40,
+          "quantity": 1
+        },
+        {
+          "id": 9501,
+          "name": "Celtia",
+          "price": 6.8,
+          "quantity": 5
+        }
+      ],
+      "total": 207.2,
+      "paid": false,
+      "createdAt": "2025-10-19T17:57:00.000Z"
+    },
+    "subNotes": [
+      {
+        "id": "sub_1760977791589_0",
+        "name": "Khadija",
+        "covers": 2,
+        "items": [
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 4
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1002,
+            "name": "Salade César",
+            "price": 26,
+            "quantity": 1
+          }
+        ],
+        "total": 59.6,
+        "paid": false,
+        "createdAt": "2025-10-19T17:57:00.000Z"
+      },
+      {
+        "id": "sub_1760977791596_1",
+        "name": "Lina",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1003,
+            "name": "Carpaccio de Bœuf à l'Huile de Truffe",
+            "price": 35,
+            "quantity": 1
+          },
+          {
+            "id": 1105,
+            "name": "Seiches Grillées",
+            "price": 40,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 3
+          }
+        ],
+        "total": 104.4,
+        "paid": false,
+        "createdAt": "2025-10-19T17:58:00.000Z"
+      }
+    ],
+    "total": 371.20000000000005
+  },
+  {
+    "id": 2,
+    "table": "15",
+    "server": "MOHAMED",
+    "covers": 6,
+    "notes": "",
+    "status": "active",
+    "consumptionConfirmed": false,
+    "createdAt": "2025-10-19T18:11:00.000Z",
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 6,
+      "items": [
+        {
+          "id": 9504,
+          "name": "Pastis",
+          "price": 8,
+          "quantity": 7
+        },
+        {
+          "id": 10000,
+          "name": "Eau Minérale",
+          "price": 4,
+          "quantity": 3
+        },
+        {
+          "id": 1001,
+          "name": "Salade Méchouia",
+          "price": 16,
+          "quantity": 1
+        },
+        {
+          "id": 1201,
+          "name": "Ojja au Merguez",
+          "price": 30,
+          "quantity": 1
+        },
+        {
+          "id": 4002,
+          "name": "Tiramisu",
+          "price": 18,
+          "quantity": 2
+        },
+        {
+          "id": 9501,
+          "name": "Celtia",
+          "price": 6.8,
+          "quantity": 4
+        },
+        {
+          "id": 10001,
+          "name": "Fanta",
+          "price": 5,
+          "quantity": 1
+        },
+        {
+          "id": 1002,
+          "name": "Salade César",
+          "price": 26,
+          "quantity": 1
+        },
+        {
+          "id": 1505,
+          "name": "Médaillons de Filet aux Duo Sauces",
+          "price": 56,
+          "quantity": 1
+        },
+        {
+          "id": 4003,
+          "name": "Chocolate Moelleux",
+          "price": 18,
+          "quantity": 1
+        },
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 2
+        },
+        {
+          "id": 10000,
+          "name": "Coca",
+          "price": 5,
+          "quantity": 1
+        },
+        {
+          "id": 1504,
+          "name": "Brochettes Mixtes au Romarin",
+          "price": 46,
+          "quantity": 1
+        }
+      ],
+      "total": 348,
+      "paid": false,
+      "createdAt": "2025-10-19T18:11:00.000Z"
+    },
+    "subNotes": [
+      {
+        "id": "sub_1760977791600_0",
+        "name": "Karim",
+        "covers": 2,
+        "items": [
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1001,
+            "name": "Salade Méchouia",
+            "price": 16,
+            "quantity": 1
+          },
+          {
+            "id": 1201,
+            "name": "Ojja au Merguez",
+            "price": 30,
+            "quantity": 1
+          },
+          {
+            "id": 4002,
+            "name": "Tiramisu",
+            "price": 18,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 4
+          }
+        ],
+        "total": 103.2,
+        "paid": false,
+        "createdAt": "2025-10-19T18:11:00.000Z"
+      },
+      {
+        "id": "sub_1760977791600_1",
+        "name": "Tarek",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10001,
+            "name": "Fanta",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1002,
+            "name": "Salade César",
+            "price": 26,
+            "quantity": 1
+          },
+          {
+            "id": 1505,
+            "name": "Médaillons de Filet aux Duo Sauces",
+            "price": 56,
+            "quantity": 1
+          },
+          {
+            "id": 4003,
+            "name": "Chocolate Moelleux",
+            "price": 18,
+            "quantity": 1
+          },
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 1
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 3
+          }
+        ],
+        "total": 140.4,
+        "paid": false,
+        "createdAt": "2025-10-19T18:12:00.000Z"
+      },
+      {
+        "id": "sub_1760977791600_2",
+        "name": "Donia",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1504,
+            "name": "Brochettes Mixtes au Romarin",
+            "price": 46,
+            "quantity": 1
+          },
+          {
+            "id": 4002,
+            "name": "Tiramisu",
+            "price": 18,
+            "quantity": 1
+          },
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 1
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 1
+          }
+        ],
+        "total": 88.4,
+        "paid": false,
+        "createdAt": "2025-10-19T18:13:00.000Z"
+      }
+    ],
+    "total": 680
+  },
+  {
+    "id": 3,
+    "table": "17",
+    "server": "MOHAMED",
+    "covers": 5,
+    "notes": "",
+    "status": "active",
+    "consumptionConfirmed": false,
+    "createdAt": "2025-10-19T18:34:00.000Z",
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 5,
+      "items": [
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 13
+        },
+        {
+          "id": 10000,
+          "name": "Eau Minérale",
+          "price": 4,
+          "quantity": 2
+        },
+        {
+          "id": 1002,
+          "name": "Salade César",
+          "price": 26,
+          "quantity": 1
+        },
+        {
+          "id": 1506,
+          "name": "Filet de Bœuf au Poivre ou aux Champignons de Paris",
+          "price": 58,
+          "quantity": 1
+        },
+        {
+          "id": 10000,
+          "name": "Coca",
+          "price": 5,
+          "quantity": 1
+        },
+        {
+          "id": 1003,
+          "name": "Carpaccio de Bœuf à l'Huile de Truffe",
+          "price": 35,
+          "quantity": 1
+        },
+        {
+          "id": 4002,
+          "name": "Tiramisu",
+          "price": 18,
+          "quantity": 2
+        },
+        {
+          "id": 9501,
+          "name": "Celtia",
+          "price": 6.8,
+          "quantity": 7
+        },
+        {
+          "id": 9504,
+          "name": "Pastis",
+          "price": 8,
+          "quantity": 7
+        },
+        {
+          "id": 9906,
+          "name": "Jour & Nuit",
+          "price": 66,
+          "quantity": 1
+        },
+        {
+          "id": 4003,
+          "name": "Chocolate Moelleux",
+          "price": 18,
+          "quantity": 2
+        },
+        {
+          "id": 9904,
+          "name": "Vieux Magon",
+          "price": 76,
+          "quantity": 1
+        }
+      ],
+      "total": 545.8,
+      "paid": false,
+      "createdAt": "2025-10-19T18:34:00.000Z"
+    },
+    "subNotes": [
+      {
+        "id": "sub_1760977791603_0",
+        "name": "Sami",
+        "covers": 3,
+        "items": [
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 3
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1002,
+            "name": "Salade César",
+            "price": 26,
+            "quantity": 1
+          },
+          {
+            "id": 1506,
+            "name": "Filet de Bœuf au Poivre ou aux Champignons de Paris",
+            "price": 58,
+            "quantity": 1
+          }
+        ],
+        "total": 110.2,
+        "paid": false,
+        "createdAt": "2025-10-19T18:34:00.000Z"
+      },
+      {
+        "id": "sub_1760977791604_1",
+        "name": "Nabil",
+        "covers": 3,
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1003,
+            "name": "Carpaccio de Bœuf à l'Huile de Truffe",
+            "price": 35,
+            "quantity": 1
+          },
+          {
+            "id": 4002,
+            "name": "Tiramisu",
+            "price": 18,
+            "quantity": 1
+          },
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 3
+          }
+        ],
+        "total": 84.2,
+        "paid": false,
+        "createdAt": "2025-10-19T18:35:00.000Z"
+      }
+    ],
+    "total": 740.2
+  },
+  {
+    "id": 4,
+    "table": "1",
+    "server": "ALI",
+    "covers": 6,
+    "notes": "",
+    "status": "active",
+    "consumptionConfirmed": false,
+    "createdAt": "2025-10-19T18:43:00.000Z",
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 6,
+      "items": [
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 9
+        },
+        {
+          "id": 10000,
+          "name": "Eau Minérale",
+          "price": 4,
+          "quantity": 2
+        },
+        {
+          "id": 1002,
+          "name": "Salade César",
+          "price": 26,
+          "quantity": 1
+        },
+        {
+          "id": 9501,
+          "name": "Celtia",
+          "price": 6.8,
+          "quantity": 8
+        },
+        {
+          "id": 1003,
+          "name": "Carpaccio de Bœuf à l'Huile de Truffe",
+          "price": 35,
+          "quantity": 1
+        },
+        {
+          "id": 1105,
+          "name": "Seiches Grillées",
+          "price": 40,
+          "quantity": 1
+        },
+        {
+          "id": 9504,
+          "name": "Pastis",
+          "price": 8,
+          "quantity": 7
+        },
+        {
+          "id": 10000,
+          "name": "Coca",
+          "price": 5,
+          "quantity": 1
+        },
+        {
+          "id": 1001,
+          "name": "Salade Méchouia",
+          "price": 16,
+          "quantity": 1
+        },
+        {
+          "id": 1504,
+          "name": "Brochettes Mixtes au Romarin",
+          "price": 46,
+          "quantity": 1
+        },
+        {
+          "id": 9902,
+          "name": "Magon",
+          "price": 48,
+          "quantity": 2
+        }
+      ],
+      "total": 449,
+      "paid": false,
+      "createdAt": "2025-10-19T18:43:00.000Z"
+    },
+    "subNotes": [
+      {
+        "id": "sub_1760977791608_0",
+        "name": "Lina",
+        "covers": 2,
+        "items": [
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 3
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1002,
+            "name": "Salade César",
+            "price": 26,
+            "quantity": 1
+          }
+        ],
+        "total": 52.2,
+        "paid": false,
+        "createdAt": "2025-10-19T18:43:00.000Z"
+      },
+      {
+        "id": "sub_1760977791609_1",
+        "name": "Mohamed",
+        "covers": 2,
+        "items": [
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1003,
+            "name": "Carpaccio de Bœuf à l'Huile de Truffe",
+            "price": 35,
+            "quantity": 1
+          },
+          {
+            "id": 1105,
+            "name": "Seiches Grillées",
+            "price": 40,
+            "quantity": 1
+          },
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 1
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 2
+          }
+        ],
+        "total": 109.2,
+        "paid": false,
+        "createdAt": "2025-10-19T18:44:00.000Z"
+      },
+      {
+        "id": "sub_1760977791609_2",
+        "name": "Youssef",
+        "covers": 2,
+        "items": [
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 1001,
+            "name": "Salade Méchouia",
+            "price": 16,
+            "quantity": 1
+          },
+          {
+            "id": 1504,
+            "name": "Brochettes Mixtes au Romarin",
+            "price": 46,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 3
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 1
+          }
+        ],
+        "total": 102.80000000000001,
+        "paid": false,
+        "createdAt": "2025-10-19T18:45:00.000Z"
+      }
+    ],
+    "total": 713.2
+  },
+  {
+    "id": 5,
+    "table": "3",
+    "server": "ALI",
+    "covers": 4,
+    "notes": "",
+    "status": "active",
+    "consumptionConfirmed": false,
+    "createdAt": "2025-10-19T19:04:00.000Z",
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 4,
+      "items": [
+        {
+          "id": 9504,
+          "name": "Pastis",
+          "price": 8,
+          "quantity": 3
+        },
+        {
+          "id": 10000,
+          "name": "Eau Minérale",
+          "price": 4,
+          "quantity": 2
+        },
+        {
+          "id": 1003,
+          "name": "Carpaccio de Bœuf à l'Huile de Truffe",
+          "price": 35,
+          "quantity": 1
+        },
+        {
+          "id": 9501,
+          "name": "Celtia",
+          "price": 6.8,
+          "quantity": 9
+        },
+        {
+          "id": 1105,
+          "name": "Seiches Grillées",
+          "price": 40,
+          "quantity": 1
+        },
+        {
+          "id": 4002,
+          "name": "Tiramisu",
+          "price": 18,
+          "quantity": 1
+        },
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 5
+        },
+        {
+          "id": 9854,
+          "name": "Pays de Rose",
+          "price": 60,
+          "quantity": 1
+        }
+      ],
+      "total": 283.2,
+      "paid": false,
+      "createdAt": "2025-10-19T19:04:00.000Z"
+    },
+    "subNotes": [
+      {
+        "id": "sub_1760977791612_0",
+        "name": "Hassan",
+        "covers": 2,
+        "items": [
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 2
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1003,
+            "name": "Carpaccio de Bœuf à l'Huile de Truffe",
+            "price": 35,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 2
+          }
+        ],
+        "total": 68.6,
+        "paid": false,
+        "createdAt": "2025-10-19T19:04:00.000Z"
+      },
+      {
+        "id": "sub_1760977791613_1",
+        "name": "Ali",
+        "covers": 2,
+        "items": [
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1105,
+            "name": "Seiches Grillées",
+            "price": 40,
+            "quantity": 1
+          },
+          {
+            "id": 4002,
+            "name": "Tiramisu",
+            "price": 18,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 1
+          }
+        ],
+        "total": 76.8,
+        "paid": false,
+        "createdAt": "2025-10-19T19:05:00.000Z"
+      }
+    ],
+    "total": 428.59999999999997
+  },
+  {
+    "id": 6,
+    "table": "5",
+    "server": "ALI",
+    "covers": 2,
+    "notes": "",
+    "status": "active",
+    "consumptionConfirmed": false,
+    "createdAt": "2025-10-19T19:19:00.000Z",
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 2,
+      "items": [
+        {
+          "id": 10000,
+          "name": "Coca",
+          "price": 5,
+          "quantity": 1
+        },
+        {
+          "id": 10000,
+          "name": "Eau Minérale",
+          "price": 4,
+          "quantity": 2
+        },
+        {
+          "id": 1001,
+          "name": "Salade Méchouia",
+          "price": 16,
+          "quantity": 1
+        },
+        {
+          "id": 1201,
+          "name": "Ojja au Merguez",
+          "price": 30,
+          "quantity": 1
+        },
+        {
+          "id": 9501,
+          "name": "Celtia",
+          "price": 6.8,
+          "quantity": 7
+        },
+        {
+          "id": 9504,
+          "name": "Pastis",
+          "price": 8,
+          "quantity": 3
+        },
+        {
+          "id": 1002,
+          "name": "Salade César",
+          "price": 26,
+          "quantity": 1
+        },
+        {
+          "id": 1506,
+          "name": "Filet de Bœuf au Poivre ou aux Champignons de Paris",
+          "price": 58,
+          "quantity": 1
+        },
+        {
+          "id": 4002,
+          "name": "Tiramisu",
+          "price": 18,
+          "quantity": 1
+        },
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 3
+        }
+      ],
+      "total": 254.8,
+      "paid": false,
+      "createdAt": "2025-10-19T19:19:00.000Z"
+    },
+    "subNotes": [
+      {
+        "id": "sub_1760977791615_0",
+        "name": "Sonia",
+        "covers": 1,
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1001,
+            "name": "Salade Méchouia",
+            "price": 16,
+            "quantity": 1
+          },
+          {
+            "id": 1201,
+            "name": "Ojja au Merguez",
+            "price": 30,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 2
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 1
+          }
+        ],
+        "total": 76.6,
+        "paid": false,
+        "createdAt": "2025-10-19T19:19:00.000Z"
+      },
+      {
+        "id": "sub_1760977791615_1",
+        "name": "Youssef",
+        "covers": 1,
+        "items": [
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1002,
+            "name": "Salade César",
+            "price": 26,
+            "quantity": 1
+          },
+          {
+            "id": 1506,
+            "name": "Filet de Bœuf au Poivre ou aux Champignons de Paris",
+            "price": 58,
+            "quantity": 1
+          },
+          {
+            "id": 4002,
+            "name": "Tiramisu",
+            "price": 18,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 2
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 2
+          }
+        ],
+        "total": 135.6,
+        "paid": false,
+        "createdAt": "2025-10-19T19:20:00.000Z"
+      }
+    ],
+    "total": 467
+  },
+  {
+    "id": 7,
+    "table": "7",
+    "server": "ALI",
+    "covers": 4,
+    "notes": "",
+    "status": "active",
+    "consumptionConfirmed": false,
+    "createdAt": "2025-10-19T19:32:00.000Z",
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 4,
+      "items": [
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 7
+        },
+        {
+          "id": 10000,
+          "name": "Eau Minérale",
+          "price": 4,
+          "quantity": 2
+        },
+        {
+          "id": 1002,
+          "name": "Salade César",
+          "price": 26,
+          "quantity": 1
+        },
+        {
+          "id": 1505,
+          "name": "Médaillons de Filet aux Duo Sauces",
+          "price": 56,
+          "quantity": 1
+        },
+        {
+          "id": 9501,
+          "name": "Celtia",
+          "price": 6.8,
+          "quantity": 7
+        },
+        {
+          "id": 9504,
+          "name": "Pastis",
+          "price": 8,
+          "quantity": 6
+        },
+        {
+          "id": 10000,
+          "name": "Coca",
+          "price": 5,
+          "quantity": 1
+        },
+        {
+          "id": 1001,
+          "name": "Salade Méchouia",
+          "price": 16,
+          "quantity": 1
+        },
+        {
+          "id": 4002,
+          "name": "Tiramisu",
+          "price": 18,
+          "quantity": 1
+        },
+        {
+          "id": 9910,
+          "name": "½ Jour & Nuit",
+          "price": 38,
+          "quantity": 1
+        }
+      ],
+      "total": 314.4,
+      "paid": false,
+      "createdAt": "2025-10-19T19:32:00.000Z"
+    },
+    "subNotes": [
+      {
+        "id": "sub_1760977791643_0",
+        "name": "Nabil",
+        "covers": 2,
+        "items": [
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1002,
+            "name": "Salade César",
+            "price": 26,
+            "quantity": 1
+          },
+          {
+            "id": 1505,
+            "name": "Médaillons de Filet aux Duo Sauces",
+            "price": 56,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 1
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 3
+          }
+        ],
+        "total": 124.2,
+        "paid": false,
+        "createdAt": "2025-10-19T19:32:00.000Z"
+      },
+      {
+        "id": "sub_1760977791643_1",
+        "name": "Donia",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1001,
+            "name": "Salade Méchouia",
+            "price": 16,
+            "quantity": 1
+          },
+          {
+            "id": 4002,
+            "name": "Tiramisu",
+            "price": 18,
+            "quantity": 1
+          },
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 2
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 3
+          }
+        ],
+        "total": 81.8,
+        "paid": false,
+        "createdAt": "2025-10-19T19:33:00.000Z"
+      }
+    ],
+    "total": 520.4
+  },
+  {
+    "id": 8,
+    "table": "9",
+    "server": "ALI",
+    "covers": 5,
+    "notes": "",
+    "status": "active",
+    "consumptionConfirmed": false,
+    "createdAt": "2025-10-19T19:42:00.000Z",
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 5,
+      "items": [
+        {
+          "id": 10000,
+          "name": "Coca",
+          "price": 5,
+          "quantity": 2
+        },
+        {
+          "id": 10000,
+          "name": "Eau Minérale",
+          "price": 4,
+          "quantity": 3
+        },
+        {
+          "id": 1001,
+          "name": "Salade Méchouia",
+          "price": 16,
+          "quantity": 1
+        },
+        {
+          "id": 1202,
+          "name": "Ojja aux Crevettes",
+          "price": 38,
+          "quantity": 1
+        },
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 3
+        },
+        {
+          "id": 10001,
+          "name": "Fanta",
+          "price": 5,
+          "quantity": 1
+        },
+        {
+          "id": 1002,
+          "name": "Salade César",
+          "price": 26,
+          "quantity": 1
+        },
+        {
+          "id": 1506,
+          "name": "Filet de Bœuf au Poivre ou aux Champignons de Paris",
+          "price": 58,
+          "quantity": 1
+        },
+        {
+          "id": 9501,
+          "name": "Celtia",
+          "price": 6.8,
+          "quantity": 9
+        },
+        {
+          "id": 4003,
+          "name": "Chocolate Moelleux",
+          "price": 18,
+          "quantity": 1
+        },
+        {
+          "id": 9504,
+          "name": "Pastis",
+          "price": 8,
+          "quantity": 2
+        }
+      ],
+      "total": 282.4,
+      "paid": false,
+      "createdAt": "2025-10-19T19:42:00.000Z"
+    },
+    "subNotes": [
+      {
+        "id": "sub_1760977791645_0",
+        "name": "Hassan",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1001,
+            "name": "Salade Méchouia",
+            "price": 16,
+            "quantity": 1
+          },
+          {
+            "id": 1202,
+            "name": "Ojja aux Crevettes",
+            "price": 38,
+            "quantity": 1
+          },
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 1
+          }
+        ],
+        "total": 70.4,
+        "paid": false,
+        "createdAt": "2025-10-19T19:42:00.000Z"
+      },
+      {
+        "id": "sub_1760977791645_1",
+        "name": "Lina",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10001,
+            "name": "Fanta",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1002,
+            "name": "Salade César",
+            "price": 26,
+            "quantity": 1
+          },
+          {
+            "id": 1506,
+            "name": "Filet de Bœuf au Poivre ou aux Champignons de Paris",
+            "price": 58,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 4
+          }
+        ],
+        "total": 120.2,
+        "paid": false,
+        "createdAt": "2025-10-19T19:43:00.000Z"
+      },
+      {
+        "id": "sub_1760977791646_2",
+        "name": "Karim",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 4003,
+            "name": "Chocolate Moelleux",
+            "price": 18,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 3
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 1
+          }
+        ],
+        "total": 55.4,
+        "paid": false,
+        "createdAt": "2025-10-19T19:44:00.000Z"
+      }
+    ],
+    "total": 528.4
+  },
+  {
+    "id": 9,
+    "table": "11",
+    "server": "ALI",
+    "covers": 6,
+    "notes": "",
+    "status": "active",
+    "consumptionConfirmed": false,
+    "createdAt": "2025-10-19T19:58:00.000Z",
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 6,
+      "items": [
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 4
+        },
+        {
+          "id": 10000,
+          "name": "Eau Minérale",
+          "price": 4,
+          "quantity": 3
+        },
+        {
+          "id": 1002,
+          "name": "Salade César",
+          "price": 26,
+          "quantity": 1
+        },
+        {
+          "id": 1105,
+          "name": "Seiches Grillées",
+          "price": 40,
+          "quantity": 1
+        },
+        {
+          "id": 9501,
+          "name": "Celtia",
+          "price": 6.8,
+          "quantity": 10
+        },
+        {
+          "id": 9504,
+          "name": "Pastis",
+          "price": 8,
+          "quantity": 2
+        },
+        {
+          "id": 1003,
+          "name": "Carpaccio de Bœuf à l'Huile de Truffe",
+          "price": 35,
+          "quantity": 1
+        },
+        {
+          "id": 10000,
+          "name": "Coca",
+          "price": 5,
+          "quantity": 1
+        },
+        {
+          "id": 1001,
+          "name": "Salade Méchouia",
+          "price": 16,
+          "quantity": 1
+        },
+        {
+          "id": 1504,
+          "name": "Brochettes Mixtes au Romarin",
+          "price": 46,
+          "quantity": 1
+        }
+      ],
+      "total": 293.6,
+      "paid": false,
+      "createdAt": "2025-10-19T19:58:00.000Z"
+    },
+    "subNotes": [
+      {
+        "id": "sub_1760977791647_0",
+        "name": "Hassan",
+        "covers": 2,
+        "items": [
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1002,
+            "name": "Salade César",
+            "price": 26,
+            "quantity": 1
+          },
+          {
+            "id": 1105,
+            "name": "Seiches Grillées",
+            "price": 40,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 3
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 1
+          }
+        ],
+        "total": 105.80000000000001,
+        "paid": false,
+        "createdAt": "2025-10-19T19:58:00.000Z"
+      },
+      {
+        "id": "sub_1760977791648_1",
+        "name": "Ahmed",
+        "covers": 2,
+        "items": [
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 5
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1003,
+            "name": "Carpaccio de Bœuf à l'Huile de Truffe",
+            "price": 35,
+            "quantity": 1
+          }
+        ],
+        "total": 73,
+        "paid": false,
+        "createdAt": "2025-10-19T19:59:00.000Z"
+      },
+      {
+        "id": "sub_1760977791649_2",
+        "name": "Ali",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1001,
+            "name": "Salade Méchouia",
+            "price": 16,
+            "quantity": 1
+          },
+          {
+            "id": 1504,
+            "name": "Brochettes Mixtes au Romarin",
+            "price": 46,
+            "quantity": 1
+          },
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 1
+          }
+        ],
+        "total": 78.4,
+        "paid": false,
+        "createdAt": "2025-10-19T20:00:00.000Z"
+      }
+    ],
+    "total": 550.8000000000001
+  },
+  {
+    "id": 10,
+    "table": "2",
+    "server": "FATIMA",
+    "covers": 8,
+    "notes": "",
+    "status": "active",
+    "consumptionConfirmed": false,
+    "createdAt": "2025-10-19T20:11:00.000Z",
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 8,
+      "items": [
+        {
+          "id": 10000,
+          "name": "Coca",
+          "price": 5,
+          "quantity": 3
+        },
+        {
+          "id": 10000,
+          "name": "Eau Minérale",
+          "price": 4,
+          "quantity": 5
+        },
+        {
+          "id": 1001,
+          "name": "Salade Méchouia",
+          "price": 16,
+          "quantity": 1
+        },
+        {
+          "id": 1201,
+          "name": "Ojja au Merguez",
+          "price": 30,
+          "quantity": 1
+        },
+        {
+          "id": 9504,
+          "name": "Pastis",
+          "price": 8,
+          "quantity": 7
+        },
+        {
+          "id": 10001,
+          "name": "Fanta",
+          "price": 5,
+          "quantity": 1
+        },
+        {
+          "id": 1003,
+          "name": "Carpaccio de Bœuf à l'Huile de Truffe",
+          "price": 35,
+          "quantity": 1
+        },
+        {
+          "id": 10028,
+          "name": "Mérou Grillé ou avec des Pâtes prix",
+          "price": 33,
+          "quantity": 1
+        },
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 14
+        },
+        {
+          "id": 1002,
+          "name": "Salade César",
+          "price": 26,
+          "quantity": 1
+        },
+        {
+          "id": 1105,
+          "name": "Seiches Grillées",
+          "price": 40,
+          "quantity": 1
+        },
+        {
+          "id": 4002,
+          "name": "Tiramisu",
+          "price": 18,
+          "quantity": 2
+        },
+        {
+          "id": 9501,
+          "name": "Celtia",
+          "price": 6.8,
+          "quantity": 14
+        },
+        {
+          "id": 9902,
+          "name": "Magon",
+          "price": 48,
+          "quantity": 2
+        }
+      ],
+      "total": 606.8,
+      "paid": false,
+      "createdAt": "2025-10-19T20:11:00.000Z"
+    },
+    "subNotes": [
+      {
+        "id": "sub_1760977791650_0",
+        "name": "Nour",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1001,
+            "name": "Salade Méchouia",
+            "price": 16,
+            "quantity": 1
+          },
+          {
+            "id": 1201,
+            "name": "Ojja au Merguez",
+            "price": 30,
+            "quantity": 1
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 1
+          }
+        ],
+        "total": 63,
+        "paid": false,
+        "createdAt": "2025-10-19T20:11:00.000Z"
+      },
+      {
+        "id": "sub_1760977791650_1",
+        "name": "Donia",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10001,
+            "name": "Fanta",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1003,
+            "name": "Carpaccio de Bœuf à l'Huile de Truffe",
+            "price": 35,
+            "quantity": 1
+          },
+          {
+            "id": 10028,
+            "name": "Mérou Grillé ou avec des Pâtes prix",
+            "price": 33,
+            "quantity": 1
+          },
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 3
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 1
+          }
+        ],
+        "total": 107.2,
+        "paid": false,
+        "createdAt": "2025-10-19T20:12:00.000Z"
+      },
+      {
+        "id": "sub_1760977791651_2",
+        "name": "Ali",
+        "covers": 2,
+        "items": [
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1002,
+            "name": "Salade César",
+            "price": 26,
+            "quantity": 1
+          },
+          {
+            "id": 1105,
+            "name": "Seiches Grillées",
+            "price": 40,
+            "quantity": 1
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 1
+          }
+        ],
+        "total": 85.4,
+        "paid": false,
+        "createdAt": "2025-10-19T20:13:00.000Z"
+      }
+    ],
+    "total": 862.4
+  },
+  {
+    "id": 11,
+    "table": "4",
+    "server": "FATIMA",
+    "covers": 10,
+    "notes": "",
+    "status": "active",
+    "consumptionConfirmed": false,
+    "createdAt": "2025-10-19T20:27:00.000Z",
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 10,
+      "items": [
+        {
+          "id": 10000,
+          "name": "Coca",
+          "price": 5,
+          "quantity": 2
+        },
+        {
+          "id": 10000,
+          "name": "Eau Minérale",
+          "price": 4,
+          "quantity": 7
+        },
+        {
+          "id": 1001,
+          "name": "Salade Méchouia",
+          "price": 16,
+          "quantity": 3
+        },
+        {
+          "id": 1201,
+          "name": "Ojja au Merguez",
+          "price": 30,
+          "quantity": 1
+        },
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 11
+        },
+        {
+          "id": 9504,
+          "name": "Pastis",
+          "price": 8,
+          "quantity": 3
+        },
+        {
+          "id": 1002,
+          "name": "Salade César",
+          "price": 26,
+          "quantity": 3
+        },
+        {
+          "id": 1503,
+          "name": "Émincé de Bœuf Stroganoff & Riz Pilaf",
+          "price": 53,
+          "quantity": 1
+        },
+        {
+          "id": 9501,
+          "name": "Celtia",
+          "price": 6.8,
+          "quantity": 19
+        },
+        {
+          "id": 10001,
+          "name": "Fanta",
+          "price": 5,
+          "quantity": 1
+        },
+        {
+          "id": 4002,
+          "name": "Tiramisu",
+          "price": 18,
+          "quantity": 1
+        },
+        {
+          "id": 4003,
+          "name": "Chocolate Moelleux",
+          "price": 18,
+          "quantity": 2
+        },
+        {
+          "id": 1105,
+          "name": "Seiches Grillées",
+          "price": 40,
+          "quantity": 2
+        },
+        {
+          "id": 9921,
+          "name": "Vin Rouge : Mouton Cadet (Rothschild)",
+          "price": 140,
+          "quantity": 3
+        }
+      ],
+      "total": 1040.6,
+      "paid": false,
+      "createdAt": "2025-10-19T20:27:00.000Z"
+    },
+    "subNotes": [
+      {
+        "id": "sub_1760977791653_0",
+        "name": "Fatma",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1001,
+            "name": "Salade Méchouia",
+            "price": 16,
+            "quantity": 1
+          },
+          {
+            "id": 1201,
+            "name": "Ojja au Merguez",
+            "price": 30,
+            "quantity": 1
+          },
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 2
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 1
+          }
+        ],
+        "total": 77.8,
+        "paid": false,
+        "createdAt": "2025-10-19T20:27:00.000Z"
+      },
+      {
+        "id": "sub_1760977791654_1",
+        "name": "Youssef",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1002,
+            "name": "Salade César",
+            "price": 26,
+            "quantity": 1
+          },
+          {
+            "id": 1503,
+            "name": "Émincé de Bœuf Stroganoff & Riz Pilaf",
+            "price": 53,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 4
+          }
+        ],
+        "total": 115.2,
+        "paid": false,
+        "createdAt": "2025-10-19T20:28:00.000Z"
+      },
+      {
+        "id": "sub_1760977791654_2",
+        "name": "Rania",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10001,
+            "name": "Fanta",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 4002,
+            "name": "Tiramisu",
+            "price": 18,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 1
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 1
+          }
+        ],
+        "total": 41.8,
+        "paid": false,
+        "createdAt": "2025-10-19T20:29:00.000Z"
+      }
+    ],
+    "total": 1275.3999999999999
+  },
+  {
+    "id": 12,
+    "table": "6",
+    "server": "FATIMA",
+    "covers": 4,
+    "notes": "",
+    "status": "active",
+    "consumptionConfirmed": false,
+    "createdAt": "2025-10-19T20:48:00.000Z",
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 4,
+      "items": [
+        {
+          "id": 9504,
+          "name": "Pastis",
+          "price": 8,
+          "quantity": 7
+        },
+        {
+          "id": 10000,
+          "name": "Eau Minérale",
+          "price": 4,
+          "quantity": 2
+        },
+        {
+          "id": 1003,
+          "name": "Carpaccio de Bœuf à l'Huile de Truffe",
+          "price": 35,
+          "quantity": 1
+        },
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 7
+        },
+        {
+          "id": 1603,
+          "name": "Filet de Loup Sauce au Citron & Œufs de Lompe",
+          "price": 50,
+          "quantity": 1
+        },
+        {
+          "id": 4002,
+          "name": "Tiramisu",
+          "price": 18,
+          "quantity": 1
+        },
+        {
+          "id": 9501,
+          "name": "Celtia",
+          "price": 6.8,
+          "quantity": 6
+        }
+      ],
+      "total": 259.6,
+      "paid": false,
+      "createdAt": "2025-10-19T20:48:00.000Z"
+    },
+    "subNotes": [
+      {
+        "id": "sub_1760977791657_0",
+        "name": "Salma",
+        "covers": 2,
+        "items": [
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 2
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1003,
+            "name": "Carpaccio de Bœuf à l'Huile de Truffe",
+            "price": 35,
+            "quantity": 1
+          },
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 3
+          }
+        ],
+        "total": 77.2,
+        "paid": false,
+        "createdAt": "2025-10-19T20:48:00.000Z"
+      },
+      {
+        "id": "sub_1760977791657_1",
+        "name": "Sami",
+        "covers": 2,
+        "items": [
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 3
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1603,
+            "name": "Filet de Loup Sauce au Citron & Œufs de Lompe",
+            "price": 50,
+            "quantity": 1
+          },
+          {
+            "id": 4002,
+            "name": "Tiramisu",
+            "price": 18,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 1
+          }
+        ],
+        "total": 102.8,
+        "paid": false,
+        "createdAt": "2025-10-19T20:49:00.000Z"
+      }
+    ],
+    "total": 439.6
+  },
+  {
+    "id": 13,
+    "table": "8",
+    "server": "FATIMA",
+    "covers": 6,
+    "notes": "",
+    "status": "active",
+    "consumptionConfirmed": false,
+    "createdAt": "2025-10-19T20:58:00.000Z",
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 6,
+      "items": [
+        {
+          "id": 10000,
+          "name": "Coca",
+          "price": 5,
+          "quantity": 2
+        },
+        {
+          "id": 10000,
+          "name": "Eau Minérale",
+          "price": 4,
+          "quantity": 3
+        },
+        {
+          "id": 1001,
+          "name": "Salade Méchouia",
+          "price": 16,
+          "quantity": 1
+        },
+        {
+          "id": 1202,
+          "name": "Ojja aux Crevettes",
+          "price": 38,
+          "quantity": 1
+        },
+        {
+          "id": 9501,
+          "name": "Celtia",
+          "price": 6.8,
+          "quantity": 18
+        },
+        {
+          "id": 10001,
+          "name": "Fanta",
+          "price": 5,
+          "quantity": 1
+        },
+        {
+          "id": 1002,
+          "name": "Salade César",
+          "price": 26,
+          "quantity": 1
+        },
+        {
+          "id": 1604,
+          "name": "Filet de Reine et sa Sauce aux Fruits de Mer",
+          "price": 54,
+          "quantity": 1
+        },
+        {
+          "id": 4003,
+          "name": "Chocolate Moelleux",
+          "price": 18,
+          "quantity": 1
+        },
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 10
+        },
+        {
+          "id": 9504,
+          "name": "Pastis",
+          "price": 8,
+          "quantity": 4
+        }
+      ],
+      "total": 407.4,
+      "paid": false,
+      "createdAt": "2025-10-19T20:58:00.000Z"
+    },
+    "subNotes": [
+      {
+        "id": "sub_1760977791659_0",
+        "name": "Khadija",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1001,
+            "name": "Salade Méchouia",
+            "price": 16,
+            "quantity": 1
+          },
+          {
+            "id": 1202,
+            "name": "Ojja aux Crevettes",
+            "price": 38,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 4
+          }
+        ],
+        "total": 90.2,
+        "paid": false,
+        "createdAt": "2025-10-19T20:58:00.000Z"
+      },
+      {
+        "id": "sub_1760977791659_1",
+        "name": "Nour",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10001,
+            "name": "Fanta",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1002,
+            "name": "Salade César",
+            "price": 26,
+            "quantity": 1
+          },
+          {
+            "id": 1604,
+            "name": "Filet de Reine et sa Sauce aux Fruits de Mer",
+            "price": 54,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 3
+          }
+        ],
+        "total": 109.4,
+        "paid": false,
+        "createdAt": "2025-10-19T20:59:00.000Z"
+      },
+      {
+        "id": "sub_1760977791659_2",
+        "name": "Sonia",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 4003,
+            "name": "Chocolate Moelleux",
+            "price": 18,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 3
+          }
+        ],
+        "total": 47.4,
+        "paid": false,
+        "createdAt": "2025-10-19T21:00:00.000Z"
+      }
+    ],
+    "total": 654.4
+  },
+  {
+    "id": 14,
+    "table": "10",
+    "server": "FATIMA",
+    "covers": 7,
+    "notes": "",
+    "status": "active",
+    "consumptionConfirmed": false,
+    "createdAt": "2025-10-19T21:18:00.000Z",
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 7,
+      "items": [
+        {
+          "id": 10000,
+          "name": "Coca",
+          "price": 5,
+          "quantity": 2
+        },
+        {
+          "id": 10000,
+          "name": "Eau Minérale",
+          "price": 4,
+          "quantity": 5
+        },
+        {
+          "id": 1002,
+          "name": "Salade César",
+          "price": 26,
+          "quantity": 3
+        },
+        {
+          "id": 1201,
+          "name": "Ojja au Merguez",
+          "price": 30,
+          "quantity": 1
+        },
+        {
+          "id": 9501,
+          "name": "Celtia",
+          "price": 6.8,
+          "quantity": 10
+        },
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 11
+        },
+        {
+          "id": 1001,
+          "name": "Salade Méchouia",
+          "price": 16,
+          "quantity": 1
+        },
+        {
+          "id": 1105,
+          "name": "Seiches Grillées",
+          "price": 40,
+          "quantity": 1
+        },
+        {
+          "id": 1504,
+          "name": "Brochettes Mixtes au Romarin",
+          "price": 46,
+          "quantity": 1
+        },
+        {
+          "id": 4002,
+          "name": "Tiramisu",
+          "price": 18,
+          "quantity": 1
+        },
+        {
+          "id": 9504,
+          "name": "Pastis",
+          "price": 8,
+          "quantity": 4
+        },
+        {
+          "id": 4003,
+          "name": "Chocolate Moelleux",
+          "price": 18,
+          "quantity": 2
+        }
+      ],
+      "total": 475.4,
+      "paid": false,
+      "createdAt": "2025-10-19T21:18:00.000Z"
+    },
+    "subNotes": [
+      {
+        "id": "sub_1760977791662_0",
+        "name": "Zineb",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1002,
+            "name": "Salade César",
+            "price": 26,
+            "quantity": 1
+          },
+          {
+            "id": 1201,
+            "name": "Ojja au Merguez",
+            "price": 30,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 4
+          }
+        ],
+        "total": 92.2,
+        "paid": false,
+        "createdAt": "2025-10-19T21:18:00.000Z"
+      },
+      {
+        "id": "sub_1760977791662_1",
+        "name": "Ahmed",
+        "covers": 2,
+        "items": [
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 4
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1001,
+            "name": "Salade Méchouia",
+            "price": 16,
+            "quantity": 1
+          },
+          {
+            "id": 1105,
+            "name": "Seiches Grillées",
+            "price": 40,
+            "quantity": 1
+          }
+        ],
+        "total": 89.6,
+        "paid": false,
+        "createdAt": "2025-10-19T21:19:00.000Z"
+      },
+      {
+        "id": "sub_1760977791662_2",
+        "name": "Donia",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1504,
+            "name": "Brochettes Mixtes au Romarin",
+            "price": 46,
+            "quantity": 1
+          },
+          {
+            "id": 4002,
+            "name": "Tiramisu",
+            "price": 18,
+            "quantity": 1
+          },
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 2
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 1
+          }
+        ],
+        "total": 95.8,
+        "paid": false,
+        "createdAt": "2025-10-19T21:20:00.000Z"
+      }
+    ],
+    "total": 753
+  },
+  {
+    "id": 15,
+    "table": "12",
+    "server": "FATIMA",
+    "covers": 5,
+    "notes": "",
+    "status": "active",
+    "consumptionConfirmed": false,
+    "createdAt": "2025-10-19T21:26:00.000Z",
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 5,
+      "items": [
+        {
+          "id": 9504,
+          "name": "Pastis",
+          "price": 8,
+          "quantity": 5
+        },
+        {
+          "id": 10000,
+          "name": "Eau Minérale",
+          "price": 4,
+          "quantity": 3
+        },
+        {
+          "id": 1003,
+          "name": "Carpaccio de Bœuf à l'Huile de Truffe",
+          "price": 35,
+          "quantity": 1
+        },
+        {
+          "id": 9501,
+          "name": "Celtia",
+          "price": 6.8,
+          "quantity": 12
+        },
+        {
+          "id": 1002,
+          "name": "Salade César",
+          "price": 26,
+          "quantity": 1
+        },
+        {
+          "id": 1105,
+          "name": "Seiches Grillées",
+          "price": 40,
+          "quantity": 1
+        },
+        {
+          "id": 4002,
+          "name": "Tiramisu",
+          "price": 18,
+          "quantity": 1
+        },
+        {
+          "id": 1001,
+          "name": "Salade Méchouia",
+          "price": 16,
+          "quantity": 1
+        },
+        {
+          "id": 4003,
+          "name": "Chocolate Moelleux",
+          "price": 18,
+          "quantity": 1
+        },
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 4
+        },
+        {
+          "id": 9908,
+          "name": "Gioia",
+          "price": 86,
+          "quantity": 1
+        }
+      ],
+      "total": 402.20000000000005,
+      "paid": false,
+      "createdAt": "2025-10-19T21:26:00.000Z"
+    },
+    "subNotes": [
+      {
+        "id": "sub_1760977791664_0",
+        "name": "Tarek",
+        "covers": 2,
+        "items": [
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1003,
+            "name": "Carpaccio de Bœuf à l'Huile de Truffe",
+            "price": 35,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 4
+          }
+        ],
+        "total": 74.2,
+        "paid": false,
+        "createdAt": "2025-10-19T21:26:00.000Z"
+      },
+      {
+        "id": "sub_1760977791664_1",
+        "name": "Karim",
+        "covers": 2,
+        "items": [
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1002,
+            "name": "Salade César",
+            "price": 26,
+            "quantity": 1
+          },
+          {
+            "id": 1105,
+            "name": "Seiches Grillées",
+            "price": 40,
+            "quantity": 1
+          },
+          {
+            "id": 4002,
+            "name": "Tiramisu",
+            "price": 18,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 1
+          }
+        ],
+        "total": 102.8,
+        "paid": false,
+        "createdAt": "2025-10-19T21:27:00.000Z"
+      },
+      {
+        "id": "sub_1760977791664_2",
+        "name": "Hassan",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1001,
+            "name": "Salade Méchouia",
+            "price": 16,
+            "quantity": 1
+          },
+          {
+            "id": 4003,
+            "name": "Chocolate Moelleux",
+            "price": 18,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 3
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 1
+          }
+        ],
+        "total": 66.4,
+        "paid": false,
+        "createdAt": "2025-10-19T21:28:00.000Z"
+      }
+    ],
+    "total": 645.6
+  },
+  {
+    "id": 16,
+    "table": "14",
+    "server": "FATIMA",
+    "covers": 8,
+    "notes": "",
+    "status": "active",
+    "consumptionConfirmed": false,
+    "createdAt": "2025-10-19T21:45:00.000Z",
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 8,
+      "items": [
+        {
+          "id": 10000,
+          "name": "Coca",
+          "price": 5,
+          "quantity": 3
+        },
+        {
+          "id": 10000,
+          "name": "Eau Minérale",
+          "price": 4,
+          "quantity": 5
+        },
+        {
+          "id": 1001,
+          "name": "Salade Méchouia",
+          "price": 16,
+          "quantity": 1
+        },
+        {
+          "id": 1202,
+          "name": "Ojja aux Crevettes",
+          "price": 38,
+          "quantity": 1
+        },
+        {
+          "id": 9504,
+          "name": "Pastis",
+          "price": 8,
+          "quantity": 10
+        },
+        {
+          "id": 10001,
+          "name": "Fanta",
+          "price": 5,
+          "quantity": 1
+        },
+        {
+          "id": 1002,
+          "name": "Salade César",
+          "price": 26,
+          "quantity": 1
+        },
+        {
+          "id": 1505,
+          "name": "Médaillons de Filet aux Duo Sauces",
+          "price": 56,
+          "quantity": 1
+        },
+        {
+          "id": 9501,
+          "name": "Celtia",
+          "price": 6.8,
+          "quantity": 2
+        },
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 8
+        },
+        {
+          "id": 1105,
+          "name": "Seiches Grillées",
+          "price": 40,
+          "quantity": 1
+        },
+        {
+          "id": 4002,
+          "name": "Tiramisu",
+          "price": 18,
+          "quantity": 1
+        },
+        {
+          "id": 4003,
+          "name": "Chocolate Moelleux",
+          "price": 18,
+          "quantity": 2
+        }
+      ],
+      "total": 422.8,
+      "paid": false,
+      "createdAt": "2025-10-19T21:45:00.000Z"
+    },
+    "subNotes": [
+      {
+        "id": "sub_1760977791666_0",
+        "name": "Hassan",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1001,
+            "name": "Salade Méchouia",
+            "price": 16,
+            "quantity": 1
+          },
+          {
+            "id": 1202,
+            "name": "Ojja aux Crevettes",
+            "price": 38,
+            "quantity": 1
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 1
+          }
+        ],
+        "total": 71,
+        "paid": false,
+        "createdAt": "2025-10-19T21:45:00.000Z"
+      },
+      {
+        "id": "sub_1760977791666_1",
+        "name": "Donia",
+        "covers": 2,
+        "items": [
+          {
+            "id": 10001,
+            "name": "Fanta",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1002,
+            "name": "Salade César",
+            "price": 26,
+            "quantity": 1
+          },
+          {
+            "id": 1505,
+            "name": "Médaillons de Filet aux Duo Sauces",
+            "price": 56,
+            "quantity": 1
+          },
+          {
+            "id": 9501,
+            "name": "Celtia",
+            "price": 6.8,
+            "quantity": 1
+          }
+        ],
+        "total": 97.8,
+        "paid": false,
+        "createdAt": "2025-10-19T21:46:00.000Z"
+      },
+      {
+        "id": "sub_1760977791667_2",
+        "name": "Nabil",
+        "covers": 2,
+        "items": [
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 3
+          },
+          {
+            "id": 10000,
+            "name": "Eau Minérale",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 1105,
+            "name": "Seiches Grillées",
+            "price": 40,
+            "quantity": 1
+          },
+          {
+            "id": 4002,
+            "name": "Tiramisu",
+            "price": 18,
+            "quantity": 1
+          },
+          {
+            "id": 9504,
+            "name": "Pastis",
+            "price": 8,
+            "quantity": 2
+          }
+        ],
+        "total": 100.2,
+        "paid": false,
+        "createdAt": "2025-10-19T21:47:00.000Z"
+      }
+    ],
+    "total": 691.8000000000001
+  },
+  {
+    "id": 17,
+    "table": "3",
+    "server": "ALI",
+    "covers": 1,
+    "notes": "",
+    "status": "nouvelle",
+    "consumptionConfirmed": false,
+    "createdAt": "2025-10-21T14:05:17.029Z",
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 1,
+      "items": [],
+      "total": 0,
+      "paid": false
+    },
+    "subNotes": [
+      {
+        "id": "sub_1761055262491",
+        "name": "Nabil",
+        "covers": 1,
+        "items": [
+          {
+            "id": 9001,
+            "name": "Eau Minérale (0,5L)",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 10002,
+            "name": "Boga",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10003,
+            "name": "Sprite",
+            "price": 5,
+            "quantity": 1
+          }
+        ],
+        "total": 14,
+        "paid": false,
+        "createdAt": "2025-10-21T14:05:17.029Z"
+      }
+    ],
+    "total": 14
+  },
+  {
+    "id": 18,
+    "table": "3",
+    "server": "ALI",
+    "covers": 1,
+    "notes": "",
+    "status": "nouvelle",
+    "consumptionConfirmed": false,
+    "createdAt": "2025-10-21T14:19:46.387Z",
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 1,
+      "items": [
+        {
+          "id": 9504,
+          "name": "Pastis",
+          "price": 8,
+          "quantity": 3
+        },
+        {
+          "id": 10000,
+          "name": "Eau Minérale",
+          "price": 4,
+          "quantity": 2
+        },
+        {
+          "id": 1003,
+          "name": "Carpaccio de Bœuf à l'Huile de Truffe",
+          "price": 35,
+          "quantity": 1
+        },
+        {
+          "id": 9501,
+          "name": "Celtia",
+          "price": 6.8,
+          "quantity": 9
+        },
+        {
+          "id": 1105,
+          "name": "Seiches Grillées",
+          "price": 40,
+          "quantity": 1
+        },
+        {
+          "id": 4002,
+          "name": "Tiramisu",
+          "price": 18,
+          "quantity": 1
+        },
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 5
+        },
+        {
+          "id": 9854,
+          "name": "Pays de Rose",
+          "price": 60,
+          "quantity": 1
+        },
+        {
+          "id": 9001,
+          "name": "Eau Minérale (0,5L)",
+          "price": 4,
+          "quantity": 1
+        }
+      ],
+      "total": 287.2,
+      "paid": false
+    },
+    "subNotes": [],
+    "total": 287.2
+  }
+]

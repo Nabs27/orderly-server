@@ -53,7 +53,7 @@ function renderGroupTabsAndFilters(groupsMap) {
     if (!groups.includes(activeGroup)) activeGroup = groups[0] || 'food';
     groups.forEach(g => {
         const btn = document.createElement('button');
-        btn.textContent = g === 'drinks' ? 'Boissons' : (g === 'spirits' ? 'Spiritueux' : (g === 'services' ? 'Services' : 'Plats'));
+        btn.textContent = g === 'drinks' ? 'Soft' : (g === 'spirits' ? 'Spiritueux' : (g === 'services' ? 'Services' : 'Plats'));
         btn.className = g === activeGroup ? 'active' : '';
         btn.addEventListener('click', () => {
             // Toujours définir d'abord le groupe actif
