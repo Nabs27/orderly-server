@@ -416,6 +416,15 @@ app.get('/orders', (req, res) => {
 	return res.json(list);
 });
 
+// 🆕 Endpoint alias pour compatibilité
+app.get('/api/pos/tables', (req, res) => {
+	const { table } = req.query;
+	// 🆕 Filtrer les commandes archivées
+	const activeOrders = orders.filter(o => o.status !== 'archived');
+	const list = table ? activeOrders.filter(o => String(o.table) === String(table)) : activeOrders;
+	return res.json(list);
+});
+
 // Récupérer une commande
 app.get('/orders/:id', (req, res) => {
 	const id = Number(req.params.id);
