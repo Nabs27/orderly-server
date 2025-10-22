@@ -364,9 +364,57 @@ app.post('/orders', (req, res) => {
 		return res.status(400).json({ error: 'Requête invalide: table et items requis' });
 	}
 	
+	// 🆕 CORRECTION: Vérifier s'il existe déjà une commande pour cette table
+	const existingOrder = orders.find(o => o.table === table && !o.consumptionConfirmed);
+	
+	if (existingOrder) {
+		// Ajouter les articles à la commande existante
+		console.log('[orders] Commande existante trouvée:', existingOrder.id, 'pour table', table);
+		
+		// Initialiser les structures si nécessaire
+		if (!existingOrder.mainNote) existingOrder.mainNote = { id: 'main', name: 'Note Principale', covers: existingOrder.covers || 1, items: [], total: 0, paid: false };
+		if (!existingOrder.subNotes) existingOrder.subNotes = [];
+		
+		const itemsTotal = items.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity || 1)), 0);
+		
+		if (noteId === 'main' || !noteId) {
+			// Ajouter à la note principale
+			existingOrder.mainNote.items.push(...items);
+			existingOrder.mainNote.total += itemsTotal;
+		} else {
+			// Ajouter à une sous-note existante ou créer une nouvelle
+			let targetSubNote = existingOrder.subNotes.find(n => n.id === noteId);
+			if (!targetSubNote) {
+				targetSubNote = {
+					id: noteId,
+					name: noteName || 'Client',
+					covers: 1,
+					items: [],
+					total: 0,
+					paid: false,
+					createdAt: new Date().toISOString()
+				};
+				existingOrder.subNotes.push(targetSubNote);
+			}
+			targetSubNote.items.push(...items);
+			targetSubNote.total += itemsTotal;
+		}
+		
+		existingOrder.total += itemsTotal;
+		existingOrder.updatedAt = new Date().toISOString();
+		
+		console.log('[orders] Articles ajoutés à commande existante:', existingOrder.id, 'total:', itemsTotal);
+		
+		// 💾 Sauvegarder automatiquement
+		savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde:', e));
+		
+		io.emit('order:updated', existingOrder);
+		return res.status(200).json(existingOrder);
+	}
+	
+	// Créer une nouvelle commande seulement si aucune n'existe
 	const total = items.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity || 1)), 0);
 	
-	// Nouvelle structure avec support des sous-notes
 	const newOrder = {
 		id: nextOrderId++,
 		table,
@@ -398,7 +446,7 @@ app.post('/orders', (req, res) => {
 	};
 	
 	orders.push(newOrder);
-	console.log('[orders] Commande créée:', newOrder.id, 'pour table', table, 'total:', total, 'note:', noteId || 'main');
+	console.log('[orders] Nouvelle commande créée:', newOrder.id, 'pour table', table, 'total:', total, 'note:', noteId || 'main');
 	
 	// 💾 Sauvegarder automatiquement
 	savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde:', e));
@@ -409,15 +457,6 @@ app.post('/orders', (req, res) => {
 
 // Lister commandes (option table=...)
 app.get('/orders', (req, res) => {
-	const { table } = req.query;
-	// 🆕 Filtrer les commandes archivées
-	const activeOrders = orders.filter(o => o.status !== 'archived');
-	const list = table ? activeOrders.filter(o => String(o.table) === String(table)) : activeOrders;
-	return res.json(list);
-});
-
-// 🆕 Endpoint alias pour compatibilité
-app.get('/api/pos/tables', (req, res) => {
 	const { table } = req.query;
 	// 🆕 Filtrer les commandes archivées
 	const activeOrders = orders.filter(o => o.status !== 'archived');
@@ -1274,8 +1313,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123'; // À changer e
 
 function authAdmin(req, res, next) {
 	const token = req.headers['x-admin-token'];
-	// 🆕 Rendre l'admin optionnel pour les tests
-	if (ADMIN_PASSWORD && token !== ADMIN_PASSWORD) {
+	if (token !== ADMIN_PASSWORD) {
 		return res.status(401).json({ error: 'Non autorisé' });
 	}
 	next();
