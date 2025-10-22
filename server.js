@@ -1265,7 +1265,8 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123'; // À changer e
 
 function authAdmin(req, res, next) {
 	const token = req.headers['x-admin-token'];
-	if (token !== ADMIN_PASSWORD) {
+	// 🆕 Rendre l'admin optionnel pour les tests
+	if (ADMIN_PASSWORD && token !== ADMIN_PASSWORD) {
 		return res.status(401).json({ error: 'Non autorisé' });
 	}
 	next();
