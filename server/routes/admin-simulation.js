@@ -9,6 +9,7 @@ const { authAdmin } = require('../middleware/auth');
 const dataStore = require('../data');
 const fileManager = require('../utils/fileManager');
 const { getIO } = require('../utils/socket');
+const { loadMenu } = require('../utils/menuSync');
 
 function shuffleArray(items) {
 	const array = [...items];
@@ -71,14 +72,11 @@ router.post('/simulate-data', authAdmin, async (req, res) => {
 		dataStore.nextClientId = 1;
 		console.log('[simulation] Crédit clients remis à zéro au début');
 		
-		// Charger le menu
-		const menuPath = path.join(__dirname, '..', '..', 'data', 'restaurants', 'les-emirs', 'menu.json');
-		if (!fs.existsSync(menuPath)) {
+		// Charger le menu (depuis MongoDB si disponible, sinon JSON local)
+		const menu = await loadMenu('les-emirs');
+		if (!menu) {
 			return res.status(400).json({ error: 'Menu non trouvé. Créez d\'abord un menu.' });
 		}
-		
-		const menuRaw = fs.readFileSync(menuPath, 'utf8');
-		const menu = JSON.parse(menuRaw);
 		
 		// Organiser les articles par catégorie pour une sélection cohérente
 		const itemsByCategory = {};

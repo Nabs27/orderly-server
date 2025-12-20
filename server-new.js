@@ -1,6 +1,9 @@
 // 🚀 Serveur refactorisé
 // Ce fichier utilise les modules créés dans le dossier server/
 
+// Charger les variables d'environnement depuis .env (si le fichier existe)
+require('dotenv').config();
+
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
@@ -54,8 +57,10 @@ app.use('/', sharedRoutes);
 app.use('/', posRoutes);
 app.use('/api/admin', adminRoutes); // ✅ Préfixe /api/admin pour toutes les routes admin
 
-// Construire l'index du menu au démarrage
-dataStore.buildMenuIndex();
+// Construire l'index du menu au démarrage (async)
+dataStore.buildMenuIndex().catch(e => {
+	console.error('[server] Erreur construction index menu:', e);
+});
 
 // Charger les données persistantes (détecte Cloud vs Local)
 dbManager.connect().then(() => {

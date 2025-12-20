@@ -40,6 +40,8 @@ class DatabaseManager {
 			await this.db.collection('orders').createIndex({ id: 1 }, { unique: true });
 			await this.db.collection('bills').createIndex({ id: 1 }, { unique: true });
 			await this.db.collection('client_credits').createIndex({ id: 1 }, { unique: true });
+			await this.db.collection('menus').createIndex({ restaurantId: 1 }, { unique: true });
+			await this.db.collection('server_permissions').createIndex({ id: 1 }, { unique: true });
 		} catch (e) {
 			console.log('[DB] ⚠️ Note: Les index existent déjà ou erreur mineure d\'indexation.');
 		}
@@ -60,6 +62,7 @@ class DatabaseManager {
 	get services() { return this.getCollection('services'); }
 	get counters() { return this.getCollection('counters'); }
 	get serverPermissions() { return this.getCollection('server_permissions'); }
+	get menus() { return this.getCollection('menus'); }
 }
 
 // Singleton

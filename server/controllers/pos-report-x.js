@@ -4,21 +4,18 @@
 const dataStore = require('../data');
 const fs = require('fs');
 const path = require('path');
+const { loadMenu } = require('../utils/menuSync');
 
 // Charger le menu et créer un mapping itemId → categoryName
-function loadMenuAndCreateMapping(restaurantId = 'les-emirs') {
-	const menuPath = path.join(__dirname, '..', '..', 'data', 'restaurants', restaurantId, 'menu.json');
-	
-	if (!fs.existsSync(menuPath)) {
-		console.log(`[report-x] Menu non trouvé: ${menuPath}`);
-		return {};
-	}
-	
+async function loadMenuAndCreateMapping(restaurantId = 'les-emirs') {
 	try {
-		const raw = fs.readFileSync(menuPath, 'utf8');
-		const menu = JSON.parse(raw);
-		const categories = Array.isArray(menu.categories) ? menu.categories : [];
+		const menu = await loadMenu(restaurantId);
+		if (!menu) {
+			console.log(`[report-x] Menu non trouvé: ${restaurantId}`);
+			return {};
+		}
 		
+		const categories = Array.isArray(menu.categories) ? menu.categories : [];
 		const itemIdToCategory = {};
 		
 		for (const category of categories) {
@@ -375,8 +372,8 @@ function extractPaymentsFromOrder(order, server, period, dateFrom, dateTo) {
 	return payments;
 }
 
-function buildReportData({ server, period, dateFrom, dateTo, restaurantId }) {
-	const itemIdToCategory = loadMenuAndCreateMapping(restaurantId || 'les-emirs');
+async function buildReportData({ server, period, dateFrom, dateTo, restaurantId }) {
+	const itemIdToCategory = await loadMenuAndCreateMapping(restaurantId || 'les-emirs');
 	
 	// 🆕 SOURCE DE VÉRITÉ UNIQUE : Définir des valeurs par défaut cohérentes
 	// Si aucune date n'est fournie, utiliser aujourd'hui par défaut
@@ -1485,7 +1482,7 @@ function calculateUnpaidTables(server) {
 async function generateReportX(req, res) {
 	try {
 		const { server, period, dateFrom, dateTo, restaurantId } = req.query;
-		const { report } = buildReportData({ server, period, dateFrom, dateTo, restaurantId });
+		const { report } = await buildReportData({ server, period, dateFrom, dateTo, restaurantId });
 		return res.json(report);
 	} catch (e) {
 		console.error('[report-x] Erreur gÃ©nÃ©ration rapport X:', e);
@@ -1496,7 +1493,7 @@ async function generateReportX(req, res) {
 async function generateReportXTicket(req, res) {
 	try {
 		const { server, period, dateFrom, dateTo, restaurantId } = req.query;
-		const { report, creditDetails } = buildReportData({ server, period, dateFrom, dateTo, restaurantId });
+		const { report, creditDetails } = await buildReportData({ server, period, dateFrom, dateTo, restaurantId });
 		
 		const {
 			summary,
@@ -1976,7 +1973,7 @@ async function generateReportXTicket(req, res) {
 async function generateCreditReport(req, res) {
 	try {
 		const { server, period, dateFrom, dateTo, restaurantId } = req.query;
-		const { report, creditDetails } = buildReportData({ server, period, dateFrom, dateTo, restaurantId });
+		const { report, creditDetails } = await buildReportData({ server, period, dateFrom, dateTo, restaurantId });
 		return res.json({
 			summary: report.creditSummary,
 			transactions: creditDetails
@@ -1990,7 +1987,7 @@ async function generateCreditReport(req, res) {
 async function generateCreditReportTicket(req, res) {
 	try {
 		const { server, period, dateFrom, dateTo, restaurantId } = req.query;
-		const { report, creditDetails } = buildReportData({ server, period, dateFrom, dateTo, restaurantId });
+		const { report, creditDetails } = await buildReportData({ server, period, dateFrom, dateTo, restaurantId });
 		const creditSummary = report.creditSummary || {};
 		const creditTotal = creditSummary.totalBalance ?? creditSummary.totalAmount ?? 0;
 		const creditClients = creditSummary.clients || [];

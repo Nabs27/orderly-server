@@ -7,6 +7,7 @@ const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
 const { filterAvailableItems, augmentWithOriginal, getTranslatedMenuWithCache } = require('../utils/translation');
+const { loadMenu } = require('../utils/menuSync');
 
 // Charger le menu (avec traduction/caching si ?lng=de|en|ar)
 router.get('/menu/:restaurantId', async (req, res) => {
@@ -15,12 +16,21 @@ router.get('/menu/:restaurantId', async (req, res) => {
 		const lng = String(req.query.lng || 'fr').toLowerCase();
 		console.log(`[menu] restaurantId=${restaurantId} lng=${lng}`);
 		const forceRefresh = String(req.query.refresh || '0') === '1';
+		
+		// Charger le menu (depuis MongoDB si disponible, sinon JSON local)
+		const menu = await loadMenu(restaurantId);
+		if (!menu) return res.status(404).json({ error: 'Menu introuvable' });
+		
+		// Pour le cache de traduction, utiliser le timestamp MongoDB ou fichier
 		const menuPath = path.join(__dirname, '..', '..', 'data', 'restaurants', restaurantId, 'menu.json');
-		const src = await fsp.readFile(menuPath, 'utf8').catch(() => null);
-		if (!src) return res.status(404).json({ error: 'Menu introuvable' });
-		const stat = await fsp.stat(menuPath);
-		const sourceMTime = stat.mtimeMs;
-		const menu = JSON.parse(src);
+		let sourceMTime = Date.now();
+		try {
+			const stat = await fsp.stat(menuPath);
+			sourceMTime = stat.mtimeMs;
+		} catch (e) {
+			// Fichier n'existe pas encore, utiliser timestamp actuel
+		}
+		
 		if (lng === 'fr') {
 			console.log('[menu] lng=fr, return source menu without translation');
 			return res.json(filterAvailableItems(augmentWithOriginal(menu)));

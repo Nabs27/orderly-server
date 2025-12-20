@@ -47,13 +47,14 @@ class DataStore {
 	}
 	
 	// Fonction pour construire l'index du menu
-	buildMenuIndex() {
+	async buildMenuIndex() {
 		try {
-			const menuPath = path.join(__dirname, '..', 'data', 'restaurants', 'les-emirs', 'menu.json');
-			if (fs.existsSync(menuPath)) {
-				const raw = fs.readFileSync(menuPath, 'utf8');
-				const json = JSON.parse(raw);
-				const cats = Array.isArray(json.categories) ? json.categories : [];
+			// Utiliser menuSync pour charger depuis MongoDB ou JSON local
+			const { loadMenu } = require('./utils/menuSync');
+			const menu = await loadMenu('les-emirs');
+			
+			if (menu) {
+				const cats = Array.isArray(menu.categories) ? menu.categories : [];
 				for (const cat of cats) {
 					const items = Array.isArray(cat.items) ? cat.items : [];
 					for (const it of items) {
@@ -71,7 +72,7 @@ class DataStore {
 				}
 				console.log(`[menu] Index construit: ${this.MENU_ITEMS.length} articles, ${this.MENU_BY_NAME.size} entrées`);
 			} else {
-				console.log('[menu] Fichier menu.json non trouvé');
+				console.log('[menu] Menu les-emirs non trouvé');
 			}
 		} catch (e) {
 			console.log(`[menu] Erreur construction index: ${e.message}`);

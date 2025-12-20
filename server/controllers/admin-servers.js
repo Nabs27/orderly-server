@@ -2,6 +2,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const dataStore = require('../data');
 const { ensureDir } = require('../utils/fileManager');
+const { loadServerProfiles, saveServerProfiles } = require('../utils/serverPermissionsSync');
 
 const DEFAULT_PERMISSIONS = {
 	canTransferNote: true,
@@ -29,17 +30,9 @@ async function ensurePermissionsFile() {
 }
 
 async function readProfiles() {
-	const filePath = await ensurePermissionsFile();
-	let raw;
-	try {
-		raw = await fs.readFile(filePath, 'utf8');
-	} catch (e) {
-		raw = '[]';
-	}
-	const profiles = JSON.parse(raw);
-	const result = Array.isArray(profiles) ? profiles : [];
+	const profiles = await loadServerProfiles();
 	// 🆕 Initialiser le profil ADMIN par défaut s'il n'existe pas
-	const updated = await ensureAdminProfile(result);
+	const updated = await ensureAdminProfile(profiles);
 	return updated;
 }
 
@@ -69,8 +62,7 @@ async function ensureAdminProfile(profiles) {
 }
 
 async function writeProfiles(profiles) {
-	const filePath = await ensurePermissionsFile();
-	await fs.writeFile(filePath, JSON.stringify(profiles, null, 2), 'utf8');
+	await saveServerProfiles(profiles);
 }
 
 function sanitizeProfile(profile, options = {}) {
