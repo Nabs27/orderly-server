@@ -19,11 +19,31 @@ npx @railway/cli init
 npx @railway/cli up
 ```
 
+## 🗄️ Configuration MongoDB Atlas
+
+### Informations de connexion
+- **Cluster** : restaurant-pos-backup
+- **Username** : Pos_project
+- **Connection String** : `mongodb+srv://Pos_project:yhk44KiqG6ZtGUmP@restaurant-pos-backup.njp7zfi.mongodb.net/?appName=restaurant-pos-backup`
+
+### ⚠️ IMPORTANT : Autoriser Railway dans MongoDB Atlas
+
+1. Allez dans **MongoDB Atlas** → **Network Access** (ou Security → Network Access)
+2. Cliquez sur **"Add IP Address"**
+3. Ajoutez : `0.0.0.0/0` (toutes les IP) - **Nécessaire pour Railway**
+4. Cliquez sur **"Confirm"**
+
+> **Note** : Votre IP locale (196.179.170.216) est déjà autorisée, mais Railway a besoin d'une IP différente. `0.0.0.0/0` autorise toutes les IP (sécurisé si vous utilisez un mot de passe fort).
+
 ## 🔧 Variables d'environnement à configurer
 
 Dans Railway Dashboard → Votre service → Variables :
 
 ```bash
+# === MONGODB (OBLIGATOIRE pour le mode cloud) ===
+MONGODB_URI=mongodb+srv://Pos_project:yhk44KiqG6ZtGUmP@restaurant-pos-backup.njp7zfi.mongodb.net/?appName=restaurant-pos-backup
+MONGODB_DB_NAME=restaurant_pos
+
 # === VARIABLES PRINCIPALES ===
 PORT=3000
 ADMIN_TOKEN=admin123
@@ -91,3 +111,4 @@ API_BASE_URL=https://votre-app.railway.app
 - **Avant** : ~$20-30/mois (24/7)
 - **Après** : ~$5-10/mois (sleep mode)
 - **Économie** : ~70% de réduction
+

@@ -714,7 +714,8 @@
           "name": "Salade César",
           "price": 26,
           "type": "Entrée froide",
-          "available": true
+          "available": true,
+          "hidden": false
         },
         {
           "id": 1003,
@@ -756,6 +757,13 @@
           "name": "Mozzarella Cerise Sauce Pesto",
           "price": 25,
           "type": "Entrée froide",
+          "available": true
+        },
+        {
+          "id": 10036,
+          "name": "Penne Marinera",
+          "price": 45,
+          "type": "Pâtes",
           "available": true
         }
       ]
@@ -990,7 +998,8 @@
           "name": "Blanc de Poulet Sauce à l’Orange",
           "price": 33,
           "type": "Volaille",
-          "available": true
+          "available": true,
+          "hidden": false
         },
         {
           "id": 10025,
