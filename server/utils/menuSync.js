@@ -8,6 +8,10 @@ const dbManager = require('./dbManager');
 
 const RESTAURANTS_DIR = path.join(__dirname, '..', '..', 'data', 'restaurants');
 
+// 🚀 Cache en mémoire pour éviter les requêtes MongoDB répétées
+const menuCache = new Map(); // restaurantId -> { menu, timestamp, fileMTime }
+const CACHE_TTL = 10000; // 10 secondes de cache (réduit pour détecter les modifications plus rapidement)
+
 // Sauvegarder un menu (JSON local + MongoDB si configuré)
 async function saveMenu(restaurantId, menu) {
 	try {
@@ -18,14 +22,33 @@ async function saveMenu(restaurantId, menu) {
 		await fsp.writeFile(menuPath, JSON.stringify(menu, null, 2), 'utf8');
 		console.log(`[menu-sync] 🏠 Menu ${restaurantId} sauvegardé en JSON local`);
 		
-		// 2. Synchroniser vers MongoDB si configuré
+		// 2. Mettre à jour le cache avec le timestamp du fichier
+		try {
+			const stats = await fsp.stat(menuPath);
+			menuCache.set(restaurantId, { 
+				menu, 
+				timestamp: Date.now(),
+				fileMTime: stats.mtimeMs
+			});
+		} catch (e) {
+			menuCache.set(restaurantId, { 
+				menu, 
+				timestamp: Date.now(),
+				fileMTime: null
+			});
+		}
+		
+		// 3. Synchroniser vers MongoDB si configuré (asynchrone, non-bloquant)
 		if (dbManager.isCloud && dbManager.db) {
-			await dbManager.menus.replaceOne(
+			dbManager.menus.replaceOne(
 				{ restaurantId },
 				{ restaurantId, menu, lastSynced: new Date().toISOString() },
 				{ upsert: true }
-			);
-			console.log(`[menu-sync] ☁️ Menu ${restaurantId} synchronisé vers MongoDB`);
+			).then(() => {
+				console.log(`[menu-sync] ☁️ Menu ${restaurantId} synchronisé vers MongoDB`);
+			}).catch(e => {
+				console.error(`[menu-sync] ⚠️ Erreur sync menu vers MongoDB:`, e.message);
+			});
 		}
 	} catch (e) {
 		console.error(`[menu-sync] ❌ Erreur sauvegarde menu ${restaurantId}:`, e);
@@ -33,33 +56,49 @@ async function saveMenu(restaurantId, menu) {
 	}
 }
 
-// Charger un menu (MongoDB si disponible, sinon JSON local)
+// Charger un menu (avec cache en mémoire et vérification de timestamp)
 async function loadMenu(restaurantId) {
 	try {
-		// 1. Essayer de charger depuis MongoDB si configuré
-		if (dbManager.isCloud && dbManager.db) {
-			const menuDoc = await dbManager.menus.findOne({ restaurantId });
-			if (menuDoc && menuDoc.menu) {
-				console.log(`[menu-sync] ☁️ Menu ${restaurantId} chargé depuis MongoDB`);
-				// Synchroniser vers JSON local pour cohérence
-				const restaurantDir = path.join(RESTAURANTS_DIR, restaurantId);
-				await fsp.mkdir(restaurantDir, { recursive: true });
-				const menuPath = path.join(restaurantDir, 'menu.json');
-				await fsp.writeFile(menuPath, JSON.stringify(menuDoc.menu, null, 2), 'utf8');
-				return menuDoc.menu;
+		const menuPath = path.join(RESTAURANTS_DIR, restaurantId, 'menu.json');
+		const fileExists = fs.existsSync(menuPath);
+		
+		// 1. Vérifier le cache en mémoire (seulement si fichier existe)
+		if (fileExists) {
+			const cached = menuCache.get(restaurantId);
+			if (cached) {
+				// Vérifier si le cache est encore valide (TTL)
+				const cacheAge = Date.now() - cached.timestamp;
+				if (cacheAge < CACHE_TTL) {
+					// Vérifier si le fichier a été modifié depuis le cache
+					try {
+						const stats = await fsp.stat(menuPath);
+						if (cached.fileMTime && stats.mtimeMs === cached.fileMTime) {
+							// Fichier non modifié, cache toujours valide
+							return cached.menu;
+						}
+					} catch (e) {
+						// Erreur de stat, on recharge
+					}
+				}
 			}
 		}
 		
-		// 2. Charger depuis JSON local
-		const menuPath = path.join(RESTAURANTS_DIR, restaurantId, 'menu.json');
-		if (fs.existsSync(menuPath)) {
+		// 2. Charger depuis JSON local (toujours la source de vérité si le fichier existe)
+		if (fileExists) {
 			const content = await fsp.readFile(menuPath, 'utf8');
 			const menu = JSON.parse(content);
-			console.log(`[menu-sync] 🏠 Menu ${restaurantId} chargé depuis JSON local`);
+			const stats = await fsp.stat(menuPath);
 			
-			// Synchroniser vers MongoDB si configuré (backup)
+			// Mettre à jour le cache avec le timestamp du fichier
+			menuCache.set(restaurantId, { 
+				menu, 
+				timestamp: Date.now(),
+				fileMTime: stats.mtimeMs
+			});
+			
+			// Synchroniser vers MongoDB si configuré (asynchrone, non-bloquant)
 			if (dbManager.isCloud && dbManager.db) {
-				await dbManager.menus.replaceOne(
+				dbManager.menus.replaceOne(
 					{ restaurantId },
 					{ restaurantId, menu, lastSynced: new Date().toISOString() },
 					{ upsert: true }
@@ -67,6 +106,36 @@ async function loadMenu(restaurantId) {
 			}
 			
 			return menu;
+		}
+		
+		// 3. Si fichier local n'existe pas (Railway ou premier démarrage), charger depuis MongoDB
+		if (dbManager.isCloud && dbManager.db) {
+			const menuDoc = await dbManager.menus.findOne({ restaurantId });
+			if (menuDoc && menuDoc.menu) {
+				// Sauvegarder en JSON local pour cohérence (si possible, sinon juste mettre en cache)
+				try {
+					const restaurantDir = path.join(RESTAURANTS_DIR, restaurantId);
+					await fsp.mkdir(restaurantDir, { recursive: true });
+					const menuPath = path.join(restaurantDir, 'menu.json');
+					await fsp.writeFile(menuPath, JSON.stringify(menuDoc.menu, null, 2), 'utf8');
+					const stats = await fsp.stat(menuPath);
+					menuCache.set(restaurantId, { 
+						menu: menuDoc.menu, 
+						timestamp: Date.now(),
+						fileMTime: stats.mtimeMs
+					});
+				} catch (e) {
+					// Sur Railway, l'écriture peut échouer (pas de stockage persistant)
+					// On met quand même en cache
+					menuCache.set(restaurantId, { 
+						menu: menuDoc.menu, 
+						timestamp: Date.now(),
+						fileMTime: null // Pas de fichier
+					});
+				}
+				
+				return menuDoc.menu;
+			}
 		}
 		
 		return null;
