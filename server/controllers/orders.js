@@ -108,8 +108,61 @@ function createOrder(req, res) {
 	// 💾 Sauvegarder automatiquement
 	fileManager.savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde:', e));
 	
+	// 📊 Récupérer TOUTES les commandes actives de la table pour l'état complet
+	// Cela permet à l'app client de voir immédiatement toutes les commandes (POS + client) de la table
+	const tableOrders = dataStore.orders.filter(o => 
+		String(o.table) === String(table) && o.status !== 'archived'
+	);
+	
+	// Calculer le total cumulé de toutes les commandes de la table
+	const totalTableAmount = tableOrders.reduce((sum, o) => {
+		// Calculer le total non payé de chaque commande
+		let orderUnpaidTotal = 0;
+		
+		// Total note principale
+		if (o.mainNote && o.mainNote.items) {
+			for (const item of o.mainNote.items) {
+				const paidQty = item.paidQuantity || 0;
+				const unpaidQty = Math.max(0, (item.quantity || 0) - paidQty);
+				orderUnpaidTotal += (item.price || 0) * unpaidQty;
+			}
+		}
+		
+		// Total sous-notes
+		if (o.subNotes) {
+			for (const subNote of o.subNotes) {
+				if (subNote.items && !subNote.paid) {
+					for (const item of subNote.items) {
+						const paidQty = item.paidQuantity || 0;
+						const unpaidQty = Math.max(0, (item.quantity || 0) - paidQty);
+						orderUnpaidTotal += (item.price || 0) * unpaidQty;
+					}
+				}
+			}
+		}
+		
+		return sum + orderUnpaidTotal;
+	}, 0);
+	
+	// 🔔 Notifier via Socket.IO
 	io.emit('order:new', newOrder);
-	return res.status(201).json(newOrder);
+	
+	// ✅ Retourner la nouvelle commande + état complet de la table
+	// Format compatible avec l'ancien (retourne toujours la commande)
+	// + nouvelles données pour synchronisation
+	return res.status(201).json({
+		// Compatibilité : retourner la commande directement (pour le POS)
+		...newOrder,
+		// 🆕 Nouvelles données pour synchronisation (pour l'app client)
+		orderId: newOrder.id, // ID généré par le POS (source de vérité unique)
+		tableState: {
+			table: table,
+			orders: tableOrders, // Toutes les commandes actives de la table
+			totalOrders: tableOrders.length,
+			totalAmount: totalTableAmount, // Total cumulé non payé
+			lastUpdated: new Date().toISOString()
+		}
+	});
 }
 
 // Lister les commandes
