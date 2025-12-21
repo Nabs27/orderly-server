@@ -151,10 +151,12 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 	try {
 		console.log('[admin] 🧹 Demande de nettoyage complet du système');
 		
-		// 🆕 CORRECTION : Nettoyer aussi MongoDB Cloud si configuré
+		// 🆕 CORRECTION : Nettoyer aussi MongoDB si connecté (même en mode hybride)
+		// Si MongoDB est connecté, il faut le nettoyer même si isCloud est false
+		// car le serveur peut charger depuis MongoDB au démarrage
 		let cloudDeleted = { orders: 0, archivedOrders: 0, bills: 0, archivedBills: 0, services: 0, clientCredits: 0 };
 		
-		if (dbManager.isCloud && dbManager.db) {
+		if (dbManager.db) { // 🆕 Nettoyer MongoDB si connecté, peu importe isCloud
 			console.log('[admin] ☁️ Nettoyage MongoDB Cloud...');
 			try {
 				// Supprimer toutes les commandes (POS + Client)

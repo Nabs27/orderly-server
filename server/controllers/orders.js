@@ -154,6 +154,7 @@ function createOrder(req, res) {
 	}, 0);
 	
 	// 🔔 Notifier via Socket.IO
+	console.log('[orders] 📡 Émission Socket.IO order:new pour commande #' + newOrder.id + ' (table: ' + table + ', source: ' + newOrder.source + ')');
 	io.emit('order:new', newOrder);
 	
 	// ✅ Retourner la nouvelle commande + état complet de la table
