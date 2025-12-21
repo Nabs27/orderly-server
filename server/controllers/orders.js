@@ -108,11 +108,20 @@ function createOrder(req, res) {
 	// 💾 Sauvegarder automatiquement
 	fileManager.savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde:', e));
 	
-	// 📊 Récupérer TOUTES les commandes actives de la table pour l'état complet
-	// Cela permet à l'app client de voir immédiatement toutes les commandes (POS + client) de la table
-	const tableOrders = dataStore.orders.filter(o => 
+	// 📊 Récupérer les commandes actives de la table pour l'état complet
+	// 🆕 CORRECTION : Exclure les commandes client confirmées (elles ne doivent pas apparaître)
+	// Cela permet à l'app client de voir immédiatement les commandes pertinentes (POS + client en attente)
+	const allTableOrders = dataStore.orders.filter(o => 
 		String(o.table) === String(table) && o.status !== 'archived'
 	);
+	
+	// Filtrer les commandes confirmées
+	const tableOrders = allTableOrders.filter(o => {
+		const isConfirmedClientOrder = o.source === 'client' && 
+		                              o.status === 'nouvelle' && 
+		                              o.serverConfirmed === true;
+		return !isConfirmedClientOrder; // Exclure les commandes confirmées
+	});
 	
 	// Calculer le total cumulé de toutes les commandes de la table
 	const totalTableAmount = tableOrders.reduce((sum, o) => {
@@ -170,14 +179,33 @@ function getAllOrders(req, res) {
 	const { table } = req.query;
 	// Filtrer les commandes archivées
 	const activeOrders = dataStore.orders.filter(o => o.status !== 'archived');
-	const list = table ? activeOrders.filter(o => String(o.table) === String(table)) : activeOrders;
 	
-	// 🆕 Log pour debug : compter les commandes client
-	const clientOrders = list.filter(o => o.source === 'client');
-	if (clientOrders.length > 0) {
-		console.log(`[orders] GET /orders: ${list.length} commandes actives, dont ${clientOrders.length} commande(s) client`);
-		for (const order of clientOrders) {
+	// 🆕 CORRECTION : Exclure les commandes client confirmées
+	// Les commandes confirmées (status=nouvelle + serverConfirmed=true) ne doivent pas apparaître
+	// car elles sont déjà intégrées dans le POS et ne nécessitent plus d'action
+	const filteredOrders = activeOrders.filter(o => {
+		const isConfirmedClientOrder = o.source === 'client' && 
+		                              o.status === 'nouvelle' && 
+		                              o.serverConfirmed === true;
+		return !isConfirmedClientOrder; // Exclure les commandes confirmées
+	});
+	
+	const list = table ? filteredOrders.filter(o => String(o.table) === String(table)) : filteredOrders;
+	
+	// 🆕 Log pour debug : compter les commandes client (avant et après filtre)
+	const allClientOrders = activeOrders.filter(o => o.source === 'client');
+	const confirmedClientOrders = activeOrders.filter(o => 
+		o.source === 'client' && o.status === 'nouvelle' && o.serverConfirmed === true
+	);
+	const pendingClientOrders = list.filter(o => o.source === 'client');
+	
+	if (allClientOrders.length > 0) {
+		console.log(`[orders] GET /orders: ${activeOrders.length} commandes actives totales, ${confirmedClientOrders.length} confirmée(s) exclue(s), ${list.length} retournée(s) (dont ${pendingClientOrders.length} client en attente)`);
+		for (const order of pendingClientOrders) {
 			console.log(`[orders]   - Commande client #${order.id}: table=${order.table}, status=${order.status}, server=${order.server}, serverConfirmed=${order.serverConfirmed}`);
+		}
+		if (confirmedClientOrders.length > 0) {
+			console.log(`[orders]   ⏭️ ${confirmedClientOrders.length} commande(s) client confirmée(s) exclue(s) de la réponse`);
 		}
 	} else {
 		console.log(`[orders] GET /orders: ${list.length} commandes actives (aucune commande client)`);
