@@ -11,6 +11,7 @@ const { authAdmin } = require('../middleware/auth');
 const dataStore = require('../data');
 const fileManager = require('../utils/fileManager');
 const { getIO } = require('../utils/socket');
+const dbManager = require('../utils/dbManager'); // 🆕 Pour nettoyer MongoDB Cloud
 
 // Variables depuis data.js
 const orders = dataStore.orders;
@@ -146,11 +147,68 @@ router.post('/clear-table-consumption', authAdmin, (req, res) => {
 });
 
 // Reset complet du système (suppression fichiers)
-router.post('/full-reset', authAdmin, (req, res) => {
+router.post('/full-reset', authAdmin, async (req, res) => {
 	try {
 		console.log('[admin] 🧹 Demande de nettoyage complet du système');
 		
-		// Supprimer les fichiers de persistance
+		// 🆕 CORRECTION : Nettoyer aussi MongoDB Cloud si configuré
+		let cloudDeleted = { orders: 0, archivedOrders: 0, bills: 0, archivedBills: 0, services: 0, clientCredits: 0 };
+		
+		if (dbManager.isCloud && dbManager.db) {
+			console.log('[admin] ☁️ Nettoyage MongoDB Cloud...');
+			try {
+				// Supprimer toutes les commandes (POS + Client)
+				const ordersResult = await dbManager.orders.deleteMany({});
+				cloudDeleted.orders = ordersResult.deletedCount || 0;
+				console.log(`[admin] ☁️ ${cloudDeleted.orders} commandes supprimées de MongoDB`);
+				
+				// Supprimer les commandes archivées
+				const archivedOrdersResult = await dbManager.archivedOrders.deleteMany({});
+				cloudDeleted.archivedOrders = archivedOrdersResult.deletedCount || 0;
+				console.log(`[admin] ☁️ ${cloudDeleted.archivedOrders} commandes archivées supprimées de MongoDB`);
+				
+				// Supprimer les factures
+				const billsResult = await dbManager.bills.deleteMany({});
+				cloudDeleted.bills = billsResult.deletedCount || 0;
+				console.log(`[admin] ☁️ ${cloudDeleted.bills} factures supprimées de MongoDB`);
+				
+				// Supprimer les factures archivées
+				const archivedBillsResult = await dbManager.archivedBills.deleteMany({});
+				cloudDeleted.archivedBills = archivedBillsResult.deletedCount || 0;
+				console.log(`[admin] ☁️ ${cloudDeleted.archivedBills} factures archivées supprimées de MongoDB`);
+				
+				// Supprimer les services
+				const servicesResult = await dbManager.services.deleteMany({});
+				cloudDeleted.services = servicesResult.deletedCount || 0;
+				console.log(`[admin] ☁️ ${cloudDeleted.services} services supprimés de MongoDB`);
+				
+				// Supprimer les crédits clients
+				const creditsResult = await dbManager.clientCredits.deleteMany({});
+				cloudDeleted.clientCredits = creditsResult.deletedCount || 0;
+				console.log(`[admin] ☁️ ${cloudDeleted.clientCredits} crédits clients supprimés de MongoDB`);
+				
+				// Réinitialiser les compteurs dans MongoDB
+				await dbManager.counters.updateOne(
+					{ type: 'global' },
+					{ 
+						$set: { 
+							nextOrderId: 1,
+							nextBillId: 1,
+							nextServiceId: 1,
+							nextClientId: 1,
+							lastSynced: new Date().toISOString()
+						} 
+					},
+					{ upsert: true }
+				);
+				console.log('[admin] ☁️ Compteurs MongoDB réinitialisés');
+			} catch (cloudError) {
+				console.error('[admin] ⚠️ Erreur nettoyage MongoDB Cloud:', cloudError.message);
+				// Continuer même en cas d'erreur cloud
+			}
+		}
+		
+		// Supprimer les fichiers de persistance locale
 		const filesToDelete = [
 			ORDERS_FILE,
 			ARCHIVED_ORDERS_FILE,
@@ -167,7 +225,7 @@ router.post('/full-reset', authAdmin, (req, res) => {
 				if (fs.existsSync(filePath)) {
 					fs.unlinkSync(filePath);
 					deletedFiles++;
-					console.log(`[admin] Fichier supprimé: ${filePath}`);
+					console.log(`[admin] 🏠 Fichier local supprimé: ${filePath}`);
 				}
 			} catch (e) {
 				console.error(`[admin] Erreur suppression ${filePath}:`, e.message);
@@ -191,22 +249,25 @@ router.post('/full-reset', authAdmin, (req, res) => {
 		// ✅ Émettre événement Socket.IO
 		const io = getIO();
 		io.emit('system:reset', { 
-			message: 'Système réinitialisé complètement',
+			message: 'Système réinitialisé complètement (local + cloud)',
 			timestamp: new Date().toISOString()
 		});
 		
-		console.log(`[admin] 🧹 Nettoyage complet terminé: ${dataStore.orders.length} commandes, ${dataStore.bills.length} factures, ${dataStore.serviceRequests.length} services supprimés`);
+		console.log(`[admin] 🧹 Nettoyage complet terminé: ${dataStore.orders.length} commandes locales, ${cloudDeleted.orders} commandes cloud supprimées`);
 		
 		return res.json({ 
 			ok: true, 
-			message: 'Nettoyage complet terminé avec succès',
+			message: 'Nettoyage complet terminé avec succès (local + cloud)',
 			deleted: {
-				orders: dataStore.orders.length,
-				archivedOrders: dataStore.archivedOrders.length,
-				bills: dataStore.bills.length,
-				archivedBills: dataStore.archivedBills.length,
-				services: dataStore.serviceRequests.length,
-			files: deletedFiles
+				local: {
+					orders: 0,
+					archivedOrders: 0,
+					bills: 0,
+					archivedBills: 0,
+					services: 0,
+					files: deletedFiles
+				},
+				cloud: cloudDeleted // 🆕 Inclure les données supprimées du cloud
 			},
 			reset: { 
 				orders: 0, 
@@ -217,7 +278,7 @@ router.post('/full-reset', authAdmin, (req, res) => {
 		});
 	} catch (e) {
 		console.error('[admin] Erreur nettoyage complet:', e);
-		return res.status(500).json({ error: 'Erreur lors du nettoyage complet' });
+		return res.status(500).json({ error: 'Erreur lors du nettoyage complet: ' + e.message });
 	}
 });
 
