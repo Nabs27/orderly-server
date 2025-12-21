@@ -213,12 +213,13 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 							nextBillId: 1,
 							nextServiceId: 1,
 							nextClientId: 1,
-							lastSynced: new Date().toISOString()
+							lastSynced: new Date().toISOString(),
+							lastReset: new Date().toISOString() // 🆕 Marquer le reset
 						} 
 					},
 					{ upsert: true }
 				);
-				console.log('[admin] ☁️ Compteurs MongoDB réinitialisés');
+				console.log('[admin] ☁️ Compteurs MongoDB réinitialisés avec marqueur de reset');
 			} catch (cloudError) {
 				console.error('[admin] ⚠️ Erreur nettoyage MongoDB Cloud:', cloudError.message);
 				// Continuer même en cas d'erreur cloud

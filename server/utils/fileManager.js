@@ -56,6 +56,31 @@ async function loadFromMongoDB() {
 	try {
 		console.log('[persistence] ☁️ Chargement des données depuis MongoDB...');
 		
+		// 🆕 CORRECTION : Vérifier si un reset a été fait récemment
+		// Si oui, s'assurer que MongoDB est vraiment vide avant de charger
+		const countersDoc = await dbManager.counters.findOne({ type: 'global' });
+		if (countersDoc && countersDoc.lastReset) {
+			const lastReset = new Date(countersDoc.lastReset);
+			const now = new Date();
+			const timeSinceReset = now - lastReset;
+			// Si le reset a été fait il y a moins de 5 minutes, vérifier que MongoDB est vide
+			if (timeSinceReset < 5 * 60 * 1000) {
+				console.log('[persistence] 🧹 Reset récent détecté (il y a ' + Math.round(timeSinceReset / 1000) + 's), vérification MongoDB...');
+				const ordersCount = await dbManager.orders.countDocuments({});
+				if (ordersCount > 0) {
+					console.log('[persistence] ⚠️ ATTENTION: ' + ordersCount + ' commande(s) encore présente(s) dans MongoDB après reset !');
+					console.log('[persistence] 🧹 Nettoyage automatique de MongoDB...');
+					await dbManager.orders.deleteMany({});
+					await dbManager.archivedOrders.deleteMany({});
+					await dbManager.bills.deleteMany({});
+					await dbManager.archivedBills.deleteMany({});
+					await dbManager.services.deleteMany({});
+					await dbManager.clientCredits.deleteMany({});
+					console.log('[persistence] ✅ MongoDB nettoyé automatiquement');
+				}
+			}
+		}
+		
 		// Charger les commandes
 		const orders = await dbManager.orders.find({}).toArray();
 		dataStore.orders.length = 0;
