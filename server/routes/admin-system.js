@@ -271,6 +271,13 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 		// 🆕 Log pour vérifier que la mémoire est bien vide
 		console.log(`[admin] 🧹 Mémoire vidée: ${dataStore.orders.length} commandes, ${dataStore.bills.length} factures`);
 		
+		// 🆕 CORRECTION CRITIQUE : Ne PAS sauvegarder après le reset
+		// Car savePersistedData() synchroniserait les données vides vers MongoDB,
+		// mais surtout, il pourrait y avoir un problème de timing où des données
+		// sont encore en mémoire et sont resynchronisées
+		// On laisse MongoDB vide et on ne sauvegarde pas
+		console.log('[admin] ⚠️ IMPORTANT: Pas de sauvegarde après reset pour éviter resynchronisation');
+		
 		// 🆕 CORRECTION CRITIQUE : Vérifier que MongoDB est vraiment vide après nettoyage
 		if (dbManager.db) {
 			try {
@@ -292,10 +299,12 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 		const io = getIO();
 		io.emit('system:reset', { 
 			message: 'Système réinitialisé complètement (local + cloud)',
-			timestamp: new Date().toISOString()
+			timestamp: new Date().toISOString(),
+			requiresRestart: true // 🆕 Indiquer qu'un redémarrage est nécessaire
 		});
 		
 		console.log(`[admin] 🧹 Nettoyage complet terminé: ${dataStore.orders.length} commandes locales, ${cloudDeleted.orders} commandes cloud supprimées`);
+		console.log('[admin] ⚠️ IMPORTANT: Redémarrez le serveur pour que les changements prennent effet complètement');
 		
 		return res.json({ 
 			ok: true, 

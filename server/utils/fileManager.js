@@ -152,6 +152,20 @@ async function saveToMongoDB() {
 			return;
 		}
 		
+		// 🆕 CORRECTION CRITIQUE : Vérifier si un reset a été fait récemment
+		// Si oui, ne PAS synchroniser vers MongoDB pour éviter de réintroduire des données
+		const countersDoc = await dbManager.counters.findOne({ type: 'global' });
+		if (countersDoc && countersDoc.lastReset) {
+			const lastReset = new Date(countersDoc.lastReset);
+			const now = new Date();
+			const timeSinceReset = now - lastReset;
+			// Si le reset a été fait il y a moins de 30 minutes, ne pas synchroniser
+			if (timeSinceReset < 30 * 60 * 1000) {
+				console.log('[sync] ⚠️ Reset récent détecté (il y a ' + Math.round(timeSinceReset / 1000) + 's), synchronisation MongoDB ignorée pour éviter réintroduction de données');
+				return; // Ne pas synchroniser après un reset récent
+			}
+		}
+		
 		console.log('[sync] ☁️ Synchronisation vers MongoDB (backup)...');
 		
 		// Synchroniser les commandes (upsert par ID pour éviter les doublons)
