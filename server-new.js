@@ -147,13 +147,28 @@ const gracefulShutdown = (signal) => {
 process.on('SIGINT', () => gracefulShutdown('SIGINT')); // Ctrl+C
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM')); // Arrêt système
 
+// 🆕 Gérer le redémarrage automatique après reset (code de sortie 100)
+// Ne pas faire de graceful shutdown dans ce cas pour un redémarrage rapide
+process.on('exit', (code) => {
+	if (code === 100) {
+		console.log('[server] 🔄 Code de redémarrage détecté (100)');
+		console.log('[server] 🔄 Le script batch va relancer automatiquement le serveur');
+	}
+});
+
 // Gérer les erreurs non capturées
 process.on('uncaughtException', (err) => {
 	console.error('[server] ❌ Erreur non capturée:', err);
-	gracefulShutdown('uncaughtException');
+	// Ne pas faire de graceful shutdown si c'est un redémarrage programmé
+	if (process.exitCode !== 100) {
+		gracefulShutdown('uncaughtException');
+	}
 });
 
 process.on('unhandledRejection', (reason, promise) => {
 	console.error('[server] ❌ Promesse rejetée non gérée:', reason);
-	gracefulShutdown('unhandledRejection');
+	// Ne pas faire de graceful shutdown si c'est un redémarrage programmé
+	if (process.exitCode !== 100) {
+		gracefulShutdown('unhandledRejection');
+	}
 });

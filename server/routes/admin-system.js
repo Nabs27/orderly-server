@@ -295,20 +295,51 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 			}
 		}
 		
-		// ✅ Émettre événement Socket.IO
+		// ✅ Émettre un signal de reset global à TOUS les clients (POS et Apps)
+		// Ce signal force le POS à vider son propre cache SharedPreferences
 		const io = getIO();
-		io.emit('system:reset', { 
-			message: 'Système réinitialisé complètement (local + cloud)',
+		io.emit('system:full_reset', { 
+			message: 'Réinitialisation complète du système par l\'administrateur',
 			timestamp: new Date().toISOString(),
-			requiresRestart: true // 🆕 Indiquer qu'un redémarrage est nécessaire
+			force_clear_cache: true
 		});
+
+		console.log(`[admin] 🧹 Nettoyage complet terminé. Signal envoyé à tous les clients.`);
 		
-		console.log(`[admin] 🧹 Nettoyage complet terminé: ${dataStore.orders.length} commandes locales, ${cloudDeleted.orders} commandes cloud supprimées`);
-		console.log('[admin] ⚠️ IMPORTANT: Redémarrez le serveur pour que les changements prennent effet complètement');
+		// 🆕 CORRECTION : Redémarrer automatiquement le serveur local après reset
+		const isRailway = !!process.env.RAILWAY_ENVIRONMENT || !!process.env.RAILWAY_SERVICE_NAME;
+		const isLocalServer = !isRailway;
+		
+		if (isLocalServer || process.env.FORCE_RESTART_ON_RESET === 'true') {
+			console.log('[admin] 🔄 Redémarrage automatique du serveur dans 2 secondes...');
+			
+			// Envoyer la réponse HTTP avant de couper le serveur
+			res.json({ 
+				ok: true, 
+				message: 'Système réinitialisé (Local + Cloud). Redémarrage automatique du serveur...',
+				requiresRestart: true,
+				deleted: {
+					local: { orders: 0, bills: 0, files: deletedFiles },
+					cloud: cloudDeleted
+				}
+			});
+			
+			setTimeout(() => {
+				console.log('[admin] 🔄 Arrêt du serveur pour redémarrage automatique (code 100)...');
+				process.exit(100); 
+			}, 2000);
+			
+			return;
+		}
 		
 		return res.json({ 
 			ok: true, 
 			message: 'Nettoyage complet terminé avec succès (local + cloud)',
+			deleted: {
+				local: { orders: 0, bills: 0, files: deletedFiles },
+				cloud: cloudDeleted
+			}
+		});
 			deleted: {
 				local: {
 					orders: 0,
