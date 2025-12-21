@@ -58,6 +58,7 @@ async function loadFromMongoDB() {
 		
 		// 🆕 CORRECTION : Vérifier si un reset a été fait récemment
 		// Si oui, s'assurer que MongoDB est vraiment vide avant de charger
+		// Charger les compteurs (un seul doc) - on le charge en premier pour vérifier le reset
 		const countersDoc = await dbManager.counters.findOne({ type: 'global' });
 		if (countersDoc && countersDoc.lastReset) {
 			const lastReset = new Date(countersDoc.lastReset);
@@ -105,8 +106,7 @@ async function loadFromMongoDB() {
 		dataStore.serviceRequests.length = 0;
 		dataStore.serviceRequests.push(...services);
 		
-		// Charger les compteurs (un seul doc)
-		const countersDoc = await dbManager.counters.findOne({ type: 'global' });
+		// Utiliser countersDoc déjà chargé plus haut
 		if (countersDoc) {
 			dataStore.nextOrderId = countersDoc.nextOrderId || 1;
 			dataStore.nextBillId = countersDoc.nextBillId || 1;
