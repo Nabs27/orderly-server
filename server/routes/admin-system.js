@@ -156,8 +156,15 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 		// car le serveur peut charger depuis MongoDB au démarrage
 		let cloudDeleted = { orders: 0, archivedOrders: 0, bills: 0, archivedBills: 0, services: 0, clientCredits: 0 };
 		
+		// 🆕 CORRECTION : Vérifier que MongoDB est bien connecté
+		if (!dbManager.db) {
+			console.log('[admin] ⚠️ MongoDB non connecté (dbManager.db est null), nettoyage MongoDB ignoré');
+			console.log('[admin] ℹ️ isCloud:', dbManager.isCloud, 'db:', dbManager.db);
+		}
+		
 		if (dbManager.db) { // 🆕 Nettoyer MongoDB si connecté, peu importe isCloud
 			console.log('[admin] ☁️ Nettoyage MongoDB Cloud...');
+			console.log('[admin] ℹ️ Connexion MongoDB vérifiée: db existe, isCloud:', dbManager.isCloud);
 			try {
 				// 🆕 Vérifier combien de commandes existent avant suppression
 				const ordersBefore = await dbManager.orders.countDocuments({});
@@ -242,6 +249,10 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 			}
 		});
 		
+		// 🆕 CORRECTION CRITIQUE : Après avoir nettoyé MongoDB et les fichiers locaux,
+		// s'assurer que la mémoire est vide ET ne pas sauvegarder l'état vide vers MongoDB
+		// car cela pourrait causer des problèmes. On laisse MongoDB vide.
+		
 		// Réinitialiser les tableaux en mémoire
 		dataStore.orders = [];
 		dataStore.archivedOrders = [];
@@ -258,6 +269,23 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 		
 		// 🆕 Log pour vérifier que la mémoire est bien vide
 		console.log(`[admin] 🧹 Mémoire vidée: ${dataStore.orders.length} commandes, ${dataStore.bills.length} factures`);
+		
+		// 🆕 CORRECTION CRITIQUE : Vérifier que MongoDB est vraiment vide après nettoyage
+		if (dbManager.db) {
+			try {
+				const finalOrdersCount = await dbManager.orders.countDocuments({});
+				if (finalOrdersCount > 0) {
+					console.error(`[admin] ⚠️ ATTENTION: ${finalOrdersCount} commande(s) encore présente(s) dans MongoDB après nettoyage !`);
+					// Forcer une nouvelle suppression
+					await dbManager.orders.deleteMany({});
+					console.log(`[admin] ☁️ Suppression forcée effectuée`);
+				} else {
+					console.log(`[admin] ✅ MongoDB vérifié: 0 commande restante`);
+				}
+			} catch (verifyError) {
+				console.error(`[admin] ⚠️ Erreur vérification MongoDB:`, verifyError.message);
+			}
+		}
 		
 		// ✅ Émettre événement Socket.IO
 		const io = getIO();
