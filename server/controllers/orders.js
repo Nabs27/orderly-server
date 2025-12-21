@@ -15,16 +15,28 @@ function createOrder(req, res) {
 		return res.status(400).json({ error: 'Requête invalide: table et items requis' });
 	}
 	
+	// 🆕 Détecter si c'est une commande client
+	// Critères : pas de serveur fourni ET pas de noteId fourni
+	const isClientOrder = !server && !noteId;
+	
+	// 🆕 Assigner automatiquement le serveur pour les commandes client
+	const { assignServerByTable } = require('../utils/serverAssignment');
+	const assignedServer = isClientOrder 
+		? assignServerByTable(table)
+		: (server || 'unknown');
+	
 	const total = items.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity || 1)), 0);
 	
 	// Nouvelle structure avec support des sous-notes
 	const newOrder = {
 		id: dataStore.nextOrderId++,
 		table,
-		server: server || 'unknown',
+		server: assignedServer, // 🆕 Serveur assigné automatiquement pour les commandes client
 		covers: covers || 1,
 		notes: notes || '',
-		status: 'nouvelle',
+		status: isClientOrder ? 'pending_server_confirmation' : 'nouvelle', // 🆕 Statut différent pour commandes client
+		source: isClientOrder ? 'client' : 'pos', // 🆕 Source de la commande
+		serverConfirmed: !isClientOrder, // 🆕 Les commandes POS sont confirmées par défaut
 		consumptionConfirmed: false,
 		createdAt: new Date().toISOString(),
 		// 🆕 Historique des paiements
@@ -76,7 +88,22 @@ function createOrder(req, res) {
 	}
 	
 	dataStore.orders.push(newOrder);
-	console.log('[orders] Commande créée:', newOrder.id, 'pour table', table, 'total:', total, 'note:', noteId || 'main');
+	
+	// 🆕 Log différencié selon la source
+	if (isClientOrder) {
+		console.log('[orders] 🆕 Commande CLIENT créée:', newOrder.id, 'pour table', table, 'serveur assigné:', assignedServer, 'total:', total, 'status:', newOrder.status, 'source:', newOrder.source);
+		console.log('[orders] 🆕 Structure commande client:', JSON.stringify({
+			id: newOrder.id,
+			table: newOrder.table,
+			server: newOrder.server,
+			status: newOrder.status,
+			source: newOrder.source,
+			serverConfirmed: newOrder.serverConfirmed,
+			mainNote: { total: newOrder.mainNote.total, items: newOrder.mainNote.items.length }
+		}, null, 2));
+	} else {
+		console.log('[orders] Commande POS créée:', newOrder.id, 'pour table', table, 'serveur:', assignedServer, 'total:', total, 'note:', noteId || 'main');
+	}
 	
 	// 💾 Sauvegarder automatiquement
 	fileManager.savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde:', e));
@@ -91,6 +118,25 @@ function getAllOrders(req, res) {
 	// Filtrer les commandes archivées
 	const activeOrders = dataStore.orders.filter(o => o.status !== 'archived');
 	const list = table ? activeOrders.filter(o => String(o.table) === String(table)) : activeOrders;
+	
+	// 🆕 Log pour debug : compter les commandes client
+	const clientOrders = list.filter(o => o.source === 'client');
+	if (clientOrders.length > 0) {
+		console.log(`[orders] GET /orders: ${list.length} commandes actives, dont ${clientOrders.length} commande(s) client`);
+		for (const order of clientOrders) {
+			console.log(`[orders]   - Commande client #${order.id}: table=${order.table}, status=${order.status}, server=${order.server}, serverConfirmed=${order.serverConfirmed}`);
+		}
+	} else {
+		console.log(`[orders] GET /orders: ${list.length} commandes actives (aucune commande client)`);
+		// 🆕 Log toutes les commandes pour debug
+		if (list.length > 0) {
+			console.log(`[orders]   Détail des commandes:`);
+			for (const order of list) {
+				console.log(`[orders]     - #${order.id}: table=${order.table}, source=${order.source || 'undefined'}, status=${order.status}, server=${order.server}`);
+			}
+		}
+	}
+	
 	return res.json(list);
 }
 
@@ -124,6 +170,63 @@ function confirmOrder(req, res) {
 	order.consumptionConfirmed = true;
 	order.updatedAt = new Date().toISOString();
 	io.emit('order:confirmed', order);
+	return res.json(order);
+}
+
+// 🆕 Confirmation d'une commande client par le serveur
+function confirmOrderByServer(req, res) {
+	const io = getIO();
+	const id = Number(req.params.id);
+	const order = dataStore.orders.find(o => o.id === id);
+	
+	if (!order) {
+		return res.status(404).json({ error: 'Commande introuvable' });
+	}
+	
+	// Vérifier que c'est une commande client
+	if (order.source !== 'client') {
+		return res.status(400).json({ error: 'Cette commande n\'est pas une commande client' });
+	}
+	
+	// Vérifier qu'elle n'est pas déjà confirmée
+	if (order.serverConfirmed) {
+		return res.status(400).json({ error: 'Commande déjà confirmée par le serveur' });
+	}
+	
+	// Vérifier que le statut est en attente
+	if (order.status !== 'pending_server_confirmation') {
+		return res.status(400).json({ error: 'Cette commande n\'est pas en attente de confirmation' });
+	}
+	
+	// Confirmer la commande
+	order.serverConfirmed = true;
+	order.status = 'nouvelle'; // Passer au statut normal
+	order.confirmedAt = new Date().toISOString();
+	order.confirmedBy = req.body.server || order.server; // Serveur qui confirme
+	order.updatedAt = new Date().toISOString();
+	
+	// Initialiser orderHistory si absent
+	if (!order.orderHistory) {
+		order.orderHistory = [];
+	}
+	
+	// Enregistrer dans l'historique
+	order.orderHistory.push({
+		timestamp: new Date().toISOString(),
+		action: 'server_confirmed',
+		server: order.confirmedBy,
+		details: `Commande client confirmée par le serveur ${order.confirmedBy}`
+	});
+	
+	console.log('[orders] Commande client confirmée:', id, 'par serveur:', order.confirmedBy, 'table:', order.table);
+	
+	// Sauvegarder
+	fileManager.savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde:', e));
+	
+	// Notifier via Socket.IO
+	io.emit('order:updated', order);
+	io.emit('order:server-confirmed', order);
+	
 	return res.json(order);
 }
 
@@ -281,6 +384,7 @@ module.exports = {
 	getOrderById,
 	updateOrder,
 	confirmOrder,
+	confirmOrderByServer, // 🆕 Nouvelle fonction
 	createSubNote,
 	addItemsToNote
 };

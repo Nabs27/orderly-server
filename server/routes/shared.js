@@ -32,6 +32,9 @@ router.patch('/api/orders/:id', orderController.updateOrder);
 // Confirmation de consommation
 router.patch('/api/orders/:id/confirm', orderController.confirmOrder);
 
+// 🆕 Confirmation d'une commande client par le serveur
+router.patch('/api/orders/:id/confirm-by-server', orderController.confirmOrderByServer);
+
 // Créer une sous-note
 router.post('/api/orders/:id/subnotes', orderController.createSubNote);
 
@@ -68,6 +71,9 @@ router.get('/orders', orderController.getAllOrders);
 router.get('/orders/:id', orderController.getOrderById);
 router.patch('/orders/:id', orderController.updateOrder);
 router.patch('/orders/:id/confirm', orderController.confirmOrder);
+
+// 🆕 Confirmation d'une commande client par le serveur (route compatibilité)
+router.patch('/orders/:id/confirm-by-server', orderController.confirmOrderByServer);
 router.post('/orders/:id/subnotes', orderController.createSubNote);
 
 router.post('/orders/:id/notes/:noteId/items', orderController.addItemsToNote);
