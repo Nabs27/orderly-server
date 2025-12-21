@@ -60,26 +60,46 @@ async function loadFromMongoDB() {
 		// Si oui, s'assurer que MongoDB est vraiment vide avant de charger
 		// Charger les compteurs (un seul doc) - on le charge en premier pour vérifier le reset
 		const countersDoc = await dbManager.counters.findOne({ type: 'global' });
+		console.log('[persistence] 🔍 Vérification reset: countersDoc existe?', !!countersDoc, 'lastReset?', countersDoc?.lastReset);
+		
 		if (countersDoc && countersDoc.lastReset) {
 			const lastReset = new Date(countersDoc.lastReset);
 			const now = new Date();
 			const timeSinceReset = now - lastReset;
-			// Si le reset a été fait il y a moins de 5 minutes, vérifier que MongoDB est vide
-			if (timeSinceReset < 5 * 60 * 1000) {
+			console.log('[persistence] 🧹 Reset détecté il y a ' + Math.round(timeSinceReset / 1000) + 's');
+			
+			// 🆕 CORRECTION : Augmenter la fenêtre de temps à 30 minutes au lieu de 5
+			// Car le serveur peut être redémarré plus tard après le reset
+			if (timeSinceReset < 30 * 60 * 1000) {
 				console.log('[persistence] 🧹 Reset récent détecté (il y a ' + Math.round(timeSinceReset / 1000) + 's), vérification MongoDB...');
 				const ordersCount = await dbManager.orders.countDocuments({});
+				console.log('[persistence] 📊 Nombre de commandes dans MongoDB:', ordersCount);
+				
 				if (ordersCount > 0) {
 					console.log('[persistence] ⚠️ ATTENTION: ' + ordersCount + ' commande(s) encore présente(s) dans MongoDB après reset !');
 					console.log('[persistence] 🧹 Nettoyage automatique de MongoDB...');
-					await dbManager.orders.deleteMany({});
-					await dbManager.archivedOrders.deleteMany({});
-					await dbManager.bills.deleteMany({});
-					await dbManager.archivedBills.deleteMany({});
-					await dbManager.services.deleteMany({});
-					await dbManager.clientCredits.deleteMany({});
-					console.log('[persistence] ✅ MongoDB nettoyé automatiquement');
+					const deletedOrders = await dbManager.orders.deleteMany({});
+					const deletedArchived = await dbManager.archivedOrders.deleteMany({});
+					const deletedBills = await dbManager.bills.deleteMany({});
+					const deletedArchivedBills = await dbManager.archivedBills.deleteMany({});
+					const deletedServices = await dbManager.services.deleteMany({});
+					const deletedCredits = await dbManager.clientCredits.deleteMany({});
+					console.log('[persistence] ✅ MongoDB nettoyé automatiquement:', {
+						orders: deletedOrders.deletedCount,
+						archivedOrders: deletedArchived.deletedCount,
+						bills: deletedBills.deletedCount,
+						archivedBills: deletedArchivedBills.deletedCount,
+						services: deletedServices.deletedCount,
+						credits: deletedCredits.deletedCount
+					});
+				} else {
+					console.log('[persistence] ✅ MongoDB est déjà vide après reset');
 				}
+			} else {
+				console.log('[persistence] ℹ️ Reset trop ancien (' + Math.round(timeSinceReset / 60000) + ' min), pas de nettoyage automatique');
 			}
+		} else {
+			console.log('[persistence] ℹ️ Aucun reset récent détecté, chargement normal depuis MongoDB');
 		}
 		
 		// Charger les commandes
