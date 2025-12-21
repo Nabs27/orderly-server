@@ -159,10 +159,18 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 		if (dbManager.db) { // 🆕 Nettoyer MongoDB si connecté, peu importe isCloud
 			console.log('[admin] ☁️ Nettoyage MongoDB Cloud...');
 			try {
+				// 🆕 Vérifier combien de commandes existent avant suppression
+				const ordersBefore = await dbManager.orders.countDocuments({});
+				console.log(`[admin] ☁️ ${ordersBefore} commande(s) trouvée(s) dans MongoDB avant suppression`);
+				
 				// Supprimer toutes les commandes (POS + Client)
 				const ordersResult = await dbManager.orders.deleteMany({});
 				cloudDeleted.orders = ordersResult.deletedCount || 0;
 				console.log(`[admin] ☁️ ${cloudDeleted.orders} commandes supprimées de MongoDB`);
+				
+				// 🆕 Vérifier que MongoDB est bien vide après suppression
+				const ordersAfter = await dbManager.orders.countDocuments({});
+				console.log(`[admin] ☁️ ${ordersAfter} commande(s) restante(s) dans MongoDB après suppression`);
 				
 				// Supprimer les commandes archivées
 				const archivedOrdersResult = await dbManager.archivedOrders.deleteMany({});
@@ -247,6 +255,9 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 		dataStore.nextBillId = 1;
 		dataStore.nextServiceId = 1;
 		dataStore.nextClientId = 1;
+		
+		// 🆕 Log pour vérifier que la mémoire est bien vide
+		console.log(`[admin] 🧹 Mémoire vidée: ${dataStore.orders.length} commandes, ${dataStore.bills.length} factures`);
 		
 		// ✅ Émettre événement Socket.IO
 		const io = getIO();
