@@ -11,7 +11,6 @@ const { authAdmin } = require('../middleware/auth');
 const dataStore = require('../data');
 const fileManager = require('../utils/fileManager');
 const { getIO } = require('../utils/socket');
-const dbManager = require('../utils/dbManager'); // 🆕 Pour nettoyer MongoDB Cloud
 
 // Variables depuis data.js
 const orders = dataStore.orders;
@@ -146,97 +145,42 @@ router.post('/clear-table-consumption', authAdmin, (req, res) => {
 	}
 });
 
-// Reset complet du système (suppression fichiers)
+// Reset complet du système (suppression fichiers + MongoDB Cloud)
 router.post('/full-reset', authAdmin, async (req, res) => {
 	try {
 		console.log('[admin] 🧹 Demande de nettoyage complet du système');
 		
-		// 🆕 CORRECTION : Nettoyer aussi MongoDB si connecté (même en mode hybride)
-		// Si MongoDB est connecté, il faut le nettoyer même si isCloud est false
-		// car le serveur peut charger depuis MongoDB au démarrage
+		const dbManager = require('../utils/dbManager');
 		let cloudDeleted = { orders: 0, archivedOrders: 0, bills: 0, archivedBills: 0, services: 0, clientCredits: 0 };
 		
-		// 🆕 CORRECTION : Vérifier que MongoDB est bien connecté
-		if (!dbManager.db) {
-			console.log('[admin] ⚠️ MongoDB non connecté (dbManager.db est null), nettoyage MongoDB ignoré');
-			console.log('[admin] ℹ️ isCloud:', dbManager.isCloud, 'db:', dbManager.db);
-		}
-		
-		if (dbManager.db) { // 🆕 Nettoyer MongoDB si connecté, peu importe isCloud
-			console.log('[admin] ☁️ Nettoyage MongoDB Cloud...');
-			console.log('[admin] ℹ️ Connexion MongoDB vérifiée: db existe, isCloud:', dbManager.isCloud);
+		// 🆕 CORRECTION : Nettoyer aussi MongoDB Cloud si configuré
+		if (dbManager.isCloud && dbManager.db) {
 			try {
-				// 🆕 SOLUTION ROBUSTE : Utiliser drop() pour supprimer complètement les collections
-				// drop() est plus rapide et garantit une suppression totale (documents + index)
-				// On recréera les collections avec leurs index après
+				console.log('[admin] ☁️ Nettoyage MongoDB Cloud...');
 				
-				// Compter avant suppression pour les logs
-				const ordersBefore = await dbManager.orders.countDocuments({}).catch(() => 0);
-				const archivedOrdersBefore = await dbManager.archivedOrders.countDocuments({}).catch(() => 0);
-				const billsBefore = await dbManager.bills.countDocuments({}).catch(() => 0);
-				const archivedBillsBefore = await dbManager.archivedBills.countDocuments({}).catch(() => 0);
-				const servicesBefore = await dbManager.services.countDocuments({}).catch(() => 0);
-				const creditsBefore = await dbManager.clientCredits.countDocuments({}).catch(() => 0);
+				// Supprimer toutes les commandes (POS + client)
+				const ordersResult = await dbManager.orders.deleteMany({});
+				cloudDeleted.orders = ordersResult.deletedCount || 0;
 				
-				console.log(`[admin] ☁️ Documents trouvés avant suppression:`);
-				console.log(`[admin]   - Orders: ${ordersBefore}, Archived: ${archivedOrdersBefore}`);
-				console.log(`[admin]   - Bills: ${billsBefore}, Archived: ${archivedBillsBefore}`);
-				console.log(`[admin]   - Services: ${servicesBefore}, Credits: ${creditsBefore}`);
+				// Supprimer les commandes archivées
+				const archivedOrdersResult = await dbManager.archivedOrders.deleteMany({});
+				cloudDeleted.archivedOrders = archivedOrdersResult.deletedCount || 0;
 				
-				// Supprimer complètement les collections avec drop()
-				// drop() supprime la collection ET tous ses index
-				// Si la collection n'existe pas, drop() retourne false, ce qui est OK
+				// Supprimer les factures
+				const billsResult = await dbManager.bills.deleteMany({});
+				cloudDeleted.bills = billsResult.deletedCount || 0;
 				
-				await dbManager.orders.drop().catch(() => {
-					console.log('[admin] ☁️ Collection orders n\'existait pas (OK)');
-				});
-				cloudDeleted.orders = ordersBefore;
-				console.log('[admin] ☁️ ✅ Collection orders supprimée complètement (drop)');
+				// Supprimer les factures archivées
+				const archivedBillsResult = await dbManager.archivedBills.deleteMany({});
+				cloudDeleted.archivedBills = archivedBillsResult.deletedCount || 0;
 				
-				await dbManager.archivedOrders.drop().catch(() => {});
-				cloudDeleted.archivedOrders = archivedOrdersBefore;
-				console.log('[admin] ☁️ ✅ Collection archived_orders supprimée complètement');
+				// Supprimer les demandes de service
+				const servicesResult = await dbManager.services.deleteMany({});
+				cloudDeleted.services = servicesResult.deletedCount || 0;
 				
-				await dbManager.bills.drop().catch(() => {});
-				cloudDeleted.bills = billsBefore;
-				console.log('[admin] ☁️ ✅ Collection bills supprimée complètement');
-				
-				await dbManager.archivedBills.drop().catch(() => {});
-				cloudDeleted.archivedBills = archivedBillsBefore;
-				console.log('[admin] ☁️ ✅ Collection archived_bills supprimée complètement');
-				
-				await dbManager.services.drop().catch(() => {});
-				cloudDeleted.services = servicesBefore;
-				console.log('[admin] ☁️ ✅ Collection services supprimée complètement');
-				
-				await dbManager.clientCredits.drop().catch(() => {});
-				cloudDeleted.clientCredits = creditsBefore;
-				console.log('[admin] ☁️ ✅ Collection client_credits supprimée complètement');
-				
-				// Vérifier que les collections sont bien supprimées (elles ne devraient plus exister)
-				const ordersAfter = await dbManager.orders.countDocuments({}).catch(() => 0);
-				const archivedOrdersAfter = await dbManager.archivedOrders.countDocuments({}).catch(() => 0);
-				const billsAfter = await dbManager.bills.countDocuments({}).catch(() => 0);
-				
-				console.log(`[admin] ☁️ Vérification après drop():`);
-				console.log(`[admin]   - Orders: ${ordersAfter}, Archived: ${archivedOrdersAfter}, Bills: ${billsAfter}`);
-				
-				if (ordersAfter > 0 || archivedOrdersAfter > 0 || billsAfter > 0) {
-					console.error('[admin] ⚠️ ATTENTION: Des documents sont encore présents après drop() !');
-					// Forcer une nouvelle suppression avec deleteMany au cas où
-					if (ordersAfter > 0) await dbManager.orders.deleteMany({});
-					if (archivedOrdersAfter > 0) await dbManager.archivedOrders.deleteMany({});
-					if (billsAfter > 0) await dbManager.bills.deleteMany({});
-					console.log('[admin] ☁️ Suppression forcée effectuée avec deleteMany()');
-				} else {
-					console.log('[admin] ✅ Toutes les collections sont bien vides après drop()');
-				}
-				
-				// Recréer les collections avec leurs index
-				// Les collections seront recréées automatiquement au premier insert,
-				// mais on peut forcer la création des index maintenant
-				await dbManager.recreateIndexes();
-				console.log('[admin] ☁️ ✅ Index recréés pour les collections');
+				// Supprimer les crédits clients
+				const clientCreditsResult = await dbManager.clientCredits.deleteMany({});
+				cloudDeleted.clientCredits = clientCreditsResult.deletedCount || 0;
 				
 				// Réinitialiser les compteurs dans MongoDB
 				await dbManager.counters.updateOne(
@@ -247,23 +191,20 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 							nextBillId: 1,
 							nextServiceId: 1,
 							nextClientId: 1,
-							lastSynced: new Date().toISOString(),
-							lastReset: new Date().toISOString() // 🆕 Marquer le reset
+							lastSynced: new Date().toISOString()
 						} 
 					},
 					{ upsert: true }
 				);
-				console.log('[admin] ☁️ ✅ Compteurs MongoDB réinitialisés avec marqueur de reset');
 				
-				console.log(`[admin] ☁️ ✅ Nettoyage MongoDB terminé: ${cloudDeleted.orders} orders, ${cloudDeleted.archivedOrders} archived, ${cloudDeleted.bills} bills supprimés`);
+				console.log(`[admin] ☁️ MongoDB Cloud nettoyé: ${cloudDeleted.orders} commandes, ${cloudDeleted.bills} factures, ${cloudDeleted.services} services, ${cloudDeleted.clientCredits} crédits clients`);
 			} catch (cloudError) {
 				console.error('[admin] ⚠️ Erreur nettoyage MongoDB Cloud:', cloudError.message);
-				console.error('[admin] Stack:', cloudError.stack);
-				// Continuer même en cas d'erreur cloud
+				// Continuer même en cas d'erreur cloud pour nettoyer le local
 			}
 		}
 		
-		// Supprimer les fichiers de persistance locale
+		// Supprimer les fichiers de persistance locaux
 		const filesToDelete = [
 			ORDERS_FILE,
 			ARCHIVED_ORDERS_FILE,
@@ -287,10 +228,6 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 			}
 		});
 		
-		// 🆕 CORRECTION CRITIQUE : Après avoir nettoyé MongoDB et les fichiers locaux,
-		// s'assurer que la mémoire est vide ET ne pas sauvegarder l'état vide vers MongoDB
-		// car cela pourrait causer des problèmes. On laisse MongoDB vide.
-		
 		// Réinitialiser les tableaux en mémoire
 		dataStore.orders = [];
 		dataStore.archivedOrders = [];
@@ -305,75 +242,31 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 		dataStore.nextServiceId = 1;
 		dataStore.nextClientId = 1;
 		
-		// 🆕 Log pour vérifier que la mémoire est bien vide
-		console.log(`[admin] 🧹 Mémoire vidée: ${dataStore.orders.length} commandes, ${dataStore.bills.length} factures`);
-		
-		// 🆕 CORRECTION CRITIQUE : Ne PAS sauvegarder après le reset
-		// Car savePersistedData() synchroniserait les données vides vers MongoDB,
-		// mais surtout, il pourrait y avoir un problème de timing où des données
-		// sont encore en mémoire et sont resynchronisées
-		// On laisse MongoDB vide et on ne sauvegarde pas
-		console.log('[admin] ⚠️ IMPORTANT: Pas de sauvegarde après reset pour éviter resynchronisation');
-		
-		// 🆕 CORRECTION CRITIQUE : Vérifier que MongoDB est vraiment vide après nettoyage
-		if (dbManager.db) {
+		// 💾 Sauvegarder pour synchroniser l'état vide avec MongoDB
+		if (dbManager.isCloud) {
 			try {
-				const finalOrdersCount = await dbManager.orders.countDocuments({});
-				if (finalOrdersCount > 0) {
-					console.error(`[admin] ⚠️ ATTENTION: ${finalOrdersCount} commande(s) encore présente(s) dans MongoDB après nettoyage !`);
-					// Forcer une nouvelle suppression
-					await dbManager.orders.deleteMany({});
-					console.log(`[admin] ☁️ Suppression forcée effectuée`);
-				} else {
-					console.log(`[admin] ✅ MongoDB vérifié: 0 commande restante`);
-				}
-			} catch (verifyError) {
-				console.error(`[admin] ⚠️ Erreur vérification MongoDB:`, verifyError.message);
+				await fileManager.savePersistedData();
+				console.log('[admin] ☁️ État vide synchronisé avec MongoDB');
+			} catch (e) {
+				console.error('[admin] ⚠️ Erreur synchronisation état vide:', e.message);
 			}
 		}
 		
-		// ✅ Émettre un signal de reset global à TOUS les clients (POS et Apps)
-		// Ce signal force le POS à vider son propre cache SharedPreferences
+		// ✅ Émettre événement Socket.IO
 		const io = getIO();
-		io.emit('system:full_reset', { 
-			message: 'Réinitialisation complète du système par l\'administrateur',
+		io.emit('system:reset', { 
+			message: 'Système réinitialisé complètement (local + cloud)',
 			timestamp: new Date().toISOString(),
-			force_clear_cache: true
+			cloudDeleted: cloudDeleted
 		});
-
-		console.log(`[admin] 🧹 Nettoyage complet terminé. Signal envoyé à tous les clients.`);
 		
-		// 🆕 CORRECTION : Redémarrer automatiquement le serveur local après reset
-		const isRailway = !!process.env.RAILWAY_ENVIRONMENT || !!process.env.RAILWAY_SERVICE_NAME;
-		const isLocalServer = !isRailway;
-		
-		if (isLocalServer || process.env.FORCE_RESTART_ON_RESET === 'true') {
-			console.log('[admin] 🔄 Redémarrage automatique du serveur dans 2 secondes...');
-			
-			// Envoyer la réponse HTTP avant de couper le serveur
-			res.json({ 
-				ok: true, 
-				message: 'Système réinitialisé (Local + Cloud). Redémarrage automatique du serveur...',
-				requiresRestart: true,
-				deleted: {
-					local: { orders: 0, bills: 0, files: deletedFiles },
-					cloud: cloudDeleted
-				}
-			});
-			
-			setTimeout(() => {
-				console.log('[admin] 🔄 Arrêt du serveur pour redémarrage automatique (code 100)...');
-				process.exit(100); 
-			}, 2000);
-			
-			return;
-		}
+		console.log(`[admin] 🧹 Nettoyage complet terminé: ${dataStore.orders.length} commandes locales, ${cloudDeleted.orders} commandes cloud supprimées`);
 		
 		return res.json({ 
 			ok: true, 
 			message: 'Nettoyage complet terminé avec succès (local + cloud)',
 			deleted: {
-				local: { 
+				local: {
 					orders: 0,
 					archivedOrders: 0,
 					bills: 0,
