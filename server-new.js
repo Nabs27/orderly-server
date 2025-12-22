@@ -125,9 +125,14 @@ dbManager.connect().then(() => {
 					// Notifier via Socket.IO les nouvelles commandes client
 					const { getIO } = require('./server/utils/socket');
 					const io = getIO();
+					
+					// 🆕 Vérifier le nombre de clients connectés
+					const connectedClients = io.sockets.sockets.size;
+					console.log(`[sync] 📡 ${connectedClients} client(s) Socket.IO connecté(s)`);
+					
 					for (const newOrder of newClientOrders) {
 						io.emit('order:new', newOrder);
-						console.log(`[sync] 📢 Commande client #${newOrder.id} (table ${newOrder.table}) notifiée via Socket.IO`);
+						console.log(`[sync] 📢 Commande client #${newOrder.id} (table ${newOrder.table}) notifiée via Socket.IO à ${connectedClients} client(s)`);
 					}
 				}
 				
