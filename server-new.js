@@ -67,6 +67,63 @@ dbManager.connect().then(() => {
 	return fileManager.loadPersistedData();
 }).then(() => {
 	console.log('[server] Données initialisées');
+	
+	// 🆕 CORRECTION : Synchronisation périodique depuis MongoDB si mode cloud
+	// Cela permet au serveur local de voir les commandes créées par le serveur cloud (app client)
+	if (dbManager.isCloud && dbManager.db) {
+		const SYNC_INTERVAL = 3000; // Synchroniser toutes les 3 secondes
+		setInterval(async () => {
+			try {
+				// Recharger les commandes depuis MongoDB
+				const cloudOrders = await dbManager.orders.find({}).toArray();
+				const cloudArchived = await dbManager.archivedOrders.find({}).toArray();
+				
+				// Comparer avec les données locales pour détecter les nouvelles commandes
+				const localOrderIds = new Set(dataStore.orders.map(o => o.id));
+				const newOrders = cloudOrders.filter(o => !localOrderIds.has(o.id));
+				
+				if (newOrders.length > 0) {
+					console.log(`[sync] 🔄 ${newOrders.length} nouvelle(s) commande(s) détectée(s) depuis MongoDB`);
+					
+					// Ajouter les nouvelles commandes
+					dataStore.orders.push(...newOrders);
+					
+					// Mettre à jour les commandes existantes (en cas de modification)
+					for (const cloudOrder of cloudOrders) {
+						const localIndex = dataStore.orders.findIndex(o => o.id === cloudOrder.id);
+						if (localIndex !== -1) {
+							dataStore.orders[localIndex] = cloudOrder;
+						}
+					}
+					
+					// Mettre à jour les archives
+					dataStore.archivedOrders.length = 0;
+					dataStore.archivedOrders.push(...cloudArchived);
+					
+					// Mettre à jour les compteurs
+					const countersDoc = await dbManager.counters.findOne({ type: 'global' });
+					if (countersDoc) {
+						dataStore.nextOrderId = Math.max(dataStore.nextOrderId, countersDoc.nextOrderId || 1);
+						dataStore.nextBillId = Math.max(dataStore.nextBillId, countersDoc.nextBillId || 1);
+						dataStore.nextServiceId = Math.max(dataStore.nextServiceId, countersDoc.nextServiceId || 1);
+						dataStore.nextClientId = Math.max(dataStore.nextClientId, countersDoc.nextClientId || 1);
+					}
+					
+					// Notifier via Socket.IO les nouvelles commandes
+					const { getIO } = require('./server/utils/socket');
+					const io = getIO();
+					for (const newOrder of newOrders) {
+						io.emit('order:new', newOrder);
+						console.log(`[sync] 📢 Commande #${newOrder.id} notifiée via Socket.IO`);
+					}
+				}
+			} catch (e) {
+				console.error('[sync] ⚠️ Erreur synchronisation périodique:', e.message);
+			}
+		}, SYNC_INTERVAL);
+		
+		console.log(`[server] 🔄 Synchronisation périodique MongoDB activée (toutes les ${SYNC_INTERVAL/1000}s)`);
+	}
 }).catch(err => {
 	console.error('[server] ❌ Erreur initialisation données:', err);
 });
@@ -147,28 +204,13 @@ const gracefulShutdown = (signal) => {
 process.on('SIGINT', () => gracefulShutdown('SIGINT')); // Ctrl+C
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM')); // Arrêt système
 
-// 🆕 Gérer le redémarrage automatique après reset (code de sortie 100)
-// Ne pas faire de graceful shutdown dans ce cas pour un redémarrage rapide
-process.on('exit', (code) => {
-	if (code === 100) {
-		console.log('[server] 🔄 Code de redémarrage détecté (100)');
-		console.log('[server] 🔄 Le script batch va relancer automatiquement le serveur');
-	}
-});
-
 // Gérer les erreurs non capturées
 process.on('uncaughtException', (err) => {
 	console.error('[server] ❌ Erreur non capturée:', err);
-	// Ne pas faire de graceful shutdown si c'est un redémarrage programmé
-	if (process.exitCode !== 100) {
-		gracefulShutdown('uncaughtException');
-	}
+	gracefulShutdown('uncaughtException');
 });
 
 process.on('unhandledRejection', (reason, promise) => {
 	console.error('[server] ❌ Promesse rejetée non gérée:', reason);
-	// Ne pas faire de graceful shutdown si c'est un redémarrage programmé
-	if (process.exitCode !== 100) {
-		gracefulShutdown('unhandledRejection');
-	}
+	gracefulShutdown('unhandledRejection');
 });
