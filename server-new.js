@@ -89,17 +89,27 @@ dbManager.connect().then(() => {
 				// Ne JAMAIS écraser les commandes POS locales
 				
 				const localOrderIds = new Set(dataStore.orders.map(o => o.id));
+				const localClientOrderIds = new Set(dataStore.orders.filter(o => o.source === 'client').map(o => o.id));
 				
 				// Filtrer UNIQUEMENT les nouvelles commandes client qui n'existent pas encore localement
+				// 🆕 CORRECTION : Vérifier que la commande n'existe pas déjà avec source='client'
+				// Car une commande POS peut avoir le même ID qu'une commande client
 				const allClientOrders = cloudOrders.filter(o => o.source === 'client');
-				const newClientOrders = allClientOrders.filter(o => !localOrderIds.has(o.id));
+				const newClientOrders = allClientOrders.filter(o => {
+					// Une commande client est nouvelle si elle n'existe pas localement avec source='client'
+					const existsAsClient = localClientOrderIds.has(o.id);
+					return !existsAsClient;
+				});
 				
 				// 🆕 Log pour déboguer
 				if (allClientOrders.length > 0) {
 					console.log(`[sync] 🔍 ${allClientOrders.length} commande(s) client trouvée(s) dans MongoDB, ${newClientOrders.length} nouvelle(s)`);
+					console.log(`[sync] 📊 État local: ${dataStore.orders.length} commandes totales, ${localClientOrderIds.size} commande(s) client`);
 					for (const clientOrder of allClientOrders) {
-						const exists = localOrderIds.has(clientOrder.id);
-						console.log(`[sync]   - Commande client #${clientOrder.id} (table ${clientOrder.table}): ${exists ? 'existe déjà' : 'NOUVELLE'}, status=${clientOrder.status}, serverConfirmed=${clientOrder.serverConfirmed}`);
+						const existsInAll = localOrderIds.has(clientOrder.id);
+						const existsAsClient = localClientOrderIds.has(clientOrder.id);
+						const status = existsInAll ? (existsAsClient ? 'existe déjà (client)' : 'existe mais source différente') : 'NOUVELLE';
+						console.log(`[sync]   - Commande client #${clientOrder.id} (table ${clientOrder.table}): ${status}, status=${clientOrder.status}, serverConfirmed=${clientOrder.serverConfirmed}`);
 					}
 				}
 				
@@ -120,20 +130,22 @@ dbManager.connect().then(() => {
 				// Ajouter les nouvelles commandes client
 				if (newClientOrders.length > 0) {
 					console.log(`[sync] 🔄 ${newClientOrders.length} nouvelle(s) commande(s) CLIENT détectée(s) depuis MongoDB`);
+					console.log(`[sync] 📝 Ajout des commandes: ${newClientOrders.map(o => `#${o.id} (table ${o.table})`).join(', ')}`);
 					dataStore.orders.push(...newClientOrders);
+					console.log(`[sync] ✅ ${dataStore.orders.length} commandes maintenant dans dataStore.orders`);
 					
 					// Notifier via Socket.IO les nouvelles commandes client
 					const { getIO } = require('./server/utils/socket');
 					const io = getIO();
 					
-					// 🆕 Vérifier le nombre de clients connectés
-					const connectedClients = io.sockets.sockets.size;
-					console.log(`[sync] 📡 ${connectedClients} client(s) Socket.IO connecté(s)`);
-					
 					for (const newOrder of newClientOrders) {
 						io.emit('order:new', newOrder);
-						console.log(`[sync] 📢 Commande client #${newOrder.id} (table ${newOrder.table}) notifiée via Socket.IO à ${connectedClients} client(s)`);
+						console.log(`[sync] 📢 Événement order:new émis pour commande #${newOrder.id} (table ${newOrder.table})`);
 					}
+				} else if (allClientOrders.length > 0) {
+					// 🆕 Log si aucune nouvelle commande mais des commandes client existent dans MongoDB
+					console.log(`[sync] ⚠️ ${allClientOrders.length} commande(s) client dans MongoDB mais aucune nouvelle à ajouter`);
+					console.log(`[sync] 🔍 Vérification: IDs locaux=${Array.from(localOrderIds).join(', ')}, IDs client MongoDB=${allClientOrders.map(o => o.id).join(', ')}`);
 				}
 				
 				// Mettre à jour les archives (sans écraser les commandes POS locales)
