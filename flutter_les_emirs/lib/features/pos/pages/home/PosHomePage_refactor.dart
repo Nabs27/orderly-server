@@ -123,8 +123,6 @@ class _PosHomePageState extends State<PosHomePage> {
   void initState() {
     super.initState();
     _homeController = HomeController(_homeState);
-    // 🆕 CORRECTION : Charger les préférences API EN PREMIER avant toute connexion
-    _loadApiPrefs();
     // 🔧 Les préférences API sont maintenant chargées dans _loadUserInfo() pour garantir l'ordre
     _loadUserInfo();
     _loadTables(); // Charger les tables sauvegardées (inclut maintenant la synchronisation)
@@ -811,7 +809,19 @@ class _PosHomePageState extends State<PosHomePage> {
   Future<void> _syncOrdersWithTables() async {
     await OrdersSyncService.syncOrdersWithTables(serverTables);
     await _saveTables();
-    if (mounted) setState(() {});
+    // 🆕 CORRECTION : Forcer un rebuild explicite après synchronisation
+    // Utiliser Future.microtask pour éviter setState pendant un build
+    if (mounted) {
+      Future.microtask(() {
+        if (mounted) {
+          setState(() {
+            // Forcer le rebuild en modifiant une valeur pour que Flutter détecte le changement
+            // La Map serverTables est modifiée par référence, donc on force un rebuild explicite
+          });
+          print('[POS HOME] ✅ UI mise à jour après synchronisation (${serverTables.length} serveurs)');
+        }
+      });
+    }
   }
 
 
@@ -840,44 +850,6 @@ class _PosHomePageState extends State<PosHomePage> {
     print('[POS HOME] Connexion Socket.IO vers: $uri');
     final s = _homeSocket.connect(uri);
     socket = s;
-
-    // 🚨 🆕 ÉCOUTEUR DE RESET GLOBAL
-    // Si le serveur envoie ce signal, on vide tout localement
-    socket?.on('system:full_reset', (data) async {
-      print('[POS] 🚨 Signal de RESET GLOBAL reçu du serveur !');
-      
-      // 1. Vider le cache SharedPreferences immédiatement
-      await LocalStorageService.clearPosCache();
-      
-      // 2. Réinitialiser l'état local des tables
-      if (mounted) {
-        setState(() {
-          serverTables.clear();
-        });
-        
-        // 3. Informer l'utilisateur
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(data['message'] ?? 'Le système a été réinitialisé complètement.'),
-            backgroundColor: Colors.red.shade800,
-            duration: const Duration(seconds: 8),
-            action: SnackBarAction(
-              label: 'OK',
-              textColor: Colors.white,
-              onPressed: () {},
-            ),
-          ),
-        );
-      }
-      
-      // 4. Attendre le redémarrage du serveur et synchroniser (état vide)
-      Future.delayed(const Duration(seconds: 5), () {
-        if (mounted) {
-          _loadTables();
-          _syncOrdersWithTables();
-        }
-      });
-    });
     
     _homeSocket.bindDefaultHandlers(
       onSync: _syncOrdersWithTables,
