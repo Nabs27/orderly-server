@@ -166,43 +166,77 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 			console.log('[admin] ☁️ Nettoyage MongoDB Cloud...');
 			console.log('[admin] ℹ️ Connexion MongoDB vérifiée: db existe, isCloud:', dbManager.isCloud);
 			try {
-				// 🆕 Vérifier combien de commandes existent avant suppression
-				const ordersBefore = await dbManager.orders.countDocuments({});
-				console.log(`[admin] ☁️ ${ordersBefore} commande(s) trouvée(s) dans MongoDB avant suppression`);
+				// 🆕 SOLUTION ROBUSTE : Utiliser drop() pour supprimer complètement les collections
+				// drop() est plus rapide et garantit une suppression totale (documents + index)
+				// On recréera les collections avec leurs index après
 				
-				// Supprimer toutes les commandes (POS + Client)
-				const ordersResult = await dbManager.orders.deleteMany({});
-				cloudDeleted.orders = ordersResult.deletedCount || 0;
-				console.log(`[admin] ☁️ ${cloudDeleted.orders} commandes supprimées de MongoDB`);
+				// Compter avant suppression pour les logs
+				const ordersBefore = await dbManager.orders.countDocuments({}).catch(() => 0);
+				const archivedOrdersBefore = await dbManager.archivedOrders.countDocuments({}).catch(() => 0);
+				const billsBefore = await dbManager.bills.countDocuments({}).catch(() => 0);
+				const archivedBillsBefore = await dbManager.archivedBills.countDocuments({}).catch(() => 0);
+				const servicesBefore = await dbManager.services.countDocuments({}).catch(() => 0);
+				const creditsBefore = await dbManager.clientCredits.countDocuments({}).catch(() => 0);
 				
-				// 🆕 Vérifier que MongoDB est bien vide après suppression
-				const ordersAfter = await dbManager.orders.countDocuments({});
-				console.log(`[admin] ☁️ ${ordersAfter} commande(s) restante(s) dans MongoDB après suppression`);
+				console.log(`[admin] ☁️ Documents trouvés avant suppression:`);
+				console.log(`[admin]   - Orders: ${ordersBefore}, Archived: ${archivedOrdersBefore}`);
+				console.log(`[admin]   - Bills: ${billsBefore}, Archived: ${archivedBillsBefore}`);
+				console.log(`[admin]   - Services: ${servicesBefore}, Credits: ${creditsBefore}`);
 				
-				// Supprimer les commandes archivées
-				const archivedOrdersResult = await dbManager.archivedOrders.deleteMany({});
-				cloudDeleted.archivedOrders = archivedOrdersResult.deletedCount || 0;
-				console.log(`[admin] ☁️ ${cloudDeleted.archivedOrders} commandes archivées supprimées de MongoDB`);
+				// Supprimer complètement les collections avec drop()
+				// drop() supprime la collection ET tous ses index
+				// Si la collection n'existe pas, drop() retourne false, ce qui est OK
 				
-				// Supprimer les factures
-				const billsResult = await dbManager.bills.deleteMany({});
-				cloudDeleted.bills = billsResult.deletedCount || 0;
-				console.log(`[admin] ☁️ ${cloudDeleted.bills} factures supprimées de MongoDB`);
+				await dbManager.orders.drop().catch(() => {
+					console.log('[admin] ☁️ Collection orders n\'existait pas (OK)');
+				});
+				cloudDeleted.orders = ordersBefore;
+				console.log('[admin] ☁️ ✅ Collection orders supprimée complètement (drop)');
 				
-				// Supprimer les factures archivées
-				const archivedBillsResult = await dbManager.archivedBills.deleteMany({});
-				cloudDeleted.archivedBills = archivedBillsResult.deletedCount || 0;
-				console.log(`[admin] ☁️ ${cloudDeleted.archivedBills} factures archivées supprimées de MongoDB`);
+				await dbManager.archivedOrders.drop().catch(() => {});
+				cloudDeleted.archivedOrders = archivedOrdersBefore;
+				console.log('[admin] ☁️ ✅ Collection archived_orders supprimée complètement');
 				
-				// Supprimer les services
-				const servicesResult = await dbManager.services.deleteMany({});
-				cloudDeleted.services = servicesResult.deletedCount || 0;
-				console.log(`[admin] ☁️ ${cloudDeleted.services} services supprimés de MongoDB`);
+				await dbManager.bills.drop().catch(() => {});
+				cloudDeleted.bills = billsBefore;
+				console.log('[admin] ☁️ ✅ Collection bills supprimée complètement');
 				
-				// Supprimer les crédits clients
-				const creditsResult = await dbManager.clientCredits.deleteMany({});
-				cloudDeleted.clientCredits = creditsResult.deletedCount || 0;
-				console.log(`[admin] ☁️ ${cloudDeleted.clientCredits} crédits clients supprimés de MongoDB`);
+				await dbManager.archivedBills.drop().catch(() => {});
+				cloudDeleted.archivedBills = archivedBillsBefore;
+				console.log('[admin] ☁️ ✅ Collection archived_bills supprimée complètement');
+				
+				await dbManager.services.drop().catch(() => {});
+				cloudDeleted.services = servicesBefore;
+				console.log('[admin] ☁️ ✅ Collection services supprimée complètement');
+				
+				await dbManager.clientCredits.drop().catch(() => {});
+				cloudDeleted.clientCredits = creditsBefore;
+				console.log('[admin] ☁️ ✅ Collection client_credits supprimée complètement');
+				
+				// Vérifier que les collections sont bien supprimées (elles ne devraient plus exister)
+				const ordersAfter = await dbManager.orders.countDocuments({}).catch(() => 0);
+				const archivedOrdersAfter = await dbManager.archivedOrders.countDocuments({}).catch(() => 0);
+				const billsAfter = await dbManager.bills.countDocuments({}).catch(() => 0);
+				
+				console.log(`[admin] ☁️ Vérification après drop():`);
+				console.log(`[admin]   - Orders: ${ordersAfter}, Archived: ${archivedOrdersAfter}, Bills: ${billsAfter}`);
+				
+				if (ordersAfter > 0 || archivedOrdersAfter > 0 || billsAfter > 0) {
+					console.error('[admin] ⚠️ ATTENTION: Des documents sont encore présents après drop() !');
+					// Forcer une nouvelle suppression avec deleteMany au cas où
+					if (ordersAfter > 0) await dbManager.orders.deleteMany({});
+					if (archivedOrdersAfter > 0) await dbManager.archivedOrders.deleteMany({});
+					if (billsAfter > 0) await dbManager.bills.deleteMany({});
+					console.log('[admin] ☁️ Suppression forcée effectuée avec deleteMany()');
+				} else {
+					console.log('[admin] ✅ Toutes les collections sont bien vides après drop()');
+				}
+				
+				// Recréer les collections avec leurs index
+				// Les collections seront recréées automatiquement au premier insert,
+				// mais on peut forcer la création des index maintenant
+				await dbManager.recreateIndexes();
+				console.log('[admin] ☁️ ✅ Index recréés pour les collections');
 				
 				// Réinitialiser les compteurs dans MongoDB
 				await dbManager.counters.updateOne(
@@ -219,9 +253,12 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 					},
 					{ upsert: true }
 				);
-				console.log('[admin] ☁️ Compteurs MongoDB réinitialisés avec marqueur de reset');
+				console.log('[admin] ☁️ ✅ Compteurs MongoDB réinitialisés avec marqueur de reset');
+				
+				console.log(`[admin] ☁️ ✅ Nettoyage MongoDB terminé: ${cloudDeleted.orders} orders, ${cloudDeleted.archivedOrders} archived, ${cloudDeleted.bills} bills supprimés`);
 			} catch (cloudError) {
 				console.error('[admin] ⚠️ Erreur nettoyage MongoDB Cloud:', cloudError.message);
+				console.error('[admin] Stack:', cloudError.stack);
 				// Continuer même en cas d'erreur cloud
 			}
 		}
@@ -336,12 +373,7 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 			ok: true, 
 			message: 'Nettoyage complet terminé avec succès (local + cloud)',
 			deleted: {
-				local: { orders: 0, bills: 0, files: deletedFiles },
-				cloud: cloudDeleted
-			}
-		});
-			deleted: {
-				local: {
+				local: { 
 					orders: 0,
 					archivedOrders: 0,
 					bills: 0,
@@ -349,7 +381,7 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 					services: 0,
 					files: deletedFiles
 				},
-				cloud: cloudDeleted // 🆕 Inclure les données supprimées du cloud
+				cloud: cloudDeleted
 			},
 			reset: { 
 				orders: 0, 

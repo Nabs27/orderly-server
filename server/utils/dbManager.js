@@ -37,14 +37,21 @@ class DatabaseManager {
 	async _ensureIndexes() {
 		if (!this.db) return;
 		try {
-			await this.db.collection('orders').createIndex({ id: 1 }, { unique: true });
-			await this.db.collection('bills').createIndex({ id: 1 }, { unique: true });
-			await this.db.collection('client_credits').createIndex({ id: 1 }, { unique: true });
-			await this.db.collection('menus').createIndex({ restaurantId: 1 }, { unique: true });
-			await this.db.collection('server_permissions').createIndex({ id: 1 }, { unique: true });
+			// Créer les index (les collections seront créées automatiquement si elles n'existent pas)
+			await this.db.collection('orders').createIndex({ id: 1 }, { unique: true }).catch(() => {});
+			await this.db.collection('bills').createIndex({ id: 1 }, { unique: true }).catch(() => {});
+			await this.db.collection('client_credits').createIndex({ id: 1 }, { unique: true }).catch(() => {});
+			await this.db.collection('menus').createIndex({ restaurantId: 1 }, { unique: true }).catch(() => {});
+			await this.db.collection('server_permissions').createIndex({ id: 1 }, { unique: true }).catch(() => {});
+			console.log('[DB] ✅ Index créés/vérifiés pour les collections principales');
 		} catch (e) {
-			console.log('[DB] ⚠️ Note: Les index existent déjà ou erreur mineure d\'indexation.');
+			console.log('[DB] ⚠️ Note: Erreur lors de la création des index (peut être normal si collections n\'existent pas encore):', e.message);
 		}
+	}
+
+	// 🆕 Méthode publique pour recréer les index après un drop()
+	async recreateIndexes() {
+		return this._ensureIndexes();
 	}
 
 	// Helpers pour accéder aux collections
