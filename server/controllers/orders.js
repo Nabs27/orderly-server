@@ -169,46 +169,10 @@ function createOrder(req, res) {
 async function getAllOrders(req, res) {
 	const { table } = req.query;
 	
-	// 🆕 CORRECTION : Si on est en mode cloud, recharger depuis MongoDB à chaque requête
-	// Cela permet de voir les commandes créées par le serveur cloud (app client)
-	const dbManager = require('../utils/dbManager');
-	if (dbManager.isCloud && dbManager.db) {
-		try {
-			// Recharger les commandes depuis MongoDB pour avoir les dernières données
-			const cloudOrders = await dbManager.orders.find({}).toArray();
-			const cloudArchived = await dbManager.archivedOrders.find({}).toArray();
-			
-			// 🆕 CORRECTION : Ne plus filtrer les commandes confirmées car elles deviennent source='pos'
-			// Les commandes client confirmées sont converties en commandes POS normales (source='pos')
-			// donc elles doivent apparaître normalement dans le POS
-			const activeCloudOrders = cloudOrders; // Plus de filtrage, toutes les commandes actives sont incluses
-			
-			// Mettre à jour dataStore avec les données MongoDB filtrées
-			dataStore.orders.length = 0;
-			dataStore.orders.push(...activeCloudOrders);
-			dataStore.archivedOrders.length = 0;
-			dataStore.archivedOrders.push(...cloudArchived);
-			
-			// Mettre à jour les compteurs depuis MongoDB
-			const countersDoc = await dbManager.counters.findOne({ type: 'global' });
-			if (countersDoc) {
-				dataStore.nextOrderId = Math.max(dataStore.nextOrderId, countersDoc.nextOrderId || 1);
-				dataStore.nextBillId = Math.max(dataStore.nextBillId, countersDoc.nextBillId || 1);
-				dataStore.nextServiceId = Math.max(dataStore.nextServiceId, countersDoc.nextServiceId || 1);
-				dataStore.nextClientId = Math.max(dataStore.nextClientId, countersDoc.nextClientId || 1);
-			}
-			
-			const confirmedCount = cloudOrders.length - activeCloudOrders.length;
-			if (confirmedCount > 0) {
-				console.log(`[orders] ☁️ Données rechargées depuis MongoDB: ${activeCloudOrders.length} commandes actives, ${confirmedCount} confirmées exclues`);
-			} else {
-				console.log(`[orders] ☁️ Données rechargées depuis MongoDB: ${activeCloudOrders.length} commandes actives`);
-			}
-		} catch (e) {
-			console.error('[orders] ⚠️ Erreur rechargement MongoDB:', e.message);
-			// Continuer avec les données en mémoire en cas d'erreur
-		}
-	}
+	// 🆕 CORRECTION : Le serveur local est la source de vérité unique
+	// Ne JAMAIS écraser dataStore.orders avec MongoDB dans getAllOrders
+	// MongoDB sert uniquement de passerelle pour les commandes client
+	// La synchronisation périodique (server-new.js) ajoute les nouvelles commandes client
 	
 	// Filtrer les commandes archivées
 	const activeOrders = dataStore.orders.filter(o => o.status !== 'archived');

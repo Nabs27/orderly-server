@@ -84,47 +84,50 @@ dbManager.connect().then(() => {
 				const cloudOrders = await dbManager.orders.find({}).toArray();
 				const cloudArchived = await dbManager.archivedOrders.find({}).toArray();
 				
-				// 🆕 CORRECTION : Ne plus filtrer les commandes confirmées car elles deviennent source='pos'
-				// Les commandes client confirmées sont converties en commandes POS normales (source='pos')
-				// donc elles doivent apparaître normalement dans le POS
-				const activeCloudOrders = cloudOrders; // Plus de filtrage, toutes les commandes actives sont incluses
+				// 🆕 CORRECTION : Le POS local est la source de vérité
+				// Ajouter UNIQUEMENT les nouvelles commandes client depuis MongoDB
+				// Ne JAMAIS écraser les commandes POS locales
 				
-				// Comparer avec les données locales pour détecter les nouvelles commandes
 				const localOrderIds = new Set(dataStore.orders.map(o => o.id));
-				const newOrders = activeCloudOrders.filter(o => !localOrderIds.has(o.id));
 				
-				// Mettre à jour les commandes existantes (en cas de modification)
-				const updatedOrders = [];
-				for (const cloudOrder of activeCloudOrders) {
-					const localIndex = dataStore.orders.findIndex(o => o.id === cloudOrder.id);
-					if (localIndex !== -1) {
-						dataStore.orders[localIndex] = cloudOrder;
-						updatedOrders.push(cloudOrder.id);
+				// Filtrer UNIQUEMENT les nouvelles commandes client qui n'existent pas encore localement
+				const newClientOrders = cloudOrders.filter(o => {
+					return o.source === 'client' && !localOrderIds.has(o.id);
+				});
+				
+				// Mettre à jour les commandes client existantes (mais pas les commandes POS)
+				const updatedClientOrders = [];
+				for (const cloudOrder of cloudOrders) {
+					if (cloudOrder.source === 'client') {
+						const localIndex = dataStore.orders.findIndex(o => o.id === cloudOrder.id && o.source === 'client');
+						if (localIndex !== -1) {
+							// Mettre à jour seulement les commandes client existantes
+							dataStore.orders[localIndex] = cloudOrder;
+							updatedClientOrders.push(cloudOrder.id);
+						}
 					}
+					// Ne JAMAIS toucher aux commandes POS (source de vérité locale)
 				}
 				
-				// Ajouter les nouvelles commandes
-				if (newOrders.length > 0) {
-					console.log(`[sync] 🔄 ${newOrders.length} nouvelle(s) commande(s) détectée(s) depuis MongoDB`);
-					dataStore.orders.push(...newOrders);
+				// Ajouter les nouvelles commandes client
+				if (newClientOrders.length > 0) {
+					console.log(`[sync] 🔄 ${newClientOrders.length} nouvelle(s) commande(s) CLIENT détectée(s) depuis MongoDB`);
+					dataStore.orders.push(...newClientOrders);
 					
-					// Notifier via Socket.IO les nouvelles commandes
+					// Notifier via Socket.IO les nouvelles commandes client
 					const { getIO } = require('./server/utils/socket');
 					const io = getIO();
-					for (const newOrder of newOrders) {
+					for (const newOrder of newClientOrders) {
 						io.emit('order:new', newOrder);
-						console.log(`[sync] 📢 Commande #${newOrder.id} (table ${newOrder.table}) notifiée via Socket.IO`);
+						console.log(`[sync] 📢 Commande client #${newOrder.id} (table ${newOrder.table}) notifiée via Socket.IO`);
 					}
 				}
 				
-				// 🆕 Plus besoin de retirer les commandes confirmées car elles deviennent source='pos'
-				// Les commandes client confirmées sont converties en commandes POS normales
-				
-				// Mettre à jour les archives
+				// Mettre à jour les archives (sans écraser les commandes POS locales)
 				dataStore.archivedOrders.length = 0;
 				dataStore.archivedOrders.push(...cloudArchived);
 				
-				// Mettre à jour les compteurs
+				// Mettre à jour les compteurs depuis MongoDB (pour éviter les conflits d'IDs)
 				const countersDoc = await dbManager.counters.findOne({ type: 'global' });
 				if (countersDoc) {
 					dataStore.nextOrderId = Math.max(dataStore.nextOrderId, countersDoc.nextOrderId || 1);
@@ -134,8 +137,8 @@ dbManager.connect().then(() => {
 				}
 				
 				const syncDuration = Date.now() - syncStartTime;
-				if (newOrders.length > 0 || updatedOrders.length > 0 || removedCount > 0) {
-					console.log(`[sync] ✅ Synchronisation terminée en ${syncDuration}ms (${newOrders.length} nouvelles, ${updatedOrders.length} mises à jour, ${removedCount} retirées)`);
+				if (newClientOrders.length > 0 || updatedClientOrders.length > 0) {
+					console.log(`[sync] ✅ Synchronisation terminée en ${syncDuration}ms (${newClientOrders.length} nouvelles commandes client, ${updatedClientOrders.length} mises à jour)`);
 				}
 				lastSyncTime = Date.now();
 			} catch (e) {
