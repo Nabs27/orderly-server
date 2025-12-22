@@ -178,15 +178,10 @@ async function getAllOrders(req, res) {
 			const cloudOrders = await dbManager.orders.find({}).toArray();
 			const cloudArchived = await dbManager.archivedOrders.find({}).toArray();
 			
-			// 🆕 CORRECTION : Filtrer les commandes confirmées lors du rechargement
-			// Les commandes confirmées (status=nouvelle + serverConfirmed=true) ne doivent pas
-			// apparaître comme "en attente"
-			const activeCloudOrders = cloudOrders.filter(o => {
-				const isConfirmed = o.source === 'client' && 
-				                  o.status === 'nouvelle' && 
-				                  o.serverConfirmed === true;
-				return !isConfirmed; // Exclure les commandes confirmées
-			});
+			// 🆕 CORRECTION : Ne plus filtrer les commandes confirmées car elles deviennent source='pos'
+			// Les commandes client confirmées sont converties en commandes POS normales (source='pos')
+			// donc elles doivent apparaître normalement dans le POS
+			const activeCloudOrders = cloudOrders; // Plus de filtrage, toutes les commandes actives sont incluses
 			
 			// Mettre à jour dataStore avec les données MongoDB filtrées
 			dataStore.orders.length = 0;
@@ -298,7 +293,12 @@ function confirmOrderByServer(req, res) {
 		return res.status(400).json({ error: 'Cette commande n\'est pas en attente de confirmation' });
 	}
 	
-	// Confirmer la commande
+	// 🆕 CORRECTION : Convertir la commande client en commande POS normale
+	// Selon les bonnes pratiques POS : une fois acceptée, elle devient une commande standard
+	// On garde originalSource pour la traçabilité (rapports, analytics)
+	const originalSource = order.source; // Sauvegarder l'origine pour traçabilité
+	order.source = 'pos'; // 🆕 Devenir une commande POS normale (comportement identique)
+	order.originalSource = originalSource; // 🆕 Traçabilité pour rapports/analytics
 	order.serverConfirmed = true;
 	order.status = 'nouvelle'; // Passer au statut normal
 	order.confirmedAt = new Date().toISOString();
@@ -315,17 +315,22 @@ function confirmOrderByServer(req, res) {
 		timestamp: new Date().toISOString(),
 		action: 'server_confirmed',
 		server: order.confirmedBy,
-		details: `Commande client confirmée par le serveur ${order.confirmedBy}`
+		details: `Commande client confirmée et convertie en commande POS par le serveur ${order.confirmedBy}`
 	});
 	
-	console.log('[orders] Commande client confirmée:', id, 'par serveur:', order.confirmedBy, 'table:', order.table);
+	console.log('[orders] ✅ Commande client #' + id + ' confirmée et convertie en commande POS par serveur:', order.confirmedBy, 'table:', order.table);
+	console.log('[orders] ✅ Commande maintenant traitée comme commande POS normale (source=pos, originalSource=' + originalSource + ')');
 	
 	// Sauvegarder
 	fileManager.savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde:', e));
 	
-	// Notifier via Socket.IO
+	// 🆕 CORRECTION : Émettre order:new pour apparition dynamique dans le POS
+	// Cela permet à la commande d'apparaître immédiatement dans le plan de table et la page Order
+	io.emit('order:new', order);
 	io.emit('order:updated', order);
 	io.emit('order:server-confirmed', order);
+	
+	console.log('[orders] 📢 Commande notifiée via Socket.IO (order:new) pour apparition dynamique dans le POS');
 	
 	return res.json(order);
 }

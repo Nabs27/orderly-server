@@ -59,27 +59,11 @@ async function loadFromMongoDB() {
 		// Charger les commandes
 		const orders = await dbManager.orders.find({}).toArray();
 		
-		// 🆕 CORRECTION : Filtrer les commandes confirmées lors du chargement initial
-		// Les commandes confirmées (status=nouvelle + serverConfirmed=true) ne doivent pas
-		// apparaître comme "en attente" au redémarrage
-		const confirmedOrders = orders.filter(o => {
-			return o.source === 'client' && 
-			       o.status === 'nouvelle' && 
-			       o.serverConfirmed === true;
-		});
-		const activeOrders = orders.filter(o => {
-			const isConfirmed = o.source === 'client' && 
-			                  o.status === 'nouvelle' && 
-			                  o.serverConfirmed === true;
-			return !isConfirmed; // Exclure les commandes confirmées
-		});
-		
+		// 🆕 CORRECTION : Ne plus filtrer les commandes confirmées car elles deviennent source='pos'
+		// Les commandes client confirmées sont converties en commandes POS normales (source='pos')
+		// donc elles doivent apparaître normalement dans le POS
 		dataStore.orders.length = 0;
-		dataStore.orders.push(...activeOrders);
-		
-		if (confirmedOrders.length > 0) {
-			console.log(`[persistence] 🧹 ${confirmedOrders.length} commande(s) confirmée(s) exclue(s) du chargement initial`);
-		}
+		dataStore.orders.push(...orders);
 		
 		// Charger les archives
 		const archived = await dbManager.archivedOrders.find({}).toArray();

@@ -84,36 +84,22 @@ dbManager.connect().then(() => {
 				const cloudOrders = await dbManager.orders.find({}).toArray();
 				const cloudArchived = await dbManager.archivedOrders.find({}).toArray();
 				
-				// 🆕 CORRECTION : Filtrer les commandes confirmées lors de la synchronisation
-				// Ne pas inclure les commandes déjà confirmées (status=nouvelle + serverConfirmed=true)
-				// car elles ne doivent plus apparaître comme "en attente"
-				const activeCloudOrders = cloudOrders.filter(o => {
-					const isConfirmed = o.source === 'client' && 
-					                   o.status === 'nouvelle' && 
-					                   o.serverConfirmed === true;
-					return !isConfirmed; // Exclure les commandes confirmées
-				});
+				// 🆕 CORRECTION : Ne plus filtrer les commandes confirmées car elles deviennent source='pos'
+				// Les commandes client confirmées sont converties en commandes POS normales (source='pos')
+				// donc elles doivent apparaître normalement dans le POS
+				const activeCloudOrders = cloudOrders; // Plus de filtrage, toutes les commandes actives sont incluses
 				
 				// Comparer avec les données locales pour détecter les nouvelles commandes
 				const localOrderIds = new Set(dataStore.orders.map(o => o.id));
 				const newOrders = activeCloudOrders.filter(o => !localOrderIds.has(o.id));
 				
-				// Mettre à jour les commandes existantes (en cas de modification, sauf si confirmée)
+				// Mettre à jour les commandes existantes (en cas de modification)
 				const updatedOrders = [];
 				for (const cloudOrder of activeCloudOrders) {
 					const localIndex = dataStore.orders.findIndex(o => o.id === cloudOrder.id);
 					if (localIndex !== -1) {
-						// Vérifier si la commande locale est confirmée mais pas dans cloud
-						const localOrder = dataStore.orders[localIndex];
-						const localIsConfirmed = localOrder.source === 'client' && 
-						                        localOrder.status === 'nouvelle' && 
-						                        localOrder.serverConfirmed === true;
-						
-						// Ne pas mettre à jour si la commande locale est confirmée
-						if (!localIsConfirmed) {
-							dataStore.orders[localIndex] = cloudOrder;
-							updatedOrders.push(cloudOrder.id);
-						}
+						dataStore.orders[localIndex] = cloudOrder;
+						updatedOrders.push(cloudOrder.id);
 					}
 				}
 				
@@ -131,19 +117,8 @@ dbManager.connect().then(() => {
 					}
 				}
 				
-				// Retirer les commandes confirmées de la liste locale
-				// (elles ne doivent plus apparaître comme "en attente")
-				const beforeFilter = dataStore.orders.length;
-				dataStore.orders = dataStore.orders.filter(o => {
-					const isConfirmed = o.source === 'client' && 
-					                   o.status === 'nouvelle' && 
-					                   o.serverConfirmed === true;
-					return !isConfirmed;
-				});
-				const removedCount = beforeFilter - dataStore.orders.length;
-				if (removedCount > 0) {
-					console.log(`[sync] 🧹 ${removedCount} commande(s) confirmée(s) retirée(s) de la liste`);
-				}
+				// 🆕 Plus besoin de retirer les commandes confirmées car elles deviennent source='pos'
+				// Les commandes client confirmées sont converties en commandes POS normales
 				
 				// Mettre à jour les archives
 				dataStore.archivedOrders.length = 0;
