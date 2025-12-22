@@ -178,9 +178,19 @@ async function getAllOrders(req, res) {
 			const cloudOrders = await dbManager.orders.find({}).toArray();
 			const cloudArchived = await dbManager.archivedOrders.find({}).toArray();
 			
-			// Mettre à jour dataStore avec les données MongoDB
+			// 🆕 CORRECTION : Filtrer les commandes confirmées lors du rechargement
+			// Les commandes confirmées (status=nouvelle + serverConfirmed=true) ne doivent pas
+			// apparaître comme "en attente"
+			const activeCloudOrders = cloudOrders.filter(o => {
+				const isConfirmed = o.source === 'client' && 
+				                  o.status === 'nouvelle' && 
+				                  o.serverConfirmed === true;
+				return !isConfirmed; // Exclure les commandes confirmées
+			});
+			
+			// Mettre à jour dataStore avec les données MongoDB filtrées
 			dataStore.orders.length = 0;
-			dataStore.orders.push(...cloudOrders);
+			dataStore.orders.push(...activeCloudOrders);
 			dataStore.archivedOrders.length = 0;
 			dataStore.archivedOrders.push(...cloudArchived);
 			
@@ -193,7 +203,12 @@ async function getAllOrders(req, res) {
 				dataStore.nextClientId = Math.max(dataStore.nextClientId, countersDoc.nextClientId || 1);
 			}
 			
-			console.log(`[orders] ☁️ Données rechargées depuis MongoDB: ${cloudOrders.length} commandes actives`);
+			const confirmedCount = cloudOrders.length - activeCloudOrders.length;
+			if (confirmedCount > 0) {
+				console.log(`[orders] ☁️ Données rechargées depuis MongoDB: ${activeCloudOrders.length} commandes actives, ${confirmedCount} confirmées exclues`);
+			} else {
+				console.log(`[orders] ☁️ Données rechargées depuis MongoDB: ${activeCloudOrders.length} commandes actives`);
+			}
 		} catch (e) {
 			console.error('[orders] ⚠️ Erreur rechargement MongoDB:', e.message);
 			// Continuer avec les données en mémoire en cas d'erreur

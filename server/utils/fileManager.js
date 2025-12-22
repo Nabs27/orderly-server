@@ -56,56 +56,30 @@ async function loadFromMongoDB() {
 	try {
 		console.log('[persistence] ☁️ Chargement des données depuis MongoDB...');
 		
-		// 🆕 CORRECTION : Vérifier si un reset a été fait récemment
-		// Si oui, s'assurer que MongoDB est vraiment vide avant de charger
-		// Charger les compteurs (un seul doc) - on le charge en premier pour vérifier le reset
-		const countersDoc = await dbManager.counters.findOne({ type: 'global' });
-		console.log('[persistence] 🔍 Vérification reset: countersDoc existe?', !!countersDoc, 'lastReset?', countersDoc?.lastReset);
-		
-		if (countersDoc && countersDoc.lastReset) {
-			const lastReset = new Date(countersDoc.lastReset);
-			const now = new Date();
-			const timeSinceReset = now - lastReset;
-			console.log('[persistence] 🧹 Reset détecté il y a ' + Math.round(timeSinceReset / 1000) + 's');
-			
-			// 🆕 CORRECTION : Augmenter la fenêtre de temps à 30 minutes au lieu de 5
-			// Car le serveur peut être redémarré plus tard après le reset
-			if (timeSinceReset < 30 * 60 * 1000) {
-				console.log('[persistence] 🧹 Reset récent détecté (il y a ' + Math.round(timeSinceReset / 1000) + 's), vérification MongoDB...');
-				const ordersCount = await dbManager.orders.countDocuments({});
-				console.log('[persistence] 📊 Nombre de commandes dans MongoDB:', ordersCount);
-				
-				if (ordersCount > 0) {
-					console.log('[persistence] ⚠️ ATTENTION: ' + ordersCount + ' commande(s) encore présente(s) dans MongoDB après reset !');
-					console.log('[persistence] 🧹 Nettoyage automatique de MongoDB...');
-					const deletedOrders = await dbManager.orders.deleteMany({});
-					const deletedArchived = await dbManager.archivedOrders.deleteMany({});
-					const deletedBills = await dbManager.bills.deleteMany({});
-					const deletedArchivedBills = await dbManager.archivedBills.deleteMany({});
-					const deletedServices = await dbManager.services.deleteMany({});
-					const deletedCredits = await dbManager.clientCredits.deleteMany({});
-					console.log('[persistence] ✅ MongoDB nettoyé automatiquement:', {
-						orders: deletedOrders.deletedCount,
-						archivedOrders: deletedArchived.deletedCount,
-						bills: deletedBills.deletedCount,
-						archivedBills: deletedArchivedBills.deletedCount,
-						services: deletedServices.deletedCount,
-						credits: deletedCredits.deletedCount
-					});
-				} else {
-					console.log('[persistence] ✅ MongoDB est déjà vide après reset');
-				}
-			} else {
-				console.log('[persistence] ℹ️ Reset trop ancien (' + Math.round(timeSinceReset / 60000) + ' min), pas de nettoyage automatique');
-			}
-		} else {
-			console.log('[persistence] ℹ️ Aucun reset récent détecté, chargement normal depuis MongoDB');
-		}
-		
 		// Charger les commandes
 		const orders = await dbManager.orders.find({}).toArray();
+		
+		// 🆕 CORRECTION : Filtrer les commandes confirmées lors du chargement initial
+		// Les commandes confirmées (status=nouvelle + serverConfirmed=true) ne doivent pas
+		// apparaître comme "en attente" au redémarrage
+		const confirmedOrders = orders.filter(o => {
+			return o.source === 'client' && 
+			       o.status === 'nouvelle' && 
+			       o.serverConfirmed === true;
+		});
+		const activeOrders = orders.filter(o => {
+			const isConfirmed = o.source === 'client' && 
+			                  o.status === 'nouvelle' && 
+			                  o.serverConfirmed === true;
+			return !isConfirmed; // Exclure les commandes confirmées
+		});
+		
 		dataStore.orders.length = 0;
-		dataStore.orders.push(...orders);
+		dataStore.orders.push(...activeOrders);
+		
+		if (confirmedOrders.length > 0) {
+			console.log(`[persistence] 🧹 ${confirmedOrders.length} commande(s) confirmée(s) exclue(s) du chargement initial`);
+		}
 		
 		// Charger les archives
 		const archived = await dbManager.archivedOrders.find({}).toArray();
@@ -126,7 +100,8 @@ async function loadFromMongoDB() {
 		dataStore.serviceRequests.length = 0;
 		dataStore.serviceRequests.push(...services);
 		
-		// Utiliser countersDoc déjà chargé plus haut
+		// Charger les compteurs (un seul doc)
+		const countersDoc = await dbManager.counters.findOne({ type: 'global' });
 		if (countersDoc) {
 			dataStore.nextOrderId = countersDoc.nextOrderId || 1;
 			dataStore.nextBillId = countersDoc.nextBillId || 1;
@@ -150,20 +125,6 @@ async function saveToMongoDB() {
 		if (!dbManager.db) {
 			console.log('[sync] ⚠️ MongoDB non connecté, synchronisation ignorée');
 			return;
-		}
-		
-		// 🆕 CORRECTION CRITIQUE : Vérifier si un reset a été fait récemment
-		// Si oui, ne PAS synchroniser vers MongoDB pour éviter de réintroduire des données
-		const countersDoc = await dbManager.counters.findOne({ type: 'global' });
-		if (countersDoc && countersDoc.lastReset) {
-			const lastReset = new Date(countersDoc.lastReset);
-			const now = new Date();
-			const timeSinceReset = now - lastReset;
-			// Si le reset a été fait il y a moins de 30 minutes, ne pas synchroniser
-			if (timeSinceReset < 30 * 60 * 1000) {
-				console.log('[sync] ⚠️ Reset récent détecté (il y a ' + Math.round(timeSinceReset / 1000) + 's), synchronisation MongoDB ignorée pour éviter réintroduction de données');
-				return; // Ne pas synchroniser après un reset récent
-			}
 		}
 		
 		console.log('[sync] ☁️ Synchronisation vers MongoDB (backup)...');

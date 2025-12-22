@@ -70,59 +70,108 @@ dbManager.connect().then(() => {
 	
 	// 🆕 CORRECTION : Synchronisation périodique depuis MongoDB si mode cloud
 	// Cela permet au serveur local de voir les commandes créées par le serveur cloud (app client)
-	if (dbManager.isCloud && dbManager.db) {
+	// 🆕 Vérifier si c'est le serveur local (port 3000) et non le cloud (port 8080)
+	const isLocalServer = (process.env.PORT || 3000) == 3000;
+	if (dbManager.isCloud && dbManager.db && isLocalServer) {
 		const SYNC_INTERVAL = 3000; // Synchroniser toutes les 3 secondes
+		let lastSyncTime = Date.now();
+		
 		setInterval(async () => {
 			try {
+				const syncStartTime = Date.now();
+				
 				// Recharger les commandes depuis MongoDB
 				const cloudOrders = await dbManager.orders.find({}).toArray();
 				const cloudArchived = await dbManager.archivedOrders.find({}).toArray();
 				
+				// 🆕 CORRECTION : Filtrer les commandes confirmées lors de la synchronisation
+				// Ne pas inclure les commandes déjà confirmées (status=nouvelle + serverConfirmed=true)
+				// car elles ne doivent plus apparaître comme "en attente"
+				const activeCloudOrders = cloudOrders.filter(o => {
+					const isConfirmed = o.source === 'client' && 
+					                   o.status === 'nouvelle' && 
+					                   o.serverConfirmed === true;
+					return !isConfirmed; // Exclure les commandes confirmées
+				});
+				
 				// Comparer avec les données locales pour détecter les nouvelles commandes
 				const localOrderIds = new Set(dataStore.orders.map(o => o.id));
-				const newOrders = cloudOrders.filter(o => !localOrderIds.has(o.id));
+				const newOrders = activeCloudOrders.filter(o => !localOrderIds.has(o.id));
 				
-				if (newOrders.length > 0) {
-					console.log(`[sync] 🔄 ${newOrders.length} nouvelle(s) commande(s) détectée(s) depuis MongoDB`);
-					
-					// Ajouter les nouvelles commandes
-					dataStore.orders.push(...newOrders);
-					
-					// Mettre à jour les commandes existantes (en cas de modification)
-					for (const cloudOrder of cloudOrders) {
-						const localIndex = dataStore.orders.findIndex(o => o.id === cloudOrder.id);
-						if (localIndex !== -1) {
+				// Mettre à jour les commandes existantes (en cas de modification, sauf si confirmée)
+				const updatedOrders = [];
+				for (const cloudOrder of activeCloudOrders) {
+					const localIndex = dataStore.orders.findIndex(o => o.id === cloudOrder.id);
+					if (localIndex !== -1) {
+						// Vérifier si la commande locale est confirmée mais pas dans cloud
+						const localOrder = dataStore.orders[localIndex];
+						const localIsConfirmed = localOrder.source === 'client' && 
+						                        localOrder.status === 'nouvelle' && 
+						                        localOrder.serverConfirmed === true;
+						
+						// Ne pas mettre à jour si la commande locale est confirmée
+						if (!localIsConfirmed) {
 							dataStore.orders[localIndex] = cloudOrder;
+							updatedOrders.push(cloudOrder.id);
 						}
 					}
-					
-					// Mettre à jour les archives
-					dataStore.archivedOrders.length = 0;
-					dataStore.archivedOrders.push(...cloudArchived);
-					
-					// Mettre à jour les compteurs
-					const countersDoc = await dbManager.counters.findOne({ type: 'global' });
-					if (countersDoc) {
-						dataStore.nextOrderId = Math.max(dataStore.nextOrderId, countersDoc.nextOrderId || 1);
-						dataStore.nextBillId = Math.max(dataStore.nextBillId, countersDoc.nextBillId || 1);
-						dataStore.nextServiceId = Math.max(dataStore.nextServiceId, countersDoc.nextServiceId || 1);
-						dataStore.nextClientId = Math.max(dataStore.nextClientId, countersDoc.nextClientId || 1);
-					}
+				}
+				
+				// Ajouter les nouvelles commandes
+				if (newOrders.length > 0) {
+					console.log(`[sync] 🔄 ${newOrders.length} nouvelle(s) commande(s) détectée(s) depuis MongoDB`);
+					dataStore.orders.push(...newOrders);
 					
 					// Notifier via Socket.IO les nouvelles commandes
 					const { getIO } = require('./server/utils/socket');
 					const io = getIO();
 					for (const newOrder of newOrders) {
 						io.emit('order:new', newOrder);
-						console.log(`[sync] 📢 Commande #${newOrder.id} notifiée via Socket.IO`);
+						console.log(`[sync] 📢 Commande #${newOrder.id} (table ${newOrder.table}) notifiée via Socket.IO`);
 					}
 				}
+				
+				// Retirer les commandes confirmées de la liste locale
+				// (elles ne doivent plus apparaître comme "en attente")
+				const beforeFilter = dataStore.orders.length;
+				dataStore.orders = dataStore.orders.filter(o => {
+					const isConfirmed = o.source === 'client' && 
+					                   o.status === 'nouvelle' && 
+					                   o.serverConfirmed === true;
+					return !isConfirmed;
+				});
+				const removedCount = beforeFilter - dataStore.orders.length;
+				if (removedCount > 0) {
+					console.log(`[sync] 🧹 ${removedCount} commande(s) confirmée(s) retirée(s) de la liste`);
+				}
+				
+				// Mettre à jour les archives
+				dataStore.archivedOrders.length = 0;
+				dataStore.archivedOrders.push(...cloudArchived);
+				
+				// Mettre à jour les compteurs
+				const countersDoc = await dbManager.counters.findOne({ type: 'global' });
+				if (countersDoc) {
+					dataStore.nextOrderId = Math.max(dataStore.nextOrderId, countersDoc.nextOrderId || 1);
+					dataStore.nextBillId = Math.max(dataStore.nextBillId, countersDoc.nextBillId || 1);
+					dataStore.nextServiceId = Math.max(dataStore.nextServiceId, countersDoc.nextServiceId || 1);
+					dataStore.nextClientId = Math.max(dataStore.nextClientId, countersDoc.nextClientId || 1);
+				}
+				
+				const syncDuration = Date.now() - syncStartTime;
+				if (newOrders.length > 0 || updatedOrders.length > 0 || removedCount > 0) {
+					console.log(`[sync] ✅ Synchronisation terminée en ${syncDuration}ms (${newOrders.length} nouvelles, ${updatedOrders.length} mises à jour, ${removedCount} retirées)`);
+				}
+				lastSyncTime = Date.now();
 			} catch (e) {
 				console.error('[sync] ⚠️ Erreur synchronisation périodique:', e.message);
+				console.error('[sync] Stack:', e.stack);
 			}
 		}, SYNC_INTERVAL);
 		
-		console.log(`[server] 🔄 Synchronisation périodique MongoDB activée (toutes les ${SYNC_INTERVAL/1000}s)`);
+		console.log(`[server] 🔄 Synchronisation périodique MongoDB activée (toutes les ${SYNC_INTERVAL/1000}s) pour serveur local`);
+	} else if (dbManager.isCloud && dbManager.db && !isLocalServer) {
+		console.log(`[server] ☁️ Serveur cloud détecté (port ${process.env.PORT || 3000}), synchronisation périodique désactivée`);
 	}
 }).catch(err => {
 	console.error('[server] ❌ Erreur initialisation données:', err);
