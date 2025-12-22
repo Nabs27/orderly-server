@@ -91,9 +91,17 @@ dbManager.connect().then(() => {
 				const localOrderIds = new Set(dataStore.orders.map(o => o.id));
 				
 				// Filtrer UNIQUEMENT les nouvelles commandes client qui n'existent pas encore localement
-				const newClientOrders = cloudOrders.filter(o => {
-					return o.source === 'client' && !localOrderIds.has(o.id);
-				});
+				const allClientOrders = cloudOrders.filter(o => o.source === 'client');
+				const newClientOrders = allClientOrders.filter(o => !localOrderIds.has(o.id));
+				
+				// 🆕 Log pour déboguer
+				if (allClientOrders.length > 0) {
+					console.log(`[sync] 🔍 ${allClientOrders.length} commande(s) client trouvée(s) dans MongoDB, ${newClientOrders.length} nouvelle(s)`);
+					for (const clientOrder of allClientOrders) {
+						const exists = localOrderIds.has(clientOrder.id);
+						console.log(`[sync]   - Commande client #${clientOrder.id} (table ${clientOrder.table}): ${exists ? 'existe déjà' : 'NOUVELLE'}, status=${clientOrder.status}, serverConfirmed=${clientOrder.serverConfirmed}`);
+					}
+				}
 				
 				// Mettre à jour les commandes client existantes (mais pas les commandes POS)
 				const updatedClientOrders = [];
