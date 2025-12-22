@@ -299,6 +299,80 @@ function confirmOrderByServer(req, res) {
 	return res.json(order);
 }
 
+// 🆕 Décliner une commande client
+function declineClientOrder(req, res) {
+	const io = getIO();
+	const id = Number(req.params.id);
+	const order = dataStore.orders.find(o => o.id === id);
+	
+	if (!order) {
+		return res.status(404).json({ error: 'Commande introuvable' });
+	}
+	
+	// Vérifier que c'est une commande client
+	if (order.source !== 'client') {
+		return res.status(400).json({ error: 'Cette commande n\'est pas une commande client' });
+	}
+	
+	// Vérifier qu'elle n'est pas déjà confirmée
+	if (order.serverConfirmed) {
+		return res.status(400).json({ error: 'Cette commande a déjà été confirmée' });
+	}
+	
+	// Vérifier que le statut est en attente
+	if (order.status !== 'pending_server_confirmation') {
+		return res.status(400).json({ error: 'Cette commande n\'est pas en attente de confirmation' });
+	}
+	
+	const declinedBy = req.body.server || order.server;
+	const reason = req.body.reason || 'Déclinée par le serveur';
+	
+	// Initialiser orderHistory si absent
+	if (!order.orderHistory) {
+		order.orderHistory = [];
+	}
+	
+	// Enregistrer dans l'historique
+	order.orderHistory.push({
+		timestamp: new Date().toISOString(),
+		action: 'server_declined',
+		server: declinedBy,
+		details: `Commande client déclinée par le serveur ${declinedBy}: ${reason}`
+	});
+	
+	// Archiver la commande (la retirer des commandes actives)
+	const idx = dataStore.orders.findIndex(o => o.id === order.id);
+	if (idx !== -1) {
+		const archived = { 
+			...order, 
+			status: 'declined',
+			declinedAt: new Date().toISOString(),
+			declinedBy: declinedBy,
+			declineReason: reason,
+			archivedAt: new Date().toISOString()
+		};
+		dataStore.orders.splice(idx, 1);
+		dataStore.archivedOrders.push(archived);
+		
+		console.log('[orders] ❌ Commande client #' + id + ' déclinée par serveur:', declinedBy, 'table:', order.table, 'raison:', reason);
+		
+		// Sauvegarder
+		fileManager.savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde:', e));
+		
+		// Émettre événements pour mettre à jour l'UI
+		io.emit('order:archived', { id: order.id, table: order.table });
+		io.emit('order:declined', { id: order.id, table: order.table, reason: reason });
+		
+		return res.json({ 
+			ok: true, 
+			message: 'Commande déclinée avec succès',
+			order: archived 
+		});
+	}
+	
+	return res.status(500).json({ error: 'Erreur lors de la déclinaison de la commande' });
+}
+
 // Créer une sous-note
 function createSubNote(req, res) {
 	const io = getIO();
@@ -454,6 +528,7 @@ module.exports = {
 	updateOrder,
 	confirmOrder,
 	confirmOrderByServer, // 🆕 Nouvelle fonction
+	declineClientOrder, // 🆕 Nouvelle fonction
 	createSubNote,
 	addItemsToNote
 };
