@@ -171,13 +171,27 @@ class _PosHomePageState extends State<PosHomePage> {
   }
 
   void _startTimer() {
+    int syncCounter = 0;
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      // 🆕 Vérifier périodiquement que le socket est connecté
+      _checkSocketConnection();
+      
+      // 🆕 Synchronisation périodique toutes les 3 secondes pour récupérer les nouvelles commandes
+      // même si le socket est connecté (au cas où l'événement Socket.IO serait manqué)
+      syncCounter++;
+      if (syncCounter >= 3) {
+        syncCounter = 0;
+        if (mounted) {
+          _syncOrdersWithTables().catchError((e) {
+            print('[POS HOME] ❌ Erreur synchronisation périodique: $e');
+          });
+        }
+      }
+      
       if (mounted) {
         setState(() {
           // Mise à jour des chronomètres
         });
-        
-        // Plus de synchronisation automatique périodique - juste les chronomètres
       }
     });
   }
@@ -888,6 +902,29 @@ class _PosHomePageState extends State<PosHomePage> {
     }
     socket = null;
     _connectSocket();
+  }
+
+  // 🆕 Vérifier périodiquement que le socket est connecté
+  void _checkSocketConnection() {
+    if (socket == null) {
+      print('[POS HOME] ⚠️ Socket est null, reconnexion...');
+      _connectSocket();
+      return;
+    }
+    
+    final isConnected = socket!.connected;
+    if (!isConnected) {
+      print('[POS HOME] ⚠️ Socket déconnecté (id=${socket!.id}), tentative de reconnexion...');
+      // Ne pas appeler dispose() ici pour éviter une boucle infinie
+      // Juste appeler connect() pour réessayer
+      try {
+        socket!.connect();
+      } catch (e) {
+        print('[POS HOME] ❌ Erreur lors de la reconnexion: $e');
+        // Si la reconnexion échoue, faire une reconnexion complète
+        _reconnectSocket();
+      }
+    }
   }
 
   void _loadApiPrefs() {
