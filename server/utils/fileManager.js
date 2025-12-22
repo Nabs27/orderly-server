@@ -116,9 +116,14 @@ async function saveToMongoDB() {
 		// Synchroniser les commandes (upsert par ID pour éviter les doublons)
 		if (dataStore.orders.length > 0) {
 			for (const order of dataStore.orders) {
+				// 🆕 CORRECTION : Supprimer _id MongoDB avant replaceOne pour éviter l'erreur "immutable field"
+				// MongoDB génère automatiquement _id lors du chargement, mais on ne doit pas le modifier
+				const orderToSave = { ...order };
+				delete orderToSave._id;
+				
 				await dbManager.orders.replaceOne(
 					{ id: order.id },
-					order,
+					orderToSave,
 					{ upsert: true }
 				);
 			}
@@ -128,9 +133,13 @@ async function saveToMongoDB() {
 		// Synchroniser les commandes archivées
 		if (dataStore.archivedOrders.length > 0) {
 			for (const order of dataStore.archivedOrders) {
+				// 🆕 CORRECTION : Supprimer _id MongoDB avant replaceOne
+				const orderToSave = { ...order };
+				delete orderToSave._id;
+				
 				await dbManager.archivedOrders.replaceOne(
 					{ id: order.id },
-					order,
+					orderToSave,
 					{ upsert: true }
 				);
 			}
@@ -140,9 +149,13 @@ async function saveToMongoDB() {
 		// Synchroniser les factures
 		if (dataStore.bills.length > 0) {
 			for (const bill of dataStore.bills) {
+				// 🆕 CORRECTION : Supprimer _id MongoDB avant replaceOne
+				const billToSave = { ...bill };
+				delete billToSave._id;
+				
 				await dbManager.bills.replaceOne(
 					{ id: bill.id },
-					bill,
+					billToSave,
 					{ upsert: true }
 				);
 			}
@@ -152,9 +165,13 @@ async function saveToMongoDB() {
 		// Synchroniser les factures archivées
 		if (dataStore.archivedBills.length > 0) {
 			for (const bill of dataStore.archivedBills) {
+				// 🆕 CORRECTION : Supprimer _id MongoDB avant replaceOne
+				const billToSave = { ...bill };
+				delete billToSave._id;
+				
 				await dbManager.archivedBills.replaceOne(
 					{ id: bill.id },
-					bill,
+					billToSave,
 					{ upsert: true }
 				);
 			}
@@ -164,9 +181,13 @@ async function saveToMongoDB() {
 		// Synchroniser les demandes de service
 		if (dataStore.serviceRequests.length > 0) {
 			for (const service of dataStore.serviceRequests) {
+				// 🆕 CORRECTION : Supprimer _id MongoDB avant replaceOne
+				const serviceToSave = { ...service };
+				delete serviceToSave._id;
+				
 				await dbManager.services.replaceOne(
 					{ id: service.id },
-					service,
+					serviceToSave,
 					{ upsert: true }
 				);
 			}
@@ -176,9 +197,13 @@ async function saveToMongoDB() {
 		// Synchroniser les clients crédit
 		if (dataStore.clientCredits.length > 0) {
 			for (const client of dataStore.clientCredits) {
+				// 🆕 CORRECTION : Supprimer _id MongoDB avant replaceOne
+				const clientToSave = { ...client };
+				delete clientToSave._id;
+				
 				await dbManager.clientCredits.replaceOne(
 					{ id: client.id },
-					client,
+					clientToSave,
 					{ upsert: true }
 				);
 			}
