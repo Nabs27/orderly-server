@@ -27,9 +27,17 @@ function createOrder(req, res) {
 	
 	const total = items.reduce((sum, it) => sum + (Number(it.price) * Number(it.quantity || 1)), 0);
 	
+	// 🆕 BONNE PRATIQUE : Seul le POS peut donner un ID à une commande
+	// Les commandes client n'ont pas d'ID jusqu'à acceptation par le POS
+	// Utiliser un ID temporaire unique pour les commandes client (timestamp + random)
+	const tempId = isClientOrder 
+		? `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+		: null;
+	
 	// Nouvelle structure avec support des sous-notes
 	const newOrder = {
-		id: dataStore.nextOrderId++,
+		id: isClientOrder ? null : dataStore.nextOrderId++, // 🆕 Pas d'ID pour commandes client
+		tempId: tempId, // 🆕 ID temporaire unique pour commandes client (avant acceptation)
 		table,
 		server: assignedServer, // 🆕 Serveur assigné automatiquement pour les commandes client
 		covers: covers || 1,
@@ -91,9 +99,10 @@ function createOrder(req, res) {
 	
 	// 🆕 Log différencié selon la source
 	if (isClientOrder) {
-		console.log('[orders] 🆕 Commande CLIENT créée:', newOrder.id, 'pour table', table, 'serveur assigné:', assignedServer, 'total:', total, 'status:', newOrder.status, 'source:', newOrder.source);
+		console.log('[orders] 🆕 Commande CLIENT créée (sans ID - en attente POS):', newOrder.tempId, 'pour table', table, 'serveur assigné:', assignedServer, 'total:', total, 'status:', newOrder.status);
 		console.log('[orders] 🆕 Structure commande client:', JSON.stringify({
 			id: newOrder.id,
+			tempId: newOrder.tempId,
 			table: newOrder.table,
 			server: newOrder.server,
 			status: newOrder.status,
@@ -154,7 +163,8 @@ function createOrder(req, res) {
 		// Compatibilité : retourner la commande directement (pour le POS)
 		...newOrder,
 		// 🆕 Nouvelles données pour synchronisation (pour l'app client)
-		orderId: newOrder.id, // ID généré par le POS (source de vérité unique)
+		orderId: newOrder.id || newOrder.tempId, // ID ou tempId pour commandes client
+		tempId: newOrder.tempId, // 🆕 ID temporaire pour commandes client (avant acceptation POS)
 		tableState: {
 			table: table,
 			orders: tableOrders, // Toutes les commandes actives de la table
@@ -235,8 +245,12 @@ function confirmOrder(req, res) {
 // 🆕 Confirmation d'une commande client par le serveur
 function confirmOrderByServer(req, res) {
 	const io = getIO();
-	const id = Number(req.params.id);
-	const order = dataStore.orders.find(o => o.id === id);
+	const tempIdOrId = req.params.id; // Peut être un tempId (string) ou un ID (number)
+	
+	// 🆕 BONNE PRATIQUE : Chercher par tempId si c'est une commande client, sinon par ID
+	const order = dataStore.orders.find(o => 
+		o.tempId === tempIdOrId || o.id === Number(tempIdOrId)
+	);
 	
 	if (!order) {
 		return res.status(404).json({ error: 'Commande introuvable' });
@@ -256,6 +270,13 @@ function confirmOrderByServer(req, res) {
 	if (order.status !== 'pending_server_confirmation') {
 		return res.status(400).json({ error: 'Cette commande n\'est pas en attente de confirmation' });
 	}
+	
+	// 🆕 BONNE PRATIQUE : Le POS donne maintenant un ID officiel à la commande client
+	// Seul le POS peut donner un ID - c'est la source de vérité unique
+	const oldTempId = order.tempId;
+	const oldId = order.id;
+	order.id = dataStore.nextOrderId++; // 🆕 ID officiel généré par le POS
+	delete order.tempId; // 🆕 Supprimer l'ID temporaire
 	
 	// 🆕 CORRECTION : Convertir la commande client en commande POS normale
 	// Selon les bonnes pratiques POS : une fois acceptée, elle devient une commande standard
@@ -282,8 +303,8 @@ function confirmOrderByServer(req, res) {
 		details: `Commande client confirmée et convertie en commande POS par le serveur ${order.confirmedBy}`
 	});
 	
-	console.log('[orders] ✅ Commande client #' + id + ' confirmée et convertie en commande POS par serveur:', order.confirmedBy, 'table:', order.table);
-	console.log('[orders] ✅ Commande maintenant traitée comme commande POS normale (source=pos, originalSource=' + originalSource + ')');
+	console.log('[orders] ✅ Commande client (tempId: ' + oldTempId + ', ancien ID: ' + (oldId || 'null') + ') confirmée et reçoit ID officiel #' + order.id + ' par serveur:', order.confirmedBy, 'table:', order.table);
+	console.log('[orders] ✅ Commande maintenant traitée comme commande POS normale (id=' + order.id + ', source=pos, originalSource=' + originalSource + ')');
 	
 	// Sauvegarder
 	fileManager.savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde:', e));
@@ -302,10 +323,13 @@ function confirmOrderByServer(req, res) {
 // 🆕 Décliner une commande client par le serveur
 function declineOrderByServer(req, res) {
 	const io = getIO();
-	const id = Number(req.params.id);
+	const tempIdOrId = req.params.id; // Peut être un tempId (string) ou un ID (number)
 	const { reason } = req.body || {}; // Raison optionnelle du refus
 	
-	const order = dataStore.orders.find(o => o.id === id);
+	// 🆕 BONNE PRATIQUE : Chercher par tempId si c'est une commande client, sinon par ID
+	const order = dataStore.orders.find(o => 
+		o.tempId === tempIdOrId || o.id === Number(tempIdOrId)
+	);
 	
 	if (!order) {
 		return res.status(404).json({ error: 'Commande introuvable' });
@@ -361,7 +385,8 @@ function declineOrderByServer(req, res) {
 		archived = order;
 	}
 	
-	console.log('[orders] ❌ Commande client #' + id + ' déclinée par serveur:', order.declinedBy, 'table:', order.table, 'raison:', reason || 'Aucune');
+	const identifier = order.tempId || order.id || 'sans ID';
+	console.log('[orders] ❌ Commande client ' + identifier + ' déclinée par serveur:', order.declinedBy, 'table:', order.table, 'raison:', reason || 'Aucune');
 	
 	// Sauvegarder
 	fileManager.savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde:', e));

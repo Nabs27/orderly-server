@@ -88,7 +88,10 @@ dbManager.connect().then(() => {
 				// Ajouter UNIQUEMENT les nouvelles commandes client depuis MongoDB
 				// Ne JAMAIS écraser les commandes POS locales
 				
-				const localOrderIds = new Set(dataStore.orders.map(o => o.id));
+				// 🆕 BONNE PRATIQUE : Les commandes client n'ont pas d'ID jusqu'à acceptation POS
+				// Utiliser tempId pour identifier les commandes client en attente
+				const localOrderTempIds = new Set(dataStore.orders.filter(o => o.tempId).map(o => o.tempId));
+				const localOrderIds = new Set(dataStore.orders.filter(o => o.id).map(o => o.id));
 				
 				// 🆕 NETTOYAGE : Retirer des archives les commandes qui sont encore en attente
 				// On ne peut pas archiver quelque chose qui n'est ni accepté ni décliné
@@ -107,8 +110,18 @@ dbManager.connect().then(() => {
 				// Filtrer UNIQUEMENT les nouvelles commandes client qui n'existent pas encore localement
 				const allClientOrders = cloudOrders.filter(o => o.source === 'client');
 				const newClientOrders = allClientOrders.filter(o => {
-					// 1. Vérifier si la commande existe déjà dans les commandes actives
-					if (localOrderIds.has(o.id)) {
+					// 🆕 BONNE PRATIQUE : Les commandes client n'ont pas d'ID jusqu'à acceptation POS
+					// Vérifier par tempId si présent, sinon par ID (pour compatibilité avec anciennes commandes)
+					if (o.tempId && localOrderTempIds.has(o.tempId)) {
+						return false; // Déjà présente (même tempId)
+					}
+					if (o.id && localOrderIds.has(o.id)) {
+						// Si la commande a un ID, vérifier qu'elle n'est pas déjà une commande POS
+						const existingOrder = dataStore.orders.find(lo => lo.id === o.id);
+						if (existingOrder && existingOrder.source === 'pos') {
+							console.log(`[sync] ⚠️ Commande client avec ID #${o.id} ignorée : conflit avec commande POS existante`);
+							return false; // Conflit avec commande POS
+						}
 						return false; // Déjà présente
 					}
 					
@@ -117,15 +130,18 @@ dbManager.connect().then(() => {
 					if (o.serverConfirmed === true || 
 						o.status !== 'pending_server_confirmation' ||
 						o.status === 'declined') {
-						console.log(`[sync] ⏭️ Commande client #${o.id} ignorée: déjà confirmée/déclinée ou statut invalide`);
+						const identifier = o.tempId || o.id || 'sans ID';
+						console.log(`[sync] ⏭️ Commande client ${identifier} ignorée: déjà confirmée/déclinée ou statut invalide`);
 						return false; // Déjà confirmée/déclinée ailleurs
 					}
 					
-					// 3. Vérifier si la commande a été archivée localement
+					// 3. Vérifier si la commande a été archivée localement (par tempId ou ID)
 					// Après nettoyage, si elle est dans les archives, c'est qu'elle a été traitée
-					const localArchivedOrderIds = new Set(dataStore.archivedOrders.map(ao => ao.id));
-					if (localArchivedOrderIds.has(o.id)) {
-						console.log(`[sync] ⏭️ Commande client #${o.id} ignorée: déjà archivée et traitée`);
+					const localArchivedOrderTempIds = new Set(dataStore.archivedOrders.filter(ao => ao.tempId).map(ao => ao.tempId));
+					const localArchivedOrderIds = new Set(dataStore.archivedOrders.filter(ao => ao.id).map(ao => ao.id));
+					if ((o.tempId && localArchivedOrderTempIds.has(o.tempId)) || (o.id && localArchivedOrderIds.has(o.id))) {
+						const identifier = o.tempId || o.id || 'sans ID';
+						console.log(`[sync] ⏭️ Commande client ${identifier} ignorée: déjà archivée et traitée`);
 						return false; // Déjà archivée et traitée, ne pas réintroduire
 					}
 					
@@ -137,7 +153,8 @@ dbManager.connect().then(() => {
 						ao.status !== 'nouvelle'
 					);
 					if (tableHasProcessedArchivedOrders) {
-						console.log(`[sync] ⏭️ Commande client #${o.id} (table ${o.table}) ignorée: table a des commandes archivées traitées (probablement payée)`);
+						const identifier = o.tempId || o.id || 'sans ID';
+						console.log(`[sync] ⏭️ Commande client ${identifier} (table ${o.table}) ignorée: table a des commandes archivées traitées (probablement payée)`);
 						return false; // Table payée, ne pas réintroduire
 					}
 					
@@ -148,8 +165,11 @@ dbManager.connect().then(() => {
 				if (allClientOrders.length > 0) {
 					console.log(`[sync] 🔍 ${allClientOrders.length} commande(s) client trouvée(s) dans MongoDB, ${newClientOrders.length} nouvelle(s)`);
 					for (const clientOrder of allClientOrders) {
-						const exists = localOrderIds.has(clientOrder.id);
-						console.log(`[sync]   - Commande client #${clientOrder.id} (table ${clientOrder.table}): ${exists ? 'existe déjà' : 'NOUVELLE'}, status=${clientOrder.status}, serverConfirmed=${clientOrder.serverConfirmed}`);
+						const existsByTempId = clientOrder.tempId && localOrderTempIds.has(clientOrder.tempId);
+						const existsById = clientOrder.id && localOrderIds.has(clientOrder.id);
+						const exists = existsByTempId || existsById;
+						const identifier = clientOrder.tempId || clientOrder.id || 'sans ID';
+						console.log(`[sync]   - Commande client ${identifier} (table ${clientOrder.table}): ${exists ? 'existe déjà' : 'NOUVELLE'}, status=${clientOrder.status}, serverConfirmed=${clientOrder.serverConfirmed}`);
 					}
 				}
 				
