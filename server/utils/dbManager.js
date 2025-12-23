@@ -37,36 +37,68 @@ class DatabaseManager {
 	async _ensureIndexes() {
 		if (!this.db) return;
 		try {
-			// 🆕 CORRECTION INDEX UNIQUE : Supprimer l'ancien index sur id s'il existe
-			// L'ancien index unique bloque les valeurs null multiples
+			const ordersCollection = this.db.collection('orders');
+			
+			// 🆕 CORRECTION INDEX UNIQUE : Lister et supprimer TOUS les index sur id et tempId
+			// Cela évite les conflits avec les anciens index
 			try {
-				await this.db.collection('orders').dropIndex('id_1');
-				console.log('[DB] 🗑️ Ancien index id_1 supprimé');
-			} catch (dropError) {
-				// L'index n'existe pas ou a déjà été supprimé, c'est OK
-				if (dropError.code !== 27 && dropError.codeName !== 'IndexNotFound') {
-					console.log('[DB] ⚠️ Erreur lors de la suppression de l\'ancien index:', dropError.message);
+				const indexes = await ordersCollection.indexes();
+				const indexesToDrop = [];
+				
+				for (const index of indexes) {
+					const indexKeys = Object.keys(index.key || {});
+					const indexName = index.name;
+					
+					// Supprimer tous les index sur id (sauf _id qui est l'index par défaut)
+					if (indexKeys.includes('id') && indexName !== '_id_') {
+						indexesToDrop.push(indexName);
+					}
+					// Supprimer tous les index sur tempId
+					if (indexKeys.includes('tempId') && indexName !== '_id_') {
+						indexesToDrop.push(indexName);
+					}
 				}
+				
+				// Supprimer les index trouvés
+				for (const indexName of indexesToDrop) {
+					try {
+						await ordersCollection.dropIndex(indexName);
+						console.log(`[DB] 🗑️ Ancien index ${indexName} supprimé`);
+					} catch (dropError) {
+						if (dropError.code !== 27 && dropError.codeName !== 'IndexNotFound') {
+							console.log(`[DB] ⚠️ Erreur suppression index ${indexName}:`, dropError.message);
+						}
+					}
+				}
+			} catch (listError) {
+				console.log('[DB] ⚠️ Erreur lors de la liste des index:', listError.message);
 			}
 			
 			// 🆕 CORRECTION INDEX UNIQUE : Index partiel pour id qui ignore les valeurs null
 			// MongoDB ne supporte pas $ne: null dans les index partiels, utiliser $exists: true
 			// Cela permet plusieurs commandes client avec id: null (elles utilisent tempId comme clé unique)
-			await this.db.collection('orders').createIndex(
-				{ id: 1 }, 
-				{ unique: true, partialFilterExpression: { id: { $exists: true } }, name: 'id_1_partial' }
-			);
-			console.log('[DB] ✅ Index partiel id_1 créé (ignore les valeurs null)');
+			try {
+				await ordersCollection.createIndex(
+					{ id: 1 }, 
+					{ unique: true, partialFilterExpression: { id: { $exists: true } }, name: 'id_1_partial' }
+				);
+				console.log('[DB] ✅ Index partiel id_1 créé (ignore les valeurs null)');
+			} catch (idError) {
+				// Si l'index existe déjà avec les mêmes options, c'est OK
+				if (idError.code !== 85 && idError.codeName !== 'IndexOptionsConflict') {
+					console.log('[DB] ⚠️ Erreur création index id:', idError.message);
+				}
+			}
 			
 			// Index unique sur tempId pour les commandes client sans ID
 			try {
-				await this.db.collection('orders').createIndex(
+				await ordersCollection.createIndex(
 					{ tempId: 1 }, 
 					{ unique: true, partialFilterExpression: { tempId: { $exists: true } }, name: 'tempId_1_partial' }
 				);
 				console.log('[DB] ✅ Index partiel tempId_1 créé');
 			} catch (tempIdError) {
-				// L'index existe peut-être déjà, c'est OK
+				// Si l'index existe déjà avec les mêmes options, c'est OK
 				if (tempIdError.code !== 85 && tempIdError.codeName !== 'IndexOptionsConflict') {
 					console.log('[DB] ⚠️ Erreur création index tempId:', tempIdError.message);
 				}
