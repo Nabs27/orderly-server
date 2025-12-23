@@ -201,16 +201,28 @@ dbManager.connect().then(() => {
 			try {
 				const countersDoc = await dbManager.counters.findOne({ type: 'global' });
 				if (countersDoc && countersDoc.nextOrderId === 1) {
-					// Vérifier si nous avons des commandes avec des IDs élevés
+					// Vérifier si nous avons des commandes avec des IDs élevés en mémoire
 					const maxOrderId = dataStore.orders.length > 0 
 						? Math.max(...dataStore.orders.map(o => o.id || 0))
 						: 0;
 					
-					if (maxOrderId > 1) {
-						console.log(`[server] 🔄 RESET DÉTECTÉ sur serveur cloud : Compteur MongoDB à 1 mais ${dataStore.orders.length} commande(s) en mémoire (max ID: ${maxOrderId})`);
-						console.log('[server] 🔄 Vidage mémoire et rechargement depuis MongoDB...');
+					// 🆕 Vérifier aussi si MongoDB contient des commandes avec des IDs élevés
+					const mongoOrders = await dbManager.orders.find({}).toArray();
+					const maxMongoOrderId = mongoOrders.length > 0
+						? Math.max(...mongoOrders.map(o => o.id || 0))
+						: 0;
+					
+					if (maxOrderId > 1 || maxMongoOrderId > 1) {
+						console.log(`[server] 🔄 RESET DÉTECTÉ sur serveur cloud : Compteur MongoDB à 1 mais ${dataStore.orders.length} commande(s) en mémoire (max ID: ${maxOrderId}) et ${mongoOrders.length} dans MongoDB (max ID: ${maxMongoOrderId})`);
+						console.log('[server] 🔄 Vidage mémoire et nettoyage MongoDB...');
 						
-						// Vider la mémoire et recharger depuis MongoDB
+						// 🆕 Supprimer toutes les commandes de MongoDB si le compteur est à 1
+						if (maxMongoOrderId > 1) {
+							const deleteResult = await dbManager.orders.deleteMany({});
+							console.log(`[server] 🗑️ ${deleteResult.deletedCount} commande(s) supprimée(s) de MongoDB (reset détecté)`);
+						}
+						
+						// Vider la mémoire et recharger depuis MongoDB (qui sera vide)
 						await fileManager.loadFromMongoDB();
 						
 						console.log(`[server] ✅ Mémoire serveur cloud synchronisée après reset : ${dataStore.orders.length} commande(s) chargée(s)`);
