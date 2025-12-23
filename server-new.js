@@ -109,6 +109,15 @@ dbManager.connect().then(() => {
 				
 				// Filtrer UNIQUEMENT les nouvelles commandes client qui n'existent pas encore localement
 				const allClientOrders = cloudOrders.filter(o => o.source === 'client');
+				
+				// 🆕 BONNE PRATIQUE : Créer un Set de tous les originalTempId des commandes confirmées
+				// Cela permet de vérifier rapidement si une commande a déjà été confirmée
+				const confirmedTempIds = new Set(
+					dataStore.orders
+						.filter(lo => lo.originalTempId && lo.source === 'pos' && lo.originalSource === 'client')
+						.map(lo => lo.originalTempId)
+				);
+				
 				const newClientOrders = allClientOrders.filter(o => {
 					// 🆕 BONNE PRATIQUE : Les commandes client n'ont pas d'ID jusqu'à acceptation POS
 					// Vérifier par tempId si présent, sinon par ID (pour compatibilité avec anciennes commandes)
@@ -117,7 +126,14 @@ dbManager.connect().then(() => {
 					}
 					
 					// 🆕 CORRECTION DOUBLE CONFIRMATION : Vérifier si cette commande a été confirmée et convertie en POS
-					// Chercher dans les commandes POS si une commande a le même originalTempId
+					// Vérifier d'abord dans le Set des tempId confirmés (plus rapide)
+					if (o.tempId && confirmedTempIds.has(o.tempId)) {
+						const identifier = o.tempId || o.id || 'sans ID';
+						console.log(`[sync] ⏭️ Commande client ${identifier} ignorée: déjà confirmée et convertie en POS (tempId dans confirmedTempIds)`);
+						return false; // Déjà confirmée et convertie en POS
+					}
+					
+					// Vérification supplémentaire : chercher dans toutes les commandes (y compris POS)
 					if (o.tempId) {
 						const confirmedOrder = dataStore.orders.find(lo => 
 							lo.originalTempId === o.tempId && lo.source === 'pos' && lo.originalSource === 'client'
@@ -188,14 +204,38 @@ dbManager.connect().then(() => {
 				}
 				
 				// Mettre à jour les commandes client existantes (mais pas les commandes POS)
+				// 🆕 CORRECTION : Ne pas mettre à jour les commandes qui ont été confirmées
 				const updatedClientOrders = [];
 				for (const cloudOrder of cloudOrders) {
 					if (cloudOrder.source === 'client') {
-						const localIndex = dataStore.orders.findIndex(o => o.id === cloudOrder.id && o.source === 'client');
+						// 🆕 Vérifier d'abord si cette commande a été confirmée (par tempId)
+						if (cloudOrder.tempId && confirmedTempIds.has(cloudOrder.tempId)) {
+							continue; // Ignorer les commandes confirmées
+						}
+						
+						// Chercher par tempId d'abord (pour les commandes client sans ID)
+						let localIndex = -1;
+						if (cloudOrder.tempId) {
+							localIndex = dataStore.orders.findIndex(o => 
+								o.tempId === cloudOrder.tempId && o.source === 'client'
+							);
+						}
+						
+						// Si pas trouvé par tempId, chercher par ID
+						if (localIndex === -1 && cloudOrder.id) {
+							localIndex = dataStore.orders.findIndex(o => 
+								o.id === cloudOrder.id && o.source === 'client'
+							);
+						}
+						
 						if (localIndex !== -1) {
-							// Mettre à jour seulement les commandes client existantes
-							dataStore.orders[localIndex] = cloudOrder;
-							updatedClientOrders.push(cloudOrder.id);
+							// Vérifier que la commande locale n'a pas été confirmée entre-temps
+							const localOrder = dataStore.orders[localIndex];
+							if (localOrder.source === 'client' && localOrder.status === 'pending_server_confirmation') {
+								// Mettre à jour seulement les commandes client existantes en attente
+								dataStore.orders[localIndex] = cloudOrder;
+								updatedClientOrders.push(cloudOrder.id || cloudOrder.tempId);
+							}
 						}
 					}
 					// Ne JAMAIS toucher aux commandes POS (source de vérité locale)

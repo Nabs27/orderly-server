@@ -317,6 +317,27 @@ function confirmOrderByServer(req, res) {
 	console.log('[orders] ✅ Commande client (tempId: ' + oldTempId + ', ancien ID: ' + (oldId || 'null') + ') confirmée et reçoit ID officiel #' + order.id + ' par serveur:', order.confirmedBy, 'table:', order.table);
 	console.log('[orders] ✅ Commande maintenant traitée comme commande POS normale (id=' + order.id + ', source=pos, originalSource=' + originalSource + ')');
 	
+	// 🆕 CORRECTION DOUBLE CONFIRMATION : Supprimer immédiatement l'ancienne entrée MongoDB avec tempId
+	// Cela évite que la synchronisation périodique la réintroduise
+	const dbManager = require('../utils/dbManager');
+	if (dbManager.isCloud && dbManager.db && oldTempId) {
+		(async () => {
+			try {
+				const deleteResult = await dbManager.orders.deleteMany({
+					$or: [
+						{ tempId: oldTempId },
+						{ id: null, tempId: oldTempId }
+					]
+				});
+				if (deleteResult.deletedCount > 0) {
+					console.log(`[orders] 🗑️ Ancienne commande avec tempId ${oldTempId} supprimée immédiatement de MongoDB (confirmée avec ID #${order.id})`);
+				}
+			} catch (e) {
+				console.error(`[orders] ⚠️ Erreur suppression ancienne entrée MongoDB: ${e.message}`);
+			}
+		})();
+	}
+	
 	// Sauvegarder
 	fileManager.savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde:', e));
 	
