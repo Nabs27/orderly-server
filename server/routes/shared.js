@@ -35,8 +35,8 @@ router.patch('/api/orders/:id/confirm', orderController.confirmOrder);
 // 🆕 Confirmation d'une commande client par le serveur
 router.patch('/api/orders/:id/confirm-by-server', orderController.confirmOrderByServer);
 
-// 🆕 Décliner une commande client
-router.patch('/api/orders/:id/decline', orderController.declineClientOrder);
+// 🆕 Décliner une commande client par le serveur
+router.patch('/api/orders/:id/decline-by-server', orderController.declineOrderByServer);
 
 // Créer une sous-note
 router.post('/api/orders/:id/subnotes', orderController.createSubNote);
@@ -78,8 +78,8 @@ router.patch('/orders/:id/confirm', orderController.confirmOrder);
 // 🆕 Confirmation d'une commande client par le serveur (route compatibilité)
 router.patch('/orders/:id/confirm-by-server', orderController.confirmOrderByServer);
 
-// 🆕 Décliner une commande client (route compatibilité)
-router.patch('/orders/:id/decline', orderController.declineClientOrder);
+// 🆕 Décliner une commande client par le serveur (route compatibilité)
+router.patch('/orders/:id/decline-by-server', orderController.declineOrderByServer);
 
 router.post('/orders/:id/subnotes', orderController.createSubNote);
 
