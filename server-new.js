@@ -90,6 +90,20 @@ dbManager.connect().then(() => {
 				
 				const localOrderIds = new Set(dataStore.orders.map(o => o.id));
 				
+				// 🆕 NETTOYAGE : Retirer des archives les commandes qui sont encore en attente
+				// On ne peut pas archiver quelque chose qui n'est ni accepté ni décliné
+				const invalidArchivedCount = dataStore.archivedOrders.filter(ao => 
+					ao.source === 'client' && 
+					ao.status === 'pending_server_confirmation'
+				).length;
+				
+				if (invalidArchivedCount > 0) {
+					console.log(`[sync] 🧹 Nettoyage archives : ${invalidArchivedCount} commande(s) client en attente trouvée(s) dans archives (incohérence)`);
+					dataStore.archivedOrders = dataStore.archivedOrders.filter(ao => 
+						!(ao.source === 'client' && ao.status === 'pending_server_confirmation')
+					);
+				}
+				
 				// Filtrer UNIQUEMENT les nouvelles commandes client qui n'existent pas encore localement
 				const allClientOrders = cloudOrders.filter(o => o.source === 'client');
 				const newClientOrders = allClientOrders.filter(o => {
@@ -98,29 +112,33 @@ dbManager.connect().then(() => {
 						return false; // Déjà présente
 					}
 					
-					// 2. Vérifier si la commande a été archivée localement
-					const localArchivedOrderIds = new Set(dataStore.archivedOrders.map(ao => ao.id));
-					if (localArchivedOrderIds.has(o.id)) {
-						console.log(`[sync] ⏭️ Commande client #${o.id} ignorée: déjà archivée`);
-						return false; // Déjà archivée, ne pas réintroduire
-					}
-					
-					// 3. Vérifier si la table a des commandes archivées récentes
-					// Si oui, ne pas réintroduire de nouvelles commandes client pour cette table
-					const tableHasArchivedOrders = dataStore.archivedOrders.some(ao => 
-						String(ao.table) === String(o.table)
-					);
-					if (tableHasArchivedOrders) {
-						console.log(`[sync] ⏭️ Commande client #${o.id} (table ${o.table}) ignorée: table a des commandes archivées (probablement payée)`);
-						return false; // Table payée, ne pas réintroduire
-					}
-					
-					// 4. Vérifier que la commande est vraiment en attente
+					// 2. Vérifier que la commande est vraiment en attente
+					// On ne peut pas archiver quelque chose qui n'est ni accepté ni décliné
 					if (o.serverConfirmed === true || 
 						o.status !== 'pending_server_confirmation' ||
 						o.status === 'declined') {
 						console.log(`[sync] ⏭️ Commande client #${o.id} ignorée: déjà confirmée/déclinée ou statut invalide`);
 						return false; // Déjà confirmée/déclinée ailleurs
+					}
+					
+					// 3. Vérifier si la commande a été archivée localement
+					// Après nettoyage, si elle est dans les archives, c'est qu'elle a été traitée
+					const localArchivedOrderIds = new Set(dataStore.archivedOrders.map(ao => ao.id));
+					if (localArchivedOrderIds.has(o.id)) {
+						console.log(`[sync] ⏭️ Commande client #${o.id} ignorée: déjà archivée et traitée`);
+						return false; // Déjà archivée et traitée, ne pas réintroduire
+					}
+					
+					// 4. Vérifier si la table a des commandes archivées récentes ET traitées
+					// Seulement si ces commandes archivées ont été vraiment traitées (payées/archivées)
+					const tableHasProcessedArchivedOrders = dataStore.archivedOrders.some(ao => 
+						String(ao.table) === String(o.table) &&
+						ao.status !== 'pending_server_confirmation' &&
+						ao.status !== 'nouvelle'
+					);
+					if (tableHasProcessedArchivedOrders) {
+						console.log(`[sync] ⏭️ Commande client #${o.id} (table ${o.table}) ignorée: table a des commandes archivées traitées (probablement payée)`);
+						return false; // Table payée, ne pas réintroduire
 					}
 					
 					return true; // Nouvelle commande client valide
