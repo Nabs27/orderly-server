@@ -154,8 +154,27 @@ async function saveToMongoDB() {
 				const orderToSave = { ...order };
 				delete orderToSave._id;
 				
+				// 🆕 CORRECTION DOUBLE CONFIRMATION : Si la commande a un ID officiel mais avait un tempId,
+				// supprimer l'ancienne entrée MongoDB avec tempId pour éviter les doublons
+				if (order.id && order.originalTempId) {
+					const deleteResult = await dbManager.orders.deleteMany({
+						$or: [
+							{ tempId: order.originalTempId },
+							{ id: null, tempId: order.originalTempId }
+						]
+					});
+					if (deleteResult.deletedCount > 0) {
+						console.log(`[sync] 🗑️ Ancienne commande avec tempId ${order.originalTempId} supprimée de MongoDB (confirmée avec ID #${order.id})`);
+					}
+				}
+				
+				// Chercher par ID si présent, sinon par tempId
+				const query = order.id 
+					? { id: order.id }
+					: (order.tempId ? { tempId: order.tempId } : {});
+				
 				await dbManager.orders.replaceOne(
-					{ id: order.id },
+					query,
 					orderToSave,
 					{ upsert: true }
 				);

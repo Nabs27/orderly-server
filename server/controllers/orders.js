@@ -287,6 +287,7 @@ function confirmOrderByServer(req, res) {
 	const oldId = order.id;
 	order.id = dataStore.nextOrderId++; // 🆕 ID officiel généré par le POS
 	delete order.tempId; // 🆕 Supprimer l'ID temporaire
+	order.originalTempId = oldTempId; // 🆕 Conserver pour supprimer l'ancienne entrée MongoDB
 	
 	// 🆕 CORRECTION : Convertir la commande client en commande POS normale
 	// Selon les bonnes pratiques POS : une fois acceptée, elle devient une commande standard

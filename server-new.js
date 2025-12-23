@@ -115,6 +115,20 @@ dbManager.connect().then(() => {
 					if (o.tempId && localOrderTempIds.has(o.tempId)) {
 						return false; // Déjà présente (même tempId)
 					}
+					
+					// 🆕 CORRECTION DOUBLE CONFIRMATION : Vérifier si cette commande a été confirmée et convertie en POS
+					// Chercher dans les commandes POS si une commande a le même originalTempId
+					if (o.tempId) {
+						const confirmedOrder = dataStore.orders.find(lo => 
+							lo.originalTempId === o.tempId && lo.source === 'pos' && lo.originalSource === 'client'
+						);
+						if (confirmedOrder) {
+							const identifier = o.tempId || o.id || 'sans ID';
+							console.log(`[sync] ⏭️ Commande client ${identifier} ignorée: déjà confirmée et convertie en POS (ID #${confirmedOrder.id})`);
+							return false; // Déjà confirmée et convertie en POS
+						}
+					}
+					
 					if (o.id && localOrderIds.has(o.id)) {
 						// Si la commande a un ID, vérifier qu'elle n'est pas déjà une commande POS
 						const existingOrder = dataStore.orders.find(lo => lo.id === o.id);
