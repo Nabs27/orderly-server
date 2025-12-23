@@ -193,7 +193,9 @@ async function getAllOrders(req, res) {
 	if (clientOrders.length > 0) {
 		console.log(`[orders] GET /orders: ${list.length} commandes actives, dont ${clientOrders.length} commande(s) client`);
 		for (const order of clientOrders) {
-			console.log(`[orders]   - Commande client #${order.id}: table=${order.table}, status=${order.status}, server=${order.server}, serverConfirmed=${order.serverConfirmed}`);
+			// 🆕 CORRECTION : Afficher tempId si id est null (commandes client sans ID officiel)
+			const identifier = order.id ?? order.tempId ?? 'sans ID';
+			console.log(`[orders]   - Commande client ${identifier}: table=${order.table}, status=${order.status}, server=${order.server}, serverConfirmed=${order.serverConfirmed}`);
 		}
 	} else {
 		console.log(`[orders] GET /orders: ${list.length} commandes actives (aucune commande client)`);
@@ -201,7 +203,9 @@ async function getAllOrders(req, res) {
 		if (list.length > 0) {
 			console.log(`[orders]   Détail des commandes:`);
 			for (const order of list) {
-				console.log(`[orders]     - #${order.id}: table=${order.table}, source=${order.source || 'undefined'}, status=${order.status}, server=${order.server}`);
+				// 🆕 CORRECTION : Afficher tempId si id est null (commandes client sans ID officiel)
+				const identifier = order.id ?? order.tempId ?? 'sans ID';
+				console.log(`[orders]     - ${identifier}: table=${order.table}, source=${order.source || 'undefined'}, status=${order.status}, server=${order.server}`);
 			}
 		}
 	}
@@ -211,8 +215,14 @@ async function getAllOrders(req, res) {
 
 // Récupérer une commande
 function getOrderById(req, res) {
-	const id = Number(req.params.id);
-	const order = dataStore.orders.find(o => o.id === id);
+	const idOrTempId = req.params.id;
+	
+	// 🆕 BONNE PRATIQUE : Chercher par tempId si c'est une commande client, sinon par ID
+	// Les commandes client ont tempId (string) avant acceptation, les commandes POS ont id (number)
+	const order = dataStore.orders.find(o => 
+		o.tempId === idOrTempId || o.id === Number(idOrTempId)
+	);
+	
 	if (!order) return res.status(404).json({ error: 'Commande introuvable' });
 	return res.json(order);
 }
@@ -371,7 +381,11 @@ function declineOrderByServer(req, res) {
 	});
 	
 	// Archiver immédiatement (ne pas garder dans les commandes actives)
-	const idx = dataStore.orders.findIndex(o => o.id === order.id);
+	// 🆕 CORRECTION : Chercher par tempId si id est null (commandes client sans ID officiel)
+	const idx = dataStore.orders.findIndex(o => 
+		(order.id !== null && o.id === order.id) || 
+		(order.tempId && o.tempId === order.tempId)
+	);
 	let archived;
 	if (idx !== -1) {
 		dataStore.orders.splice(idx, 1);
@@ -398,12 +412,15 @@ function declineOrderByServer(req, res) {
 			try {
 				const orderToSave = { ...archived };
 				delete orderToSave._id; // Éviter erreur MongoDB
+				// 🆕 CORRECTION : Utiliser tempId si id est null pour MongoDB (commandes client sans ID officiel)
+				const query = archived.id ? { id: archived.id } : { tempId: archived.tempId };
 				await dbManager.orders.replaceOne(
-					{ id: archived.id },
+					query,
 					orderToSave,
 					{ upsert: true }
 				);
-				console.log(`[orders] ✅ Commande #${archived.id} synchronisée avec MongoDB après déclinaison`);
+				const archivedIdentifier = archived.id ?? archived.tempId ?? 'sans ID';
+				console.log(`[orders] ✅ Commande ${archivedIdentifier} synchronisée avec MongoDB après déclinaison`);
 			} catch (e) {
 				console.error(`[orders] ⚠️ Erreur synchronisation MongoDB: ${e.message}`);
 			}

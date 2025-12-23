@@ -63,8 +63,10 @@ class _CartPageState extends State<CartPage> {
         builder: (context, list, _) {
           return Column(
             children: [
-              if (cart.lastOrderId != null) _PreviousOrderCard(
-                orderId: cart.lastOrderId!,
+              // 🆕 Afficher la carte si on a un ID ou un tempId
+              if (cart.lastOrderId != null || cart.lastOrderTempId != null) _PreviousOrderCard(
+                orderId: cart.lastOrderId,
+                orderTempId: cart.lastOrderTempId,
                 total: cart.lastOrderTotal ?? 0,
                 createdAtIso: cart.lastOrderAt,
               ),
@@ -165,7 +167,8 @@ class _CartPageState extends State<CartPage> {
           : throw Exception('Format de réponse invalide');
       
       // 🆕 Vérifier que l'ID existe (support ancien format avec 'id' et nouveau avec 'orderId')
-      final orderId = data['orderId'] ?? data['id'];
+      // 🆕 CORRECTION : orderId peut être int (ID officiel) ou String (tempId pour commandes client)
+      final orderId = data['orderId'] ?? data['id'] ?? data['tempId'];
       if (orderId == null) {
         throw Exception('ID de commande manquant dans la réponse');
       }
@@ -179,14 +182,17 @@ class _CartPageState extends State<CartPage> {
       }
       
       // Enregistrer la dernière commande et vider le panier
+      // 🆕 CORRECTION : Enregistrer orderId comme String si c'est un tempId, sinon comme int
+      final orderIdString = orderId.toString();
       await cart.recordLastOrder(
-        id: (orderId as num).toInt(),
+        id: orderId is num ? orderId.toInt() : null, // null si c'est un tempId (string)
+        tempId: orderId is String ? orderId : null, // null si c'est un ID (int)
         total: ((data['total'] as num?)?.toDouble() ?? cart.total),
         createdAt: (data['createdAt'] as String? ?? DateTime.now().toIso8601String()),
       );
       await cart.clear();
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed('/confirm/${orderId}');
+      Navigator.of(context).pushReplacementNamed('/confirm/${orderIdString}');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -223,10 +229,16 @@ class _CartPageState extends State<CartPage> {
   }
 }
 class _PreviousOrderCard extends StatelessWidget {
-  final int orderId;
+  final int? orderId; // 🆕 Peut être null si on a seulement tempId
+  final String? orderTempId; // 🆕 tempId pour commandes client en attente
   final double total;
   final String? createdAtIso;
-  const _PreviousOrderCard({required this.orderId, required this.total, required this.createdAtIso});
+  const _PreviousOrderCard({
+    this.orderId,
+    this.orderTempId,
+    required this.total,
+    required this.createdAtIso,
+  });
 
   String _formatTime(String? iso) {
     if (iso == null) return '';
@@ -256,7 +268,11 @@ class _PreviousOrderCard extends StatelessWidget {
           Text('${_formatTime(createdAtIso)}  •  ${total.toStringAsFixed(2)} TND'),
         ])),
         TextButton(
-          onPressed: () => Navigator.pushNamed(context, '/confirm/$orderId'),
+          // 🆕 Utiliser tempId si orderId est null (commandes client en attente)
+          onPressed: () => Navigator.pushNamed(
+            context,
+            '/confirm/${orderTempId ?? orderId}',
+          ),
           child: Text(Strings.t('details')),
         )
       ]),
