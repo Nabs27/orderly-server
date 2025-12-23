@@ -50,10 +50,11 @@ class DatabaseManager {
 			}
 			
 			// 🆕 CORRECTION INDEX UNIQUE : Index partiel pour id qui ignore les valeurs null
+			// MongoDB ne supporte pas $ne: null dans les index partiels, utiliser $exists: true
 			// Cela permet plusieurs commandes client avec id: null (elles utilisent tempId comme clé unique)
 			await this.db.collection('orders').createIndex(
 				{ id: 1 }, 
-				{ unique: true, partialFilterExpression: { id: { $ne: null } }, name: 'id_1_partial' }
+				{ unique: true, partialFilterExpression: { id: { $exists: true } }, name: 'id_1_partial' }
 			);
 			console.log('[DB] ✅ Index partiel id_1 créé (ignore les valeurs null)');
 			
@@ -61,7 +62,7 @@ class DatabaseManager {
 			try {
 				await this.db.collection('orders').createIndex(
 					{ tempId: 1 }, 
-					{ unique: true, partialFilterExpression: { tempId: { $ne: null } }, name: 'tempId_1_partial' }
+					{ unique: true, partialFilterExpression: { tempId: { $exists: true } }, name: 'tempId_1_partial' }
 				);
 				console.log('[DB] ✅ Index partiel tempId_1 créé');
 			} catch (tempIdError) {
