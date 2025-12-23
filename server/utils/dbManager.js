@@ -37,23 +37,46 @@ class DatabaseManager {
 	async _ensureIndexes() {
 		if (!this.db) return;
 		try {
+			// 🆕 CORRECTION INDEX UNIQUE : Supprimer l'ancien index sur id s'il existe
+			// L'ancien index unique bloque les valeurs null multiples
+			try {
+				await this.db.collection('orders').dropIndex('id_1');
+				console.log('[DB] 🗑️ Ancien index id_1 supprimé');
+			} catch (dropError) {
+				// L'index n'existe pas ou a déjà été supprimé, c'est OK
+				if (dropError.code !== 27 && dropError.codeName !== 'IndexNotFound') {
+					console.log('[DB] ⚠️ Erreur lors de la suppression de l\'ancien index:', dropError.message);
+				}
+			}
+			
 			// 🆕 CORRECTION INDEX UNIQUE : Index partiel pour id qui ignore les valeurs null
 			// Cela permet plusieurs commandes client avec id: null (elles utilisent tempId comme clé unique)
 			await this.db.collection('orders').createIndex(
 				{ id: 1 }, 
-				{ unique: true, partialFilterExpression: { id: { $ne: null } } }
+				{ unique: true, partialFilterExpression: { id: { $ne: null } }, name: 'id_1_partial' }
 			);
+			console.log('[DB] ✅ Index partiel id_1 créé (ignore les valeurs null)');
+			
 			// Index unique sur tempId pour les commandes client sans ID
-			await this.db.collection('orders').createIndex(
-				{ tempId: 1 }, 
-				{ unique: true, partialFilterExpression: { tempId: { $ne: null } } }
-			);
+			try {
+				await this.db.collection('orders').createIndex(
+					{ tempId: 1 }, 
+					{ unique: true, partialFilterExpression: { tempId: { $ne: null } }, name: 'tempId_1_partial' }
+				);
+				console.log('[DB] ✅ Index partiel tempId_1 créé');
+			} catch (tempIdError) {
+				// L'index existe peut-être déjà, c'est OK
+				if (tempIdError.code !== 85 && tempIdError.codeName !== 'IndexOptionsConflict') {
+					console.log('[DB] ⚠️ Erreur création index tempId:', tempIdError.message);
+				}
+			}
+			
 			await this.db.collection('bills').createIndex({ id: 1 }, { unique: true });
 			await this.db.collection('client_credits').createIndex({ id: 1 }, { unique: true });
 			await this.db.collection('menus').createIndex({ restaurantId: 1 }, { unique: true });
 			await this.db.collection('server_permissions').createIndex({ id: 1 }, { unique: true });
 		} catch (e) {
-			console.log('[DB] ⚠️ Note: Les index existent déjà ou erreur mineure d\'indexation.');
+			console.log('[DB] ⚠️ Note: Les index existent déjà ou erreur mineure d\'indexation:', e.message);
 		}
 	}
 
