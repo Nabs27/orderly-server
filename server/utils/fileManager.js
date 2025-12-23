@@ -168,10 +168,21 @@ async function saveToMongoDB() {
 					}
 				}
 				
-				// Chercher par ID si présent, sinon par tempId
-				const query = order.id 
-					? { id: order.id }
-					: (order.tempId ? { tempId: order.tempId } : {});
+				// 🆕 CORRECTION INDEX UNIQUE : Chercher par ID si présent, sinon par tempId
+				// MongoDB a un index unique sur id, donc on ne peut pas utiliser { id: null } pour plusieurs commandes
+				// Pour les commandes client sans ID, on utilise tempId comme clé unique
+				let query;
+				if (order.id) {
+					// Commande avec ID officiel : chercher par ID
+					query = { id: order.id };
+				} else if (order.tempId) {
+					// Commande client sans ID : chercher par tempId (unique)
+					query = { tempId: order.tempId };
+				} else {
+					// Fallback : utiliser createdAt + table comme identifiant (ne devrait jamais arriver)
+					console.warn(`[sync] ⚠️ Commande sans ID ni tempId détectée, utilisation createdAt comme fallback`);
+					query = { createdAt: order.createdAt, table: order.table };
+				}
 				
 				await dbManager.orders.replaceOne(
 					query,

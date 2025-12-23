@@ -37,21 +37,24 @@ class DatabaseManager {
 	async _ensureIndexes() {
 		if (!this.db) return;
 		try {
-			// Créer les index (les collections seront créées automatiquement si elles n'existent pas)
-			await this.db.collection('orders').createIndex({ id: 1 }, { unique: true }).catch(() => {});
-			await this.db.collection('bills').createIndex({ id: 1 }, { unique: true }).catch(() => {});
-			await this.db.collection('client_credits').createIndex({ id: 1 }, { unique: true }).catch(() => {});
-			await this.db.collection('menus').createIndex({ restaurantId: 1 }, { unique: true }).catch(() => {});
-			await this.db.collection('server_permissions').createIndex({ id: 1 }, { unique: true }).catch(() => {});
-			console.log('[DB] ✅ Index créés/vérifiés pour les collections principales');
+			// 🆕 CORRECTION INDEX UNIQUE : Index partiel pour id qui ignore les valeurs null
+			// Cela permet plusieurs commandes client avec id: null (elles utilisent tempId comme clé unique)
+			await this.db.collection('orders').createIndex(
+				{ id: 1 }, 
+				{ unique: true, partialFilterExpression: { id: { $ne: null } } }
+			);
+			// Index unique sur tempId pour les commandes client sans ID
+			await this.db.collection('orders').createIndex(
+				{ tempId: 1 }, 
+				{ unique: true, partialFilterExpression: { tempId: { $ne: null } } }
+			);
+			await this.db.collection('bills').createIndex({ id: 1 }, { unique: true });
+			await this.db.collection('client_credits').createIndex({ id: 1 }, { unique: true });
+			await this.db.collection('menus').createIndex({ restaurantId: 1 }, { unique: true });
+			await this.db.collection('server_permissions').createIndex({ id: 1 }, { unique: true });
 		} catch (e) {
-			console.log('[DB] ⚠️ Note: Erreur lors de la création des index (peut être normal si collections n\'existent pas encore):', e.message);
+			console.log('[DB] ⚠️ Note: Les index existent déjà ou erreur mineure d\'indexation.');
 		}
-	}
-
-	// 🆕 Méthode publique pour recréer les index après un drop()
-	async recreateIndexes() {
-		return this._ensureIndexes();
 	}
 
 	// Helpers pour accéder aux collections
