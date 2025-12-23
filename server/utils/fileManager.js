@@ -111,6 +111,27 @@ async function saveToMongoDB() {
 			return;
 		}
 		
+		// 🆕 DÉTECTION RESET : Vérifier si le compteur MongoDB a été réinitialisé à 1
+		// alors que nous avons des commandes avec des IDs élevés en mémoire
+		const countersDoc = await dbManager.counters.findOne({ type: 'global' });
+		if (countersDoc && countersDoc.nextOrderId === 1) {
+			// Vérifier si nous avons des commandes avec des IDs élevés
+			const maxOrderId = dataStore.orders.length > 0 
+				? Math.max(...dataStore.orders.map(o => o.id || 0))
+				: 0;
+			
+			if (maxOrderId > 1) {
+				console.log(`[sync] 🔄 RESET DÉTECTÉ : Compteur MongoDB à 1 mais ${dataStore.orders.length} commande(s) en mémoire (max ID: ${maxOrderId})`);
+				console.log('[sync] 🔄 Vidage mémoire et rechargement depuis MongoDB...');
+				
+				// Vider la mémoire et recharger depuis MongoDB
+				await loadFromMongoDB();
+				
+				console.log(`[sync] ✅ Mémoire synchronisée après reset : ${dataStore.orders.length} commande(s) chargée(s)`);
+				return; // Ne pas synchroniser les anciennes commandes
+			}
+		}
+		
 		console.log('[sync] ☁️ Synchronisation vers MongoDB (backup)...');
 		
 		// Synchroniser les commandes (upsert par ID pour éviter les doublons)
@@ -353,5 +374,6 @@ async function saveToJSON() {
 module.exports = {
 	ensureDir,
 	loadPersistedData,
-	savePersistedData
+	savePersistedData,
+	loadFromMongoDB // 🆕 Export pour détection reset serveur cloud
 };

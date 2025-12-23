@@ -194,7 +194,34 @@ dbManager.connect().then(() => {
 		
 		console.log(`[server] 🔄 Synchronisation périodique MongoDB activée (toutes les ${SYNC_INTERVAL/1000}s) pour serveur local`);
 	} else if (dbManager.isCloud && dbManager.db && !isLocalServer) {
-		console.log(`[server] ☁️ Serveur cloud détecté (port ${process.env.PORT || 3000}), synchronisation périodique désactivée`);
+		// 🆕 DÉTECTION RESET pour serveur cloud : vérifier périodiquement si reset détecté
+		const CLOUD_RESET_CHECK_INTERVAL = 5000; // Vérifier toutes les 5 secondes
+		
+		setInterval(async () => {
+			try {
+				const countersDoc = await dbManager.counters.findOne({ type: 'global' });
+				if (countersDoc && countersDoc.nextOrderId === 1) {
+					// Vérifier si nous avons des commandes avec des IDs élevés
+					const maxOrderId = dataStore.orders.length > 0 
+						? Math.max(...dataStore.orders.map(o => o.id || 0))
+						: 0;
+					
+					if (maxOrderId > 1) {
+						console.log(`[server] 🔄 RESET DÉTECTÉ sur serveur cloud : Compteur MongoDB à 1 mais ${dataStore.orders.length} commande(s) en mémoire (max ID: ${maxOrderId})`);
+						console.log('[server] 🔄 Vidage mémoire et rechargement depuis MongoDB...');
+						
+						// Vider la mémoire et recharger depuis MongoDB
+						await fileManager.loadFromMongoDB();
+						
+						console.log(`[server] ✅ Mémoire serveur cloud synchronisée après reset : ${dataStore.orders.length} commande(s) chargée(s)`);
+					}
+				}
+			} catch (e) {
+				console.error('[server] ⚠️ Erreur vérification reset serveur cloud:', e.message);
+			}
+		}, CLOUD_RESET_CHECK_INTERVAL);
+		
+		console.log(`[server] ☁️ Serveur cloud détecté (port ${process.env.PORT || 3000}), vérification reset activée (toutes les ${CLOUD_RESET_CHECK_INTERVAL/1000}s)`);
 	}
 }).catch(err => {
 	console.error('[server] ❌ Erreur initialisation données:', err);
