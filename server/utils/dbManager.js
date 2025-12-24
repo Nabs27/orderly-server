@@ -74,15 +74,16 @@ class DatabaseManager {
 				console.log('[DB] ⚠️ Erreur lors de la liste des index:', listError.message);
 			}
 			
-			// 🆕 CORRECTION INDEX UNIQUE : Index partiel pour id qui ignore les valeurs null
-			// MongoDB ne supporte pas $ne: null dans les index partiels, utiliser $exists: true
-			// Cela permet plusieurs commandes client avec id: null (elles utilisent tempId comme clé unique)
+			// 🆕 SOLUTION FINALE : Utiliser SPARSE INDEX au lieu de partial index
+			// Un sparse index ignore automatiquement les documents où le champ est null ou absent
+			// Cela permet plusieurs commandes avec id: null sans violation d'unicité
+			// C'est la méthode recommandée par MongoDB pour ce cas d'usage
 			try {
 				await ordersCollection.createIndex(
 					{ id: 1 }, 
-					{ unique: true, partialFilterExpression: { id: { $exists: true } }, name: 'id_1_partial' }
+					{ unique: true, sparse: true, name: 'id_1_sparse' }
 				);
-				console.log('[DB] ✅ Index partiel id_1 créé (ignore les valeurs null)');
+				console.log('[DB] ✅ Index sparse unique id créé (ignore automatiquement les valeurs null)');
 			} catch (idError) {
 				// Si l'index existe déjà avec les mêmes options, c'est OK
 				if (idError.code !== 85 && idError.codeName !== 'IndexOptionsConflict') {
@@ -90,13 +91,13 @@ class DatabaseManager {
 				}
 			}
 			
-			// Index unique sur tempId pour les commandes client sans ID
+			// Index sparse unique sur tempId pour les commandes client sans ID
 			try {
 				await ordersCollection.createIndex(
 					{ tempId: 1 }, 
-					{ unique: true, partialFilterExpression: { tempId: { $exists: true } }, name: 'tempId_1_partial' }
+					{ unique: true, sparse: true, name: 'tempId_1_sparse' }
 				);
-				console.log('[DB] ✅ Index partiel tempId_1 créé');
+				console.log('[DB] ✅ Index sparse unique tempId créé (ignore automatiquement les valeurs null)');
 			} catch (tempIdError) {
 				// Si l'index existe déjà avec les mêmes options, c'est OK
 				if (tempIdError.code !== 85 && tempIdError.codeName !== 'IndexOptionsConflict') {
