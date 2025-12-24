@@ -6,7 +6,7 @@ const fileManager = require('../utils/fileManager');
 const { getIO } = require('../utils/socket');
 
 // Créer une commande
-function createOrder(req, res) {
+async function createOrder(req, res) {
 	const io = getIO();
 	console.log('[orders] POST /orders - Body:', JSON.stringify(req.body, null, 2));
 	const { table, items, notes, server, covers, noteId, noteName } = req.body || {};
