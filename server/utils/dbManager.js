@@ -74,27 +74,12 @@ class DatabaseManager {
 				console.log('[DB] ⚠️ Erreur lors de la liste des index:', listError.message);
 			}
 			
-			// 🆕 SOLUTION FINALE : Utiliser SPARSE INDEX au lieu de partial index
-			// Un sparse index ignore automatiquement les documents où le champ est null ou absent
-			// Cela permet plusieurs commandes avec id: null sans violation d'unicité
-			// C'est la méthode recommandée par MongoDB pour ce cas d'usage
+			// 🆕 SOLUTION FINALE : Pas d'index unique sur id pour les commandes client
+			// Les commandes client utilisent tempId comme clé unique
+			// Les commandes POS utilisent id comme clé (sans index unique pour permettre des doublons théoriques)
 			try {
 				await ordersCollection.createIndex(
-					{ id: 1 }, 
-					{ unique: true, sparse: true, name: 'id_1_sparse' }
-				);
-				console.log('[DB] ✅ Index sparse unique id créé (ignore automatiquement les valeurs null)');
-			} catch (idError) {
-				// Si l'index existe déjà avec les mêmes options, c'est OK
-				if (idError.code !== 85 && idError.codeName !== 'IndexOptionsConflict') {
-					console.log('[DB] ⚠️ Erreur création index id:', idError.message);
-				}
-			}
-			
-			// Index sparse unique sur tempId pour les commandes client sans ID
-			try {
-				await ordersCollection.createIndex(
-					{ tempId: 1 }, 
+					{ tempId: 1 },
 					{ unique: true, sparse: true, name: 'tempId_1_sparse' }
 				);
 				console.log('[DB] ✅ Index sparse unique tempId créé (ignore automatiquement les valeurs null)');
@@ -102,6 +87,19 @@ class DatabaseManager {
 				// Si l'index existe déjà avec les mêmes options, c'est OK
 				if (tempIdError.code !== 85 && tempIdError.codeName !== 'IndexOptionsConflict') {
 					console.log('[DB] ⚠️ Erreur création index tempId:', tempIdError.message);
+				}
+			}
+
+			// Index non-unique sur id pour les performances (optionnel)
+			try {
+				await ordersCollection.createIndex(
+					{ id: 1 },
+					{ name: 'id_1_nonunique' }
+				);
+				console.log('[DB] ✅ Index non-unique id créé (pour performance)');
+			} catch (idError) {
+				if (idError.code !== 85 && idError.codeName !== 'IndexOptionsConflict') {
+					console.log('[DB] ⚠️ Erreur création index id:', idError.message);
 				}
 			}
 			

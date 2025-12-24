@@ -58,12 +58,32 @@ async function loadFromMongoDB() {
 		
 		// Charger les commandes
 		const orders = await dbManager.orders.find({}).toArray();
-		
-		// 🆕 CORRECTION : Ne plus filtrer les commandes confirmées car elles deviennent source='pos'
-		// Les commandes client confirmées sont converties en commandes POS normales (source='pos')
-		// donc elles doivent apparaître normalement dans le POS
+
+		// 🆕 SOLUTION : Identifier les commandes confirmées par leur originalTempId
+		const confirmedTempIds = new Set(
+			orders
+				.filter(o => o.id && o.originalTempId && o.source === 'pos')
+				.map(o => o.originalTempId)
+		);
+
+		// 🆕 Filtrer : exclure les commandes client qui ont déjà été confirmées
+		const filteredOrders = orders.filter(o => {
+			// Si c'est une commande client avec tempId mais sans id, vérifier si elle a été confirmée
+			if (o.tempId && (!o.id || o.id === null) && o.source === 'client') {
+				if (confirmedTempIds.has(o.tempId)) {
+					console.log(`[persistence] 🧹 Commande client ${o.tempId} ignorée: déjà confirmée (ID #${orders.find(oo => oo.originalTempId === o.tempId && oo.id)?.id})`);
+					// Supprimer de MongoDB aussi
+					dbManager.orders.deleteMany({ tempId: o.tempId }).catch(e =>
+						console.error(`[persistence] ⚠️ Erreur suppression doublon: ${e.message}`)
+					);
+					return false;
+				}
+			}
+			return true;
+		});
+
 		dataStore.orders.length = 0;
-		dataStore.orders.push(...orders);
+		dataStore.orders.push(...filteredOrders);
 		
 		// Charger les archives
 		const archived = await dbManager.archivedOrders.find({}).toArray();
@@ -168,18 +188,17 @@ async function saveToMongoDB() {
 					}
 				}
 				
-				// 🆕 CORRECTION INDEX UNIQUE : Chercher par ID si présent, sinon par tempId
-				// MongoDB a un index unique sur id, donc on ne peut pas utiliser { id: null } pour plusieurs commandes
-				// Pour les commandes client sans ID, on utilise tempId comme clé unique
+				// 🆕 SOLUTION : Utiliser tempId pour les commandes client, id pour les commandes POS
+				// Plus d'index unique sur id, donc pas de conflit
 				let query;
-				if (order.id) {
-					// Commande avec ID officiel : chercher par ID
-					query = { id: order.id };
-				} else if (order.tempId) {
-					// Commande client sans ID : chercher par tempId (unique)
+				if (order.tempId) {
+					// Commande client : utiliser tempId (unique)
 					query = { tempId: order.tempId };
+				} else if (order.id) {
+					// Commande POS : utiliser id (non-unique)
+					query = { id: order.id };
 				} else {
-					// Fallback : utiliser createdAt + table comme identifiant (ne devrait jamais arriver)
+					// Fallback : utiliser createdAt + table
 					console.warn(`[sync] ⚠️ Commande sans ID ni tempId détectée, utilisation createdAt comme fallback`);
 					query = { createdAt: order.createdAt, table: order.table };
 				}
