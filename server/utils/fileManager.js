@@ -17,16 +17,19 @@ async function ensureDir(p) {
 
 // 💾 Charger les données persistantes (détecte Cloud vs Local)
 async function loadPersistedData() {
-	if (dbManager.isCloud) {
-		// 🆕 SERVEUR CLOUD : STATELESS - Charger UNIQUEMENT depuis MongoDB
-		// Pas de datastore local persistant pour éviter les conflits
-		return loadFromMongoDB();
+	console.log('[persistence] 🔄 Chargement des données persistées...');
+
+	// 🆕 SERVEUR LOCAL = SOURCE DE VERITE : TOUJOURS charger depuis JSON local d'abord
+	await loadFromJSON();
+	console.log('[persistence] ✅ Données chargées depuis fichiers locaux');
+
+	// Puis synchroniser intelligemment avec MongoDB si disponible (pour commandes clients + backup)
+	if (dbManager.db) {
+		console.log('[persistence] ☁️ Synchronisation intelligente avec MongoDB...');
+		await smartSyncWithMongoDB();
+		console.log('[persistence] ✅ Synchronisation terminée');
 	} else {
-		// SERVEUR LOCAL : État full local + sync MongoDB
-		await loadFromJSON();
-		if (dbManager.db) {
-			await mergeFromMongoDB();
-		}
+		console.log('[persistence] ℹ️ MongoDB non disponible - fonctionnement en mode local seulement');
 	}
 }
 
@@ -131,6 +134,72 @@ async function loadFromMongoDB() {
 		console.log(`[persistence] ☁️ ✅ ${dataStore.orders.length} commandes et ${dataStore.clientCredits.length} clients chargés depuis MongoDB`);
 	} catch (e) {
 		console.error('[persistence] ❌ Erreur chargement MongoDB:', e);
+	}
+}
+
+// 🆕 SYNCHRONISATION INTELLIGENTE : Ne pas écraser l'état local
+async function smartSyncWithMongoDB() {
+	try {
+		// 1. Charger UNIQUEMENT les commandes clients non confirmées depuis MongoDB
+		const mongoOrders = await dbManager.orders.find({
+			tempId: { $exists: true },
+			$or: [{ id: null }, { id: { $exists: false } }],
+			source: 'client'
+		}).toArray();
+
+		console.log(`[sync] 📥 ${mongoOrders.length} commande(s) client trouvée(s) dans MongoDB`);
+
+		// 2. Merger intelligemment : ajouter seulement les nouvelles commandes clients
+		let addedCount = 0;
+		for (const mongoOrder of mongoOrders) {
+			// Vérifier si cette commande client existe déjà localement
+			const existingLocal = dataStore.orders.find(o =>
+				o.tempId === mongoOrder.tempId ||
+				(o.id && o.id === mongoOrder.id)
+			);
+
+			if (!existingLocal) {
+				// Ajouter la nouvelle commande client
+				dataStore.orders.push(mongoOrder);
+				addedCount++;
+				console.log(`[sync] ➕ Commande client ${mongoOrder.tempId} ajoutée depuis MongoDB`);
+			}
+		}
+
+		// 3. Synchroniser les compteurs si nécessaire
+		const countersDoc = await dbManager.counters.findOne({ type: 'global' });
+		if (countersDoc) {
+			// Utiliser le max entre local et cloud
+			const localMaxId = dataStore.orders.length > 0
+				? Math.max(...dataStore.orders.map(o => o.id || 0))
+				: 0;
+			const cloudMaxId = countersDoc.nextOrderId || 1;
+
+			dataStore.nextOrderId = Math.max(localMaxId + 1, cloudMaxId);
+			dataStore.nextBillId = Math.max(dataStore.nextBillId, countersDoc.nextBillId || 1);
+			dataStore.nextServiceId = Math.max(dataStore.nextServiceId, countersDoc.nextServiceId || 1);
+			dataStore.nextClientId = Math.max(dataStore.nextClientId, countersDoc.nextClientId || 1);
+
+			console.log(`[sync] 🔢 Compteurs synchronisés: nextOrderId=${dataStore.nextOrderId}`);
+		}
+
+		// 4. Charger les clients crédit (backup)
+		const clients = await dbManager.clientCredits.find({}).toArray();
+		if (clients.length > 0) {
+			// Merger sans écraser
+			for (const client of clients) {
+				const existing = dataStore.clientCredits.find(c => c.id === client.id);
+				if (!existing) {
+					dataStore.clientCredits.push(client);
+					console.log(`[sync] 👤 Client ${client.name} ajouté depuis MongoDB`);
+				}
+			}
+		}
+
+		console.log(`[sync] ✅ Synchronisation intelligente terminée: ${addedCount} commande(s) client ajoutée(s)`);
+
+	} catch (e) {
+		console.error('[sync] ❌ Erreur synchronisation intelligente:', e);
 	}
 }
 
@@ -252,8 +321,18 @@ async function saveToMongoDB() {
 				);
 			}
 			console.log(`[sync] ☁️ ${dataStore.archivedOrders.length} commandes archivées synchronisées`);
+
+			// 🆕 SUPPRIMER les commandes archivées de la collection orders principale
+			// pour éviter qu'elles réapparaissent au redémarrage
+			if (dataStore.archivedOrders.length > 0) {
+				const archivedIds = dataStore.archivedOrders.map(o => o.id);
+				const deleteResult = await dbManager.orders.deleteMany({
+					id: { $in: archivedIds }
+				});
+				console.log(`[sync] 🗑️ ${deleteResult.deletedCount} commande(s) supprimée(s) de orders (maintenant archivées)`);
+			}
 		}
-		
+
 		// Synchroniser les factures
 		if (dataStore.bills.length > 0) {
 			for (const bill of dataStore.bills) {
@@ -462,5 +541,6 @@ module.exports = {
 	ensureDir,
 	loadPersistedData,
 	savePersistedData,
-	loadFromMongoDB // 🆕 Export pour détection reset serveur cloud
+	loadFromMongoDB, // Pour compatibilité serveur cloud
+	smartSyncWithMongoDB // 🆕 Synchronisation intelligente
 };
