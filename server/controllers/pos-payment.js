@@ -391,6 +391,7 @@ async function payMultiOrders(req, res) {
 					discount: discount,
 					isPercentDiscount: isPercentDiscount,
 					discountAmount: orderDiscountAmount * splitProp,
+					discountClientName: discountClientName, // 🆕 Nom du client pour justifier la remise
 					isSplitPayment: true,
 					splitPaymentId: splitPaymentBaseId,
 					server: serverName,
@@ -413,6 +414,7 @@ async function payMultiOrders(req, res) {
 				discount: discount,
 				isPercentDiscount: isPercentDiscount,
 				discountAmount: orderDiscountAmount,
+				discountClientName: discountClientName, // 🆕 Nom du client pour justifier la remise
 				server: serverName,
 				table: table,
 				noteId: orderInfo.paidItems[0]?.noteId || 'main',
