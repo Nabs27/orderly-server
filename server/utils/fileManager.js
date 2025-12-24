@@ -161,36 +161,52 @@ async function saveToMongoDB() {
 			return;
 		}
 		
-		// 🆕 DÉTECTION RESET : Vérifier si le compteur MongoDB a été réinitialisé à 1
-		// alors que nous avons des commandes avec des IDs élevés en mémoire OU dans MongoDB
+		// 🆕 SYNCHRONISATION INTELLIGENTE : Gérer les resets de compteur intelligemment
 		const countersDoc = await dbManager.counters.findOne({ type: 'global' });
 		if (countersDoc && countersDoc.nextOrderId === 1) {
-			// Vérifier si nous avons des commandes avec des IDs élevés en mémoire
-			const maxOrderId = dataStore.orders.length > 0 
+			// Calculer le max ID existant dans mémoire et MongoDB
+			const maxOrderId = dataStore.orders.length > 0
 				? Math.max(...dataStore.orders.map(o => o.id || 0))
 				: 0;
-			
-			// 🆕 Vérifier aussi si MongoDB contient des commandes avec des IDs élevés
+
 			const mongoOrders = await dbManager.orders.find({}).toArray();
 			const maxMongoOrderId = mongoOrders.length > 0
 				? Math.max(...mongoOrders.map(o => o.id || 0))
 				: 0;
-			
-			if (maxOrderId > 1 || maxMongoOrderId > 1) {
-				console.log(`[sync] 🔄 RESET DÉTECTÉ : Compteur MongoDB à 1 mais ${dataStore.orders.length} commande(s) en mémoire (max ID: ${maxOrderId}) et ${mongoOrders.length} dans MongoDB (max ID: ${maxMongoOrderId})`);
-				console.log('[sync] 🔄 Vidage mémoire et nettoyage MongoDB...');
-				
-				// 🆕 Supprimer toutes les commandes de MongoDB si le compteur est à 1
-				if (maxMongoOrderId > 1) {
-					const deleteResult = await dbManager.orders.deleteMany({});
-					console.log(`[sync] 🗑️ ${deleteResult.deletedCount} commande(s) supprimée(s) de MongoDB (reset détecté)`);
+
+			const globalMaxId = Math.max(maxOrderId, maxMongoOrderId);
+
+			if (globalMaxId > 0) {
+				// 🆕 CAS NORMAL : Synchroniser le compteur au lieu de reset destructeur
+				console.log(`[sync] 🔄 SYNC COMPTEUR : nextOrderId 1 → ${globalMaxId + 1} (max ID trouvé: ${globalMaxId})`);
+				await dbManager.counters.updateOne(
+					{ type: 'global' },
+					{ $set: { nextOrderId: globalMaxId + 1 } }
+				);
+				dataStore.nextOrderId = globalMaxId + 1;
+
+				// 🆕 Nettoyer automatiquement les anciennes entrées tempId des commandes confirmées
+				const confirmedTempIds = new Set(
+					[...dataStore.orders, ...mongoOrders]
+						.filter(o => o.id && o.originalTempId && o.source === 'pos')
+						.map(o => o.originalTempId)
+				);
+
+				if (confirmedTempIds.size > 0) {
+					console.log(`[sync] 🧹 Nettoyage automatique : ${confirmedTempIds.size} ancienne(s) entrée(s) tempId confirmée(s)`);
+					let cleanedCount = 0;
+					for (const tempId of confirmedTempIds) {
+						const deleteResult = await dbManager.orders.deleteMany({
+							tempId: tempId,
+							$or: [{ id: null }, { id: { $exists: false } }] // Supprimer seulement les entrées sans ID officiel
+						});
+						cleanedCount += deleteResult.deletedCount || 0;
+					}
+					console.log(`[sync] 🗑️ ${cleanedCount} ancienne(s) entrée(s) tempId supprimée(s)`);
 				}
-				
-				// Vider la mémoire et recharger depuis MongoDB (qui sera vide)
-				await loadFromMongoDB();
-				
-				console.log(`[sync] ✅ Mémoire synchronisée après reset : ${dataStore.orders.length} commande(s) chargée(s)`);
-				return; // Ne pas synchroniser les anciennes commandes
+
+				console.log(`[sync] ✅ Synchronisation intelligente terminée - Commandes préservées`);
+				return; // Pas de sync normale, on vient de synchroniser intelligemment
 			}
 		}
 		
