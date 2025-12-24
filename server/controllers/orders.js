@@ -317,13 +317,47 @@ async function confirmOrderByServer(req, res) {
 	if (!order.orderHistory) {
 		order.orderHistory = [];
 	}
-	
+
+	// 🆕 CORRECTION : Normaliser tous les événements existants dans orderHistory
+	// pour qu'ils soient cohérents avec le nouvel ID et la nouvelle structure
+	for (const event of order.orderHistory) {
+		// Ajouter orderId si manquant (normalise tous les événements)
+		if (!event.orderId) {
+			event.orderId = order.id;
+		}
+
+		// Mettre à jour les références dans les détails si elles pointent vers l'ancien ID
+		if (event.details && typeof event.details === 'string') {
+			event.details = event.details
+				.replace(new RegExp(oldTempId, 'g'), order.id.toString())
+				.replace(new RegExp(oldId?.toString() || '', 'g'), order.id.toString());
+		}
+
+		// S'assurer que tous les événements ont la bonne structure
+		if (!event.timestamp) {
+			event.timestamp = event.createdAt || order.createdAt || new Date().toISOString();
+		}
+
+		// Nettoyer les champs obsolètes
+		delete event.tempId;
+		delete event._id;
+	}
+
 	// Enregistrer dans l'historique
 	order.orderHistory.push({
 		timestamp: new Date().toISOString(),
 		action: 'server_confirmed',
 		server: order.confirmedBy,
+		orderId: order.id,
 		details: `Commande client confirmée et convertie en commande POS par le serveur ${order.confirmedBy}`
+	});
+
+	// 🆕 AJOUTER UN ÉVÉNEMENT DE CORRECTION pour tracer les changements
+	order.orderHistory.push({
+		timestamp: new Date().toISOString(),
+		action: 'order_normalized',
+		orderId: order.id,
+		details: `Événements orderHistory normalisés après confirmation (ancien tempId: ${oldTempId}, nouvel ID: ${order.id})`
 	});
 	
 	console.log('[orders] ✅ Commande client (tempId: ' + oldTempId + ', ancien ID: ' + (oldId || 'null') + ') confirmée et reçoit ID officiel #' + order.id + ' par serveur:', order.confirmedBy, 'table:', order.table);
