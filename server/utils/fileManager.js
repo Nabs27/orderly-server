@@ -34,7 +34,12 @@ async function loadPersistedData() {
 async function savePersistedData() {
 	if (dbManager.isCloud) {
 		// 🆕 SERVEUR CLOUD : STATELESS - PAS de sauvegarde JSON locale
-		// Le serveur cloud ne maintient pas d'état local persistant
+		// MAIS sauvegarde quand même dans MongoDB pour les données reçues
+		if (dbManager.db) {
+			saveToMongoDB().catch(e => {
+				console.error('[sync] ⚠️ Erreur sync MongoDB cloud:', e.message);
+			});
+		}
 		return;
 	} else {
 		// SERVEUR LOCAL : Sauvegarde JSON locale + sync MongoDB
@@ -53,32 +58,7 @@ async function savePersistedData() {
 	}
 }
 
-async function mergeFromMongoDB() {
-	try {
-		console.log('[persistence] ☁️ Fusion avec données MongoDB...');
-
-		const mongoOrders = await dbManager.orders.find({}).toArray();
-
-		// Identifier ce qu'on a déjà localement
-		const localOrderIds = new Set(dataStore.orders.map(o => o.id).filter(Boolean));
-		const localTempIds = new Set(dataStore.orders.map(o => o.tempId).filter(Boolean));
-
-		// Ajouter uniquement les nouvelles commandes client depuis MongoDB
-		let addedCount = 0;
-		for (const mongoOrder of mongoOrders) {
-			if (mongoOrder.tempId && !localTempIds.has(mongoOrder.tempId)) {
-				// Nouvelle commande client à ajouter
-				dataStore.orders.push(mongoOrder);
-				addedCount++;
-				console.log(`[persistence] ➕ Nouvelle commande client ajoutée: ${mongoOrder.tempId}`);
-			}
-		}
-
-		console.log(`[persistence] ☁️ Fusion terminée: ${dataStore.orders.length} commandes total (${addedCount} ajoutées depuis MongoDB)`);
-	} catch (e) {
-		console.error('[persistence] ❌ Erreur fusion MongoDB:', e);
-	}
-}
+// Fonction supprimée - le serveur cloud est maintenant stateless
 
 // --- LOGIQUE MONGODB (CLOUD) ---
 

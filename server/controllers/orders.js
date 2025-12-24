@@ -95,27 +95,39 @@ function createOrder(req, res) {
 		});
 	}
 	
-	dataStore.orders.push(newOrder);
-	
-	// 🆕 Log différencié selon la source
+	// 🆕 GESTION DIFFÉRENCIÉE SELON LE TYPE DE SERVEUR
 	if (isClientOrder) {
+		// SERVEUR CLOUD : Sauvegarder directement dans MongoDB (pas d'état local)
+		const dbManager = require('../utils/dbManager');
+		if (dbManager.isCloud && dbManager.db) {
+			try {
+				// Supprimer _id MongoDB avant sauvegarde
+				const orderToSave = { ...newOrder };
+				delete orderToSave._id;
+
+				await dbManager.orders.replaceOne(
+					{ tempId: newOrder.tempId },
+					orderToSave,
+					{ upsert: true }
+				);
+				console.log('[orders] ☁️ Commande CLIENT sauvegardée dans MongoDB:', newOrder.tempId);
+			} catch (e) {
+				console.error('[orders] ❌ Erreur sauvegarde MongoDB:', e.message);
+			}
+		} else {
+			// SERVEUR LOCAL : Ajouter au datastore local
+			dataStore.orders.push(newOrder);
+		}
+
 		console.log('[orders] 🆕 Commande CLIENT créée (sans ID - en attente POS):', newOrder.tempId, 'pour table', table, 'serveur assigné:', assignedServer, 'total:', total, 'status:', newOrder.status);
-		console.log('[orders] 🆕 Structure commande client:', JSON.stringify({
-			id: newOrder.id,
-			tempId: newOrder.tempId,
-			table: newOrder.table,
-			server: newOrder.server,
-			status: newOrder.status,
-			source: newOrder.source,
-			serverConfirmed: newOrder.serverConfirmed,
-			mainNote: { total: newOrder.mainNote.total, items: newOrder.mainNote.items.length }
-		}, null, 2));
 	} else {
+		// TOUJOURS ajouter au datastore local pour les commandes POS
+		dataStore.orders.push(newOrder);
 		console.log('[orders] Commande POS créée:', newOrder.id, 'pour table', table, 'serveur:', assignedServer, 'total:', total, 'note:', noteId || 'main');
+
+		// Sauvegarder automatiquement (JSON local + MongoDB)
+		fileManager.savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde:', e));
 	}
-	
-	// 💾 Sauvegarder automatiquement
-	fileManager.savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde:', e));
 	
 	// 📊 Récupérer TOUTES les commandes actives de la table pour l'état complet
 	// Cela permet à l'app client de voir immédiatement toutes les commandes (POS + client) de la table
@@ -336,8 +348,27 @@ async function confirmOrderByServer(req, res) {
 		}
 	}
 
-	// Sauvegarder APRÈS la suppression
-	await fileManager.savePersistedData();
+	// 🆕 GESTION DIFFÉRENCIÉE SELON LE TYPE DE SERVEUR
+	const dbManager = require('../utils/dbManager');
+	if (dbManager.isCloud && dbManager.db) {
+		// SERVEUR CLOUD : Sauvegarder directement dans MongoDB
+		try {
+			const orderToSave = { ...order };
+			delete orderToSave._id;
+
+			await dbManager.orders.replaceOne(
+				{ id: order.id },
+				orderToSave,
+				{ upsert: true }
+			);
+			console.log(`[orders] ☁️ Commande confirmée sauvegardée dans MongoDB: ID #${order.id}`);
+		} catch (e) {
+			console.error('[orders] ❌ Erreur sauvegarde MongoDB:', e.message);
+		}
+	} else {
+		// SERVEUR LOCAL : Sauvegarde normale
+		await fileManager.savePersistedData();
+	}
 	
 	// 🆕 CORRECTION : Émettre order:new pour apparition dynamique dans le POS
 	// Cela permet à la commande d'apparaître immédiatement dans le plan de table et la page Order
