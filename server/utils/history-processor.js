@@ -598,15 +598,25 @@ function processServiceSessions(sessions) {
 				// 🆕 CORRECTION : Filtrer les événements sans articles pour éviter les commandes vides dans l'historique
 				const items = event.items || [];
 				const hasItems = items.length > 0;
-				
-				// Ne pas inclure les événements order_created ou subnote_created sans articles
-				// (items_added peut être vide temporairement, on le garde)
-				if (!hasItems && (event.action === 'order_created' || event.action === 'subnote_created')) {
-					continue; // Ignorer les commandes/sous-notes créées sans articles
+
+				// 🆕 CORRECTION : Logique spécifique pour subnote_created
+				if (event.action === 'subnote_created') {
+					// Vérifier si cette sous-note a des paiements associés
+					const noteId = event.noteId;
+					const hasPaymentsForNote = (session.paymentHistory || []).some(p => p.noteId === noteId);
+					const subNoteStillExists = (session.subNotes || []).some(sn => sn.id === noteId && !sn.paid);
+
+					// ✅ Inclure si : elle a des articles OU des paiements OU elle existe encore (non payée)
+					if (!hasItems && !hasPaymentsForNote && !subNoteStillExists) {
+						continue; // Ignorer seulement si elle n'a RIEN du tout
+					}
+				} else if (event.action === 'order_created' && !hasItems) {
+					// Garder la logique originale pour order_created
+					continue;
 				}
-				
-				allOrderEvents.push({ 
-					...event, 
+
+				allOrderEvents.push({
+					...event,
 					orderId: session.id,
 					server: session.server || 'unknown',
 					table: session.table

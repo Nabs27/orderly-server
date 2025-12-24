@@ -12,9 +12,9 @@ async function loadMenuAndCreateMapping(restaurantId = 'les-emirs') {
 		const menu = await loadMenu(restaurantId);
 		if (!menu) {
 			console.log(`[report-x] Menu non trouvé: ${restaurantId}`);
-			return {};
-		}
-		
+		return {};
+	}
+	
 		const categories = Array.isArray(menu.categories) ? menu.categories : [];
 		const itemIdToCategory = {};
 		
