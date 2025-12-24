@@ -74,29 +74,39 @@ class DatabaseManager {
 				console.log('[DB] ⚠️ Erreur lors de la liste des index:', listError.message);
 			}
 			
-			// 🆕 SOLUTION FINALE : Pas d'index unique sur id pour les commandes client
-			// Les commandes client utilisent tempId comme clé unique
-			// Les commandes POS utilisent id comme clé (sans index unique pour permettre des doublons théoriques)
+			// 🆕 CORRECTION : Supprimer l'index sparse qui cause les doublons
+			// L'index sparse unique sur tempId ne permet qu'une seule valeur null
+			// Mais les commandes POS confirmées ont toutes tempId: null
+			try {
+				await ordersCollection.dropIndex('tempId_1_sparse');
+				console.log('[DB] 🗑️ Index tempId sparse supprimé (causait les erreurs de doublons)');
+			} catch (dropError) {
+				// Index peut ne pas exister, c'est OK
+				if (dropError.code !== 27) {
+					console.log('[DB] ℹ️ Index tempId sparse non trouvé ou déjà supprimé');
+				}
+			}
+
+			// Créer un index non-unique sur tempId pour les performances
 			try {
 				await ordersCollection.createIndex(
 					{ tempId: 1 },
-					{ unique: true, sparse: true, name: 'tempId_1_sparse' }
+					{ name: 'tempId_1' } // Non-unique
 				);
-				console.log('[DB] ✅ Index sparse unique tempId créé (ignore automatiquement les valeurs null)');
+				console.log('[DB] ✅ Index tempId non-unique créé');
 			} catch (tempIdError) {
-				// Si l'index existe déjà avec les mêmes options, c'est OK
 				if (tempIdError.code !== 85 && tempIdError.codeName !== 'IndexOptionsConflict') {
 					console.log('[DB] ⚠️ Erreur création index tempId:', tempIdError.message);
 				}
 			}
 
-			// Index non-unique sur id pour les performances (optionnel)
+			// Index non-unique sur id pour les performances
 			try {
 				await ordersCollection.createIndex(
 					{ id: 1 },
-					{ name: 'id_1_nonunique' }
+					{ name: 'id_1' }
 				);
-				console.log('[DB] ✅ Index non-unique id créé (pour performance)');
+				console.log('[DB] ✅ Index id non-unique créé');
 			} catch (idError) {
 				if (idError.code !== 85 && idError.codeName !== 'IndexOptionsConflict') {
 					console.log('[DB] ⚠️ Erreur création index id:', idError.message);

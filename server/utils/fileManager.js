@@ -17,39 +17,39 @@ async function ensureDir(p) {
 
 // 💾 Charger les données persistantes (détecte Cloud vs Local)
 async function loadPersistedData() {
-	// 🆕 CORRECTION : Toujours charger depuis JSON d'abord (source de vérité locale)
-	// Puis fusionner avec MongoDB si disponible
-	await loadFromJSON();
-
-	if (dbManager.isCloud && dbManager.db) {
-		// En mode cloud, enrichir avec les données MongoDB (nouvelles commandes client)
-		await mergeFromMongoDB();
+	if (dbManager.isCloud) {
+		// 🆕 SERVEUR CLOUD : STATELESS - Charger UNIQUEMENT depuis MongoDB
+		// Pas de datastore local persistant pour éviter les conflits
+		return loadFromMongoDB();
+	} else {
+		// SERVEUR LOCAL : État full local + sync MongoDB
+		await loadFromJSON();
+		if (dbManager.db) {
+			await mergeFromMongoDB();
+		}
 	}
 }
 
-// 💾 Sauvegarder les données (Mode Hybride : Local + Backup Cloud)
+// 💾 Sauvegarder les données (Cloud = Stateless, Local = Statefull)
 async function savePersistedData() {
-	// 1. Sauvegarder en JSON local (source de vérité, rapide, fonctionne sans internet)
-	// Sur Railway (cloud), cette sauvegarde peut échouer (pas de fichiers persistants), c'est normal
-	try {
-		await saveToJSON();
-	} catch (e) {
-		// Sur Railway ou si erreur d'écriture, on continue avec MongoDB
 	if (dbManager.isCloud) {
-			console.log('[persistence] ⚠️ Sauvegarde JSON ignorée (mode cloud)');
+		// 🆕 SERVEUR CLOUD : STATELESS - PAS de sauvegarde JSON locale
+		// Le serveur cloud ne maintient pas d'état local persistant
+		return;
 	} else {
-			console.error('[persistence] ❌ Erreur sauvegarde JSON:', e.message);
+		// SERVEUR LOCAL : Sauvegarde JSON locale + sync MongoDB
+		try {
+			await saveToJSON();
+		} catch (e) {
+			console.error('[persistence] ❌ Erreur sauvegarde JSON local:', e.message);
 		}
-	}
-	
-	// 2. Si MongoDB est configuré, synchroniser vers le cloud (backup)
-	// La synchronisation est asynchrone et non-bloquante pour ne pas ralentir le POS
-	if (dbManager.isCloud && dbManager.db) {
-		// Ne pas attendre la fin de la synchronisation cloud (non-bloquant)
-		saveToMongoDB().catch(e => {
-			console.error('[sync] ⚠️ Erreur synchronisation cloud (non bloquant):', e.message);
-			// Ne pas bloquer le POS en cas d'erreur cloud
-		});
+
+		// Sync vers MongoDB (non-bloquant)
+		if (dbManager.db) {
+			saveToMongoDB().catch(e => {
+				console.error('[sync] ⚠️ Erreur sync MongoDB:', e.message);
+			});
+		}
 	}
 }
 
