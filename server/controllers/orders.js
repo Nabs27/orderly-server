@@ -4,6 +4,7 @@
 const dataStore = require('../data');
 const fileManager = require('../utils/fileManager');
 const { getIO } = require('../utils/socket');
+const dbManager = require('../utils/dbManager');
 
 // Créer une commande
 async function createOrder(req, res) {
@@ -98,7 +99,6 @@ async function createOrder(req, res) {
 	// 🆕 GESTION DIFFÉRENCIÉE SELON LE TYPE DE SERVEUR
 	if (isClientOrder) {
 		// SERVEUR CLOUD : Sauvegarder directement dans MongoDB (pas d'état local)
-		const dbManager = require('../utils/dbManager');
 		if (dbManager.isCloud && dbManager.db) {
 			try {
 				// Supprimer _id MongoDB avant sauvegarde
@@ -331,7 +331,6 @@ async function confirmOrderByServer(req, res) {
 	
 	// 🆕 CORRECTION : Supprimer SYNCHRONEMENT l'ancienne entrée MongoDB
 	// Cela garantit que la suppression est faite avant le redémarrage
-	const dbManager = require('../utils/dbManager');
 	if (dbManager.isCloud && dbManager.db && oldTempId) {
 		try {
 			const deleteResult = await dbManager.orders.deleteMany({
@@ -349,7 +348,6 @@ async function confirmOrderByServer(req, res) {
 	}
 
 	// 🆕 GESTION DIFFÉRENCIÉE SELON LE TYPE DE SERVEUR
-	const dbManager = require('../utils/dbManager');
 	if (dbManager.isCloud && dbManager.db) {
 		// SERVEUR CLOUD : Sauvegarder directement dans MongoDB
 		try {
@@ -457,7 +455,6 @@ function declineOrderByServer(req, res) {
 	fileManager.savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde:', e));
 	
 	// Synchroniser avec MongoDB si cloud activé
-	const dbManager = require('../utils/dbManager');
 	if (dbManager.isCloud && dbManager.db) {
 		(async () => {
 			try {
