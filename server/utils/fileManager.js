@@ -141,19 +141,31 @@ async function loadFromMongoDB() {
 async function smartSyncWithMongoDB() {
 	try {
 		// 1. Charger UNIQUEMENT les commandes clients non confirmées depuis MongoDB
+		// 🆕 DEBUG : Vérifier d'abord ce qui existe dans MongoDB
+		const allMongoOrders = await dbManager.orders.find({}).toArray();
+		console.log(`[sync] 🔍 DEBUG: ${allMongoOrders.length} commande(s) totale(s) dans MongoDB`);
+		
+		// Afficher toutes les commandes pour diagnostic
+		for (const order of allMongoOrders) {
+			console.log(`[sync] 🔍   - tempId: ${order.tempId || 'N/A'}, id: ${order.id || 'N/A'}, source: ${order.source || 'N/A'}, status: ${order.status || 'N/A'}, serverConfirmed: ${order.serverConfirmed || 'N/A'}`);
+		}
+		
+		// Requête pour récupérer les commandes client en attente
 		const mongoOrders = await dbManager.orders.find({
 			tempId: { $exists: true },
 			$or: [{ id: null }, { id: { $exists: false } }],
 			source: 'client'
 		}).toArray();
 
-		console.log(`[sync] 📥 ${mongoOrders.length} commande(s) client trouvée(s) dans MongoDB`);
+		console.log(`[sync] 📥 ${mongoOrders.length} commande(s) client trouvée(s) dans MongoDB (après filtrage)`);
 		
 		// 🆕 DEBUG : Afficher les détails des commandes trouvées
 		if (mongoOrders.length > 0) {
 			for (const order of mongoOrders) {
 				console.log(`[sync]   - tempId: ${order.tempId}, table: ${order.table}, status: ${order.status}, serverConfirmed: ${order.serverConfirmed}`);
 			}
+		} else if (allMongoOrders.length > 0) {
+			console.log(`[sync] ⚠️ Des commandes existent dans MongoDB mais ne correspondent pas au filtre (tempId existe, id null, source='client')`);
 		}
 
 		// 2. Merger intelligemment : ajouter seulement les nouvelles commandes clients

@@ -118,6 +118,11 @@ async function createOrder(req, res) {
 			// SERVEUR LOCAL : Ajouter au datastore local
 			dataStore.orders.push(newOrder);
 			console.log('[orders] 🏠 Commande CLIENT ajoutée au datastore local (sera sync avec MongoDB):', newOrder.tempId);
+			
+			// 🆕 CORRECTION : Sauvegarder immédiatement pour que la commande soit dans MongoDB
+			// Même si c'est le serveur local, il doit sauvegarder les commandes client dans MongoDB
+			// pour que le POS local puisse les récupérer
+			fileManager.savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde commande client:', e));
 		}
 
 		console.log('[orders] 🆕 Commande CLIENT créée (sans ID - en attente POS):', newOrder.tempId, 'pour table', table, 'serveur assigné:', assignedServer, 'total:', total, 'status:', newOrder.status);
