@@ -7,13 +7,22 @@ class DatabaseManager {
 	constructor() {
 		this.client = null;
 		this.db = null;
-		this.isCloud = !!process.env.MONGODB_URI;
+		// 🆕 CORRECTION : isCloud = true UNIQUEMENT si IS_CLOUD_SERVER=true
+		// Le serveur local peut avoir MONGODB_URI pour backup sans être "cloud"
+		// Le serveur cloud (Render) doit avoir IS_CLOUD_SERVER=true dans ses variables d'environnement
+		this.isCloud = process.env.IS_CLOUD_SERVER === 'true';
 		this.dbName = process.env.MONGODB_DB_NAME || 'restaurant_pos';
+		
+		// Log pour debug
+		console.log(`[DB] Mode: ${this.isCloud ? '☁️ CLOUD (stateless)' : '🏠 LOCAL (source de vérité)'}`);
+		console.log(`[DB] MONGODB_URI: ${process.env.MONGODB_URI ? 'défini' : 'non défini'}`);
 	}
 
 	async connect() {
-		if (!this.isCloud) {
-			console.log('[DB] 🏠 Mode Local détecté : utilisation des fichiers JSON.');
+		// 🆕 CORRECTION : Le serveur local peut aussi se connecter à MongoDB (pour backup/sync)
+		// On ne bloque la connexion que si MONGODB_URI n'est pas défini
+		if (!process.env.MONGODB_URI) {
+			console.log('[DB] 🏠 Mode Local sans MongoDB : utilisation des fichiers JSON uniquement.');
 			return;
 		}
 
@@ -22,7 +31,12 @@ class DatabaseManager {
 			this.client = new MongoClient(uri);
 			await this.client.connect();
 			this.db = this.client.db(this.dbName);
-			console.log(`[DB] ☁️ ✅ Connecté à MongoDB Cloud (Base: ${this.dbName})`);
+			
+			if (this.isCloud) {
+				console.log(`[DB] ☁️ ✅ Connecté à MongoDB Cloud (Base: ${this.dbName}) - Mode CLOUD`);
+			} else {
+				console.log(`[DB] ☁️ ✅ Connecté à MongoDB Cloud (Base: ${this.dbName}) - Pour backup/sync`);
+			}
 			
 			// Créer les index nécessaires si besoin
 			await this._ensureIndexes();
