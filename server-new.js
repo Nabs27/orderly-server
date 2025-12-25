@@ -68,223 +68,31 @@ dbManager.connect().then(() => {
 }).then(() => {
 	console.log('[server] Données initialisées');
 	
-	// 🆕 CORRECTION : Synchronisation périodique depuis MongoDB si mode cloud
-	// Cela permet au serveur local de voir les commandes créées par le serveur cloud (app client)
-	// 🆕 Vérifier si c'est le serveur local (port 3000) et non le cloud (port 8080)
-	const isLocalServer = (process.env.PORT || 3000) == 3000;
-	if (dbManager.isCloud && dbManager.db && isLocalServer) {
-		const SYNC_INTERVAL = 3000; // Synchroniser toutes les 3 secondes
-		let lastSyncTime = Date.now();
+	// 🆕 ARCHITECTURE "BOÎTE AUX LETTRES" : Polling périodique pour aspirer les commandes
+	// Le serveur local vérifie la boîte aux lettres MongoDB toutes les 60 secondes
+	// Cela permet de recevoir les commandes client sans redémarrer le serveur
+	const isLocalServer = !dbManager.isCloud;
+	if (isLocalServer && dbManager.db) {
+		const POLLING_INTERVAL = 60000; // Vérifier toutes les 60 secondes
 		
 		setInterval(async () => {
 			try {
-				const syncStartTime = Date.now();
-				
-				// Recharger les commandes depuis MongoDB
-				const cloudOrders = await dbManager.orders.find({}).toArray();
-				const cloudArchived = await dbManager.archivedOrders.find({}).toArray();
-				
-				// 🆕 CORRECTION : Le POS local est la source de vérité
-				// Ajouter UNIQUEMENT les nouvelles commandes client depuis MongoDB
-				// Ne JAMAIS écraser les commandes POS locales
-				
-				// 🆕 BONNE PRATIQUE : Les commandes client n'ont pas d'ID jusqu'à acceptation POS
-				// Utiliser tempId pour identifier les commandes client en attente
-				const localOrderTempIds = new Set(dataStore.orders.filter(o => o.tempId).map(o => o.tempId));
-				const localOrderIds = new Set(dataStore.orders.filter(o => o.id).map(o => o.id));
-				
-				// 🆕 NETTOYAGE : Retirer des archives les commandes qui sont encore en attente
-				// On ne peut pas archiver quelque chose qui n'est ni accepté ni décliné
-				const invalidArchivedCount = dataStore.archivedOrders.filter(ao => 
-					ao.source === 'client' && 
-					ao.status === 'pending_server_confirmation'
-				).length;
-				
-				if (invalidArchivedCount > 0) {
-					console.log(`[sync] 🧹 Nettoyage archives : ${invalidArchivedCount} commande(s) client en attente trouvée(s) dans archives (incohérence)`);
-					dataStore.archivedOrders = dataStore.archivedOrders.filter(ao => 
-						!(ao.source === 'client' && ao.status === 'pending_server_confirmation')
-					);
-				}
-				
-				// Filtrer UNIQUEMENT les nouvelles commandes client qui n'existent pas encore localement
-				const allClientOrders = cloudOrders.filter(o => o.source === 'client');
-				
-				// 🆕 BONNE PRATIQUE : Créer un Set de tous les originalTempId des commandes confirmées
-				// Cela permet de vérifier rapidement si une commande a déjà été confirmée
-				const confirmedTempIds = new Set(
-					dataStore.orders
-						.filter(lo => lo.originalTempId && lo.source === 'pos' && lo.originalSource === 'client')
-						.map(lo => lo.originalTempId)
-				);
-				
-				const newClientOrders = allClientOrders.filter(o => {
-					// 🆕 BONNE PRATIQUE : Les commandes client n'ont pas d'ID jusqu'à acceptation POS
-					// Vérifier par tempId si présent, sinon par ID (pour compatibilité avec anciennes commandes)
-					if (o.tempId && localOrderTempIds.has(o.tempId)) {
-						return false; // Déjà présente (même tempId)
-					}
-					
-					// 🆕 CORRECTION DOUBLE CONFIRMATION : Vérifier si cette commande a été confirmée et convertie en POS
-					// Vérifier d'abord dans le Set des tempId confirmés (plus rapide)
-					if (o.tempId && confirmedTempIds.has(o.tempId)) {
-						const identifier = o.tempId || o.id || 'sans ID';
-						console.log(`[sync] ⏭️ Commande client ${identifier} ignorée: déjà confirmée et convertie en POS (tempId dans confirmedTempIds)`);
-						return false; // Déjà confirmée et convertie en POS
-					}
-					
-					// Vérification supplémentaire : chercher dans toutes les commandes (y compris POS)
-					if (o.tempId) {
-						const confirmedOrder = dataStore.orders.find(lo => 
-							lo.originalTempId === o.tempId && lo.source === 'pos' && lo.originalSource === 'client'
-						);
-						if (confirmedOrder) {
-							const identifier = o.tempId || o.id || 'sans ID';
-							console.log(`[sync] ⏭️ Commande client ${identifier} ignorée: déjà confirmée et convertie en POS (ID #${confirmedOrder.id})`);
-							return false; // Déjà confirmée et convertie en POS
-						}
-					}
-					
-					if (o.id && localOrderIds.has(o.id)) {
-						// Si la commande a un ID, vérifier qu'elle n'est pas déjà une commande POS
-						const existingOrder = dataStore.orders.find(lo => lo.id === o.id);
-						if (existingOrder && existingOrder.source === 'pos') {
-							console.log(`[sync] ⚠️ Commande client avec ID #${o.id} ignorée : conflit avec commande POS existante`);
-							return false; // Conflit avec commande POS
-						}
-						return false; // Déjà présente
-					}
-					
-					// 2. Vérifier que la commande est vraiment en attente
-					// On ne peut pas archiver quelque chose qui n'est ni accepté ni décliné
-					if (o.serverConfirmed === true || 
-						o.status !== 'pending_server_confirmation' ||
-						o.status === 'declined') {
-						const identifier = o.tempId || o.id || 'sans ID';
-						console.log(`[sync] ⏭️ Commande client ${identifier} ignorée: déjà confirmée/déclinée ou statut invalide`);
-						return false; // Déjà confirmée/déclinée ailleurs
-					}
-					
-					// 3. Vérifier si la commande a été archivée localement (par tempId ou ID)
-					// Après nettoyage, si elle est dans les archives, c'est qu'elle a été traitée
-					const localArchivedOrderTempIds = new Set(dataStore.archivedOrders.filter(ao => ao.tempId).map(ao => ao.tempId));
-					const localArchivedOrderIds = new Set(dataStore.archivedOrders.filter(ao => ao.id).map(ao => ao.id));
-					if ((o.tempId && localArchivedOrderTempIds.has(o.tempId)) || (o.id && localArchivedOrderIds.has(o.id))) {
-						const identifier = o.tempId || o.id || 'sans ID';
-						console.log(`[sync] ⏭️ Commande client ${identifier} ignorée: déjà archivée et traitée`);
-						return false; // Déjà archivée et traitée, ne pas réintroduire
-					}
-					
-					// 4. Vérifier si la table a des commandes archivées récentes ET traitées
-					// Seulement si ces commandes archivées ont été vraiment traitées (payées/archivées)
-					const tableHasProcessedArchivedOrders = dataStore.archivedOrders.some(ao => 
-						String(ao.table) === String(o.table) &&
-						ao.status !== 'pending_server_confirmation' &&
-						ao.status !== 'nouvelle'
-					);
-					if (tableHasProcessedArchivedOrders) {
-						const identifier = o.tempId || o.id || 'sans ID';
-						console.log(`[sync] ⏭️ Commande client ${identifier} (table ${o.table}) ignorée: table a des commandes archivées traitées (probablement payée)`);
-						return false; // Table payée, ne pas réintroduire
-					}
-					
-					return true; // Nouvelle commande client valide
-				});
-				
-				// 🆕 Log pour déboguer
-				if (allClientOrders.length > 0) {
-					console.log(`[sync] 🔍 ${allClientOrders.length} commande(s) client trouvée(s) dans MongoDB, ${newClientOrders.length} nouvelle(s)`);
-					for (const clientOrder of allClientOrders) {
-						const existsByTempId = clientOrder.tempId && localOrderTempIds.has(clientOrder.tempId);
-						const existsById = clientOrder.id && localOrderIds.has(clientOrder.id);
-						const exists = existsByTempId || existsById;
-						const identifier = clientOrder.tempId || clientOrder.id || 'sans ID';
-						console.log(`[sync]   - Commande client ${identifier} (table ${clientOrder.table}): ${exists ? 'existe déjà' : 'NOUVELLE'}, status=${clientOrder.status}, serverConfirmed=${clientOrder.serverConfirmed}`);
-					}
-				}
-				
-				// Mettre à jour les commandes client existantes (mais pas les commandes POS)
-				// 🆕 CORRECTION : Ne pas mettre à jour les commandes qui ont été confirmées
-				const updatedClientOrders = [];
-				for (const cloudOrder of cloudOrders) {
-					if (cloudOrder.source === 'client') {
-						// 🆕 Vérifier d'abord si cette commande a été confirmée (par tempId)
-						if (cloudOrder.tempId && confirmedTempIds.has(cloudOrder.tempId)) {
-							continue; // Ignorer les commandes confirmées
-						}
-						
-						// Chercher par tempId d'abord (pour les commandes client sans ID)
-						let localIndex = -1;
-						if (cloudOrder.tempId) {
-							localIndex = dataStore.orders.findIndex(o => 
-								o.tempId === cloudOrder.tempId && o.source === 'client'
-							);
-						}
-						
-						// Si pas trouvé par tempId, chercher par ID
-						if (localIndex === -1 && cloudOrder.id) {
-							localIndex = dataStore.orders.findIndex(o => 
-								o.id === cloudOrder.id && o.source === 'client'
-							);
-						}
-						
-						if (localIndex !== -1) {
-							// Vérifier que la commande locale n'a pas été confirmée entre-temps
-							const localOrder = dataStore.orders[localIndex];
-							if (localOrder.source === 'client' && localOrder.status === 'pending_server_confirmation') {
-								// Mettre à jour seulement les commandes client existantes en attente
-								dataStore.orders[localIndex] = cloudOrder;
-								updatedClientOrders.push(cloudOrder.id || cloudOrder.tempId);
-							}
-						}
-					}
-					// Ne JAMAIS toucher aux commandes POS (source de vérité locale)
-				}
-				
-				// Ajouter les nouvelles commandes client
-				if (newClientOrders.length > 0) {
-					console.log(`[sync] 🔄 ${newClientOrders.length} nouvelle(s) commande(s) CLIENT détectée(s) depuis MongoDB`);
-					dataStore.orders.push(...newClientOrders);
-					
-					// Notifier via Socket.IO les nouvelles commandes client
+				const processedCount = await fileManager.pullFromMailbox();
+				if (processedCount > 0) {
+					// Notifier via Socket.IO les nouvelles commandes
 					const { getIO } = require('./server/utils/socket');
 					const io = getIO();
 					
-					// 🆕 Vérifier le nombre de clients connectés
-					const connectedClients = io.sockets.sockets.size;
-					console.log(`[sync] 📡 ${connectedClients} client(s) Socket.IO connecté(s)`);
-					
-					for (const newOrder of newClientOrders) {
-						io.emit('order:new', newOrder);
-						console.log(`[sync] 📢 Commande client #${newOrder.id} (table ${newOrder.table}) notifiée via Socket.IO à ${connectedClients} client(s)`);
-					}
+					// Émettre un événement pour rafraîchir les tables
+					io.emit('orders:sync', { timestamp: new Date().toISOString() });
+					console.log(`[sync] 📡 Notification Socket.IO envoyée pour ${processedCount} nouvelle(s) commande(s)`);
 				}
-				
-				// Mettre à jour les archives (sans écraser les commandes POS locales)
-				dataStore.archivedOrders.length = 0;
-				dataStore.archivedOrders.push(...cloudArchived);
-				
-				// Mettre à jour les compteurs depuis MongoDB (pour éviter les conflits d'IDs)
-				const countersDoc = await dbManager.counters.findOne({ type: 'global' });
-				if (countersDoc) {
-					dataStore.nextOrderId = Math.max(dataStore.nextOrderId, countersDoc.nextOrderId || 1);
-					dataStore.nextBillId = Math.max(dataStore.nextBillId, countersDoc.nextBillId || 1);
-					dataStore.nextServiceId = Math.max(dataStore.nextServiceId, countersDoc.nextServiceId || 1);
-					dataStore.nextClientId = Math.max(dataStore.nextClientId, countersDoc.nextClientId || 1);
-				}
-				
-				const syncDuration = Date.now() - syncStartTime;
-				if (newClientOrders.length > 0 || updatedClientOrders.length > 0) {
-					console.log(`[sync] ✅ Synchronisation terminée en ${syncDuration}ms (${newClientOrders.length} nouvelles commandes client, ${updatedClientOrders.length} mises à jour)`);
-				}
-				lastSyncTime = Date.now();
 			} catch (e) {
-				console.error('[sync] ⚠️ Erreur synchronisation périodique:', e.message);
-				console.error('[sync] Stack:', e.stack);
+				console.error('[sync] ⚠️ Erreur polling boîte aux lettres:', e.message);
 			}
-		}, SYNC_INTERVAL);
+		}, POLLING_INTERVAL);
 		
-		console.log(`[server] 🔄 Synchronisation périodique MongoDB activée (toutes les ${SYNC_INTERVAL/1000}s) pour serveur local`);
+		console.log(`[server] 📬 Polling boîte aux lettres activé (toutes les ${POLLING_INTERVAL/1000}s)`);
 	} else if (dbManager.isCloud && dbManager.db && !isLocalServer) {
 		// 🆕 DÉTECTION RESET pour serveur cloud : vérifier périodiquement si reset détecté
 		const CLOUD_RESET_CHECK_INTERVAL = 5000; // Vérifier toutes les 5 secondes

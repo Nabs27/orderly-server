@@ -110,7 +110,7 @@ async function createOrder(req, res) {
 				delete orderToSave._id;
 
 				await dbManager.orders.insertOne(orderToSave);
-				console.log('[orders] 📬 Commande CLIENT déposée dans la boîte aux lettres MongoDB:', newOrder.tempId);
+				console.log(`[orders] 📬 Commande client reçue. Déposée dans la boîte aux lettres (waitingForPos: true, tempId: ${newOrder.tempId})`);
 			} catch (e) {
 				console.error('[orders] ❌ Erreur dépôt MongoDB:', e.message);
 				return res.status(500).json({ error: 'Erreur lors de la création de la commande' });

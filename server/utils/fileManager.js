@@ -137,12 +137,15 @@ async function loadFromMongoDB() {
 	}
 }
 
-// 🆕 ARCHITECTURE "BOÎTE AUX LETTRES" : Le serveur local aspire les commandes et leur donne un ID
-async function smartSyncWithMongoDB() {
+// 🆕 FONCTION D'ASPIRATION : Récupère les commandes de la boîte aux lettres MongoDB
+// Peut être appelée au démarrage ET périodiquement (polling)
+async function pullFromMailbox() {
+	if (!dbManager.db) {
+		return 0; // MongoDB non disponible
+	}
+
 	try {
-		// 1. ASPIRER les commandes client de la "boîte aux lettres" MongoDB
-		// On cherche UNIQUEMENT les commandes avec waitingForPos=true et processedByPos=false
-		// Ces commandes n'ont PAS d'ID (le POS local va leur en donner un)
+		// 1. SCAN de la boîte aux lettres MongoDB
 		const waitingOrders = await dbManager.orders.find({
 			waitingForPos: true,
 			processedByPos: { $ne: true }, // Pas encore traitées
@@ -150,50 +153,101 @@ async function smartSyncWithMongoDB() {
 			source: 'client'
 		}).toArray();
 
-		console.log(`[sync] 📬 ${waitingOrders.length} commande(s) en attente dans la boîte aux lettres MongoDB`);
+		if (waitingOrders.length === 0) {
+			return 0; // Boîte aux lettres vide
+		}
+
+		console.log(`[sync] 🔍 Scan de la boîte aux lettres MongoDB...`);
+		console.log(`[sync] 📬 ${waitingOrders.length} nouvelle(s) commande(s) trouvée(s)`);
 
 		// 2. TRAITER chaque commande : lui donner un ID local et la marquer comme traitée
 		let processedCount = 0;
 		for (const mongoOrder of waitingOrders) {
-			// Vérifier si cette commande existe déjà localement (éviter doublons)
+			// 🆕 VÉRIFICATION ANTI-DOUBLON : Vérifier si cette commande existe déjà localement
+			// Protection contre les micro-coupures réseau ou redémarrages
 			const existingLocal = dataStore.orders.find(o =>
 				o.tempId === mongoOrder.tempId ||
-				(o.id && o.id === mongoOrder.id)
+				(o.id && o.id === mongoOrder.id) ||
+				(o.tempId && mongoOrder.tempId && o.tempId === mongoOrder.tempId)
 			);
 
-			if (!existingLocal) {
-				// 🆕 LE POS LOCAL DONNE L'ID (source de vérité)
-				const localId = dataStore.nextOrderId++;
-				mongoOrder.id = localId;
-				mongoOrder.waitingForPos = false; // Plus en attente
-				mongoOrder.processedByPos = true; // Traitée par le POS
-				delete mongoOrder._id; // Supprimer _id MongoDB avant ajout local
-
-				// Ajouter au datastore local
-				dataStore.orders.push(mongoOrder);
-				processedCount++;
-				
-				console.log(`[sync] ✅ Commande ${mongoOrder.tempId} → ID #${localId} (aspirée et traitée)`);
-				
-				// Marquer comme traitée dans MongoDB (pour ne pas la reprendre)
-				try {
-					await dbManager.orders.updateOne(
-						{ tempId: mongoOrder.tempId },
-						{ 
-							$set: { 
-								id: localId,
-								processedByPos: true,
-								waitingForPos: false
+			if (existingLocal) {
+				console.log(`[sync] ⏭️ Commande ${mongoOrder.tempId} déjà présente localement (ID: ${existingLocal.id || 'N/A'}), ignorée`);
+				// Marquer quand même comme traitée dans MongoDB si elle a déjà un ID
+				if (existingLocal.id) {
+					try {
+						await dbManager.orders.updateOne(
+							{ tempId: mongoOrder.tempId },
+							{ 
+								$set: { 
+									id: existingLocal.id,
+									processedByPos: true,
+									waitingForPos: false
+								}
 							}
-						}
-					);
-				} catch (e) {
-					console.error(`[sync] ⚠️ Erreur marquage commande ${mongoOrder.tempId} comme traitée:`, e.message);
+						);
+					} catch (e) {
+						// Ignorer les erreurs de mise à jour
+					}
 				}
-			} else {
-				console.log(`[sync] ⏭️ Commande ${mongoOrder.tempId} déjà présente localement, ignorée`);
+				continue;
+			}
+
+			// 🆕 LE POS LOCAL DONNE L'ID (source de vérité)
+			const localId = dataStore.nextOrderId++;
+			mongoOrder.id = localId;
+			mongoOrder.waitingForPos = false; // Plus en attente
+			mongoOrder.processedByPos = true; // Traitée par le POS
+			delete mongoOrder._id; // Supprimer _id MongoDB avant ajout local
+
+			// Ajouter au datastore local
+			dataStore.orders.push(mongoOrder);
+			processedCount++;
+			
+			console.log(`[sync] ✍️ Attribution ID #${localId} à ${mongoOrder.tempId}. Enregistré localement.`);
+			
+			// 🆕 DOUBLE VALIDATION MONGODB : Marquer comme traitée avec les 3 champs requis
+			try {
+				const updateResult = await dbManager.orders.updateOne(
+					{ tempId: mongoOrder.tempId },
+					{ 
+						$set: { 
+							id: localId, // ID définitif du POS
+							processedByPos: true, // Traitée par le POS
+							waitingForPos: false // Plus en attente
+						}
+					}
+				);
+				if (updateResult.modifiedCount > 0) {
+					console.log(`[sync] ✉️ Boîte aux lettres : Commande ${mongoOrder.tempId} marquée comme traitée (ID #${localId})`);
+				}
+			} catch (e) {
+				console.error(`[sync] ⚠️ Erreur marquage commande ${mongoOrder.tempId} comme traitée:`, e.message);
 			}
 		}
+
+		// Sauvegarder les nouvelles commandes dans le JSON local
+		if (processedCount > 0) {
+			try {
+				await saveToJSON();
+				console.log(`[sync] 💾 ${processedCount} commande(s) sauvegardée(s) en JSON local`);
+			} catch (e) {
+				console.error(`[sync] ⚠️ Erreur sauvegarde JSON:`, e.message);
+			}
+		}
+
+		return processedCount;
+	} catch (e) {
+		console.error('[sync] ❌ Erreur aspiration boîte aux lettres:', e);
+		return 0;
+	}
+}
+
+// 🆕 SYNCHRONISATION INTELLIGENTE : Ne pas écraser l'état local
+async function smartSyncWithMongoDB() {
+	try {
+		// 1. ASPIRER les commandes de la boîte aux lettres (au démarrage)
+		const processedCount = await pullFromMailbox();
 
 		// 🆕 Le serveur local est la SEULE source de vérité
 		// On ne récupère PAS les commandes depuis MongoDB (sauf commandes client en attente)
@@ -544,5 +598,6 @@ module.exports = {
 	loadPersistedData,
 	savePersistedData,
 	loadFromMongoDB, // Pour compatibilité serveur cloud
-	smartSyncWithMongoDB // 🆕 Synchronisation intelligente
+	smartSyncWithMongoDB, // 🆕 Synchronisation intelligente
+	pullFromMailbox // 🆕 Fonction d'aspiration pour polling périodique
 };
