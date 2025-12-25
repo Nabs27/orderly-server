@@ -69,11 +69,11 @@ dbManager.connect().then(() => {
 	console.log('[server] Données initialisées');
 	
 	// 🆕 ARCHITECTURE "BOÎTE AUX LETTRES" : Polling périodique pour aspirer les commandes
-	// Le serveur local vérifie la boîte aux lettres MongoDB toutes les 60 secondes
-	// Cela permet de recevoir les commandes client sans redémarrer le serveur
+	// Le serveur local vérifie la boîte aux lettres MongoDB toutes les 5 secondes
+	// Cela permet de recevoir les commandes client rapidement sans redémarrer le serveur
 	const isLocalServer = !dbManager.isCloud;
 	if (isLocalServer && dbManager.db) {
-		const POLLING_INTERVAL = 60000; // Vérifier toutes les 60 secondes
+		const POLLING_INTERVAL = 5000; // Vérifier toutes les 5 secondes
 		
 		setInterval(async () => {
 			try {

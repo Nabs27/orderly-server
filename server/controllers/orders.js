@@ -98,14 +98,16 @@ async function createOrder(req, res) {
 	
 	// 🆕 ARCHITECTURE "BOÎTE AUX LETTRES" : Le Cloud est muet, le Local est le patron
 	if (isClientOrder) {
-		// SERVEUR CLOUD : Juste déposer dans la "boîte aux lettres" MongoDB
-		// Ne donne JAMAIS d'ID, ne fait AUCUN traitement, juste insertion
-		if (dbManager.isCloud && dbManager.db) {
+		// 🆕 CORRECTION : Si MongoDB est disponible, TOUJOURS insérer dans MongoDB
+		// Peu importe isCloud - si MongoDB existe, c'est qu'on peut déposer la commande
+		// Cela corrige le cas où Railway a isCloud=false mais doit quand même déposer dans MongoDB
+		if (dbManager.db) {
 			try {
 				const orderToSave = { 
 					...newOrder,
 					waitingForPos: true, // 🆕 Marqueur : en attente du POS local
-					processedByPos: false // 🆕 Pas encore traitée par le POS
+					processedByPos: false, // 🆕 Pas encore traitée par le POS
+					id: null // 🆕 FORCER id à null (le POS local donnera l'ID)
 				};
 				delete orderToSave._id;
 
@@ -116,9 +118,9 @@ async function createOrder(req, res) {
 				return res.status(500).json({ error: 'Erreur lors de la création de la commande' });
 			}
 		} else {
-			// SERVEUR LOCAL : Ne devrait jamais recevoir de commandes client directement
-			// Les commandes client arrivent via MongoDB (aspirées par pullClientOrders)
-			console.warn('[orders] ⚠️ Commande client reçue sur serveur local - devrait venir de MongoDB');
+			// SERVEUR LOCAL SANS MONGODB : Ne devrait jamais arriver en production
+			// Les commandes client arrivent normalement via MongoDB (aspirées par pullFromMailbox)
+			console.warn('[orders] ⚠️ Commande client reçue sur serveur local SANS MongoDB - mode dégradé');
 			dataStore.orders.push(newOrder);
 			fileManager.savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde:', e));
 		}
