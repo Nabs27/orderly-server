@@ -265,50 +265,52 @@ async function saveToMongoDB() {
 		
 		console.log('[sync] ☁️ Synchronisation vers MongoDB (backup)...');
 		
-		// Synchroniser les commandes (upsert par ID pour éviter les doublons)
-		if (dataStore.orders.length > 0) {
-			for (const order of dataStore.orders) {
-				// 🆕 CORRECTION : Supprimer _id MongoDB avant replaceOne pour éviter l'erreur "immutable field"
-				// MongoDB génère automatiquement _id lors du chargement, mais on ne doit pas le modifier
+		// 🆕 SUPPRESSION RADICALE : Ne sauvegarder QUE les commandes client EN ATTENTE dans MongoDB
+		// Les commandes confirmées (source='pos' ou confirmées) ne doivent JAMAIS être dans MongoDB
+		// MongoDB ne doit contenir QUE :
+		// 1. Commandes client EN ATTENTE (tempId, source='client', non confirmées)
+		// 2. Backups archivées (pour dashboard)
+		
+		// Filtrer uniquement les commandes client en attente
+		const pendingClientOrders = dataStore.orders.filter(o => 
+			o.source === 'client' && 
+			o.tempId && 
+			(o.status === 'pending_server_confirmation' || !o.serverConfirmed)
+		);
+		
+		if (pendingClientOrders.length > 0) {
+			for (const order of pendingClientOrders) {
 				const orderToSave = { ...order };
 				delete orderToSave._id;
 				
-				// 🆕 CORRECTION DOUBLE CONFIRMATION : Si la commande a un ID officiel mais avait un tempId,
-				// supprimer l'ancienne entrée MongoDB avec tempId pour éviter les doublons
-				if (order.id && order.originalTempId) {
-					const deleteResult = await dbManager.orders.deleteMany({
-						$or: [
-							{ tempId: order.originalTempId },
-							{ id: null, tempId: order.originalTempId }
-						]
-					});
-					if (deleteResult.deletedCount > 0) {
-						console.log(`[sync] 🗑️ Ancienne commande avec tempId ${order.originalTempId} supprimée de MongoDB (confirmée avec ID #${order.id})`);
-					}
-				}
-				
-				// 🆕 SOLUTION : Utiliser tempId pour les commandes client, id pour les commandes POS
-				// Plus d'index unique sur id, donc pas de conflit
-				let query;
-				if (order.tempId) {
-					// Commande client : utiliser tempId (unique)
-					query = { tempId: order.tempId };
-				} else if (order.id) {
-					// Commande POS : utiliser id (non-unique)
-					query = { id: order.id };
-				} else {
-					// Fallback : utiliser createdAt + table
-					console.warn(`[sync] ⚠️ Commande sans ID ni tempId détectée, utilisation createdAt comme fallback`);
-					query = { createdAt: order.createdAt, table: order.table };
-				}
-				
 				await dbManager.orders.replaceOne(
-					query,
+					{ tempId: order.tempId },
 					orderToSave,
 					{ upsert: true }
 				);
 			}
-			console.log(`[sync] ☁️ ${dataStore.orders.length} commandes synchronisées`);
+			console.log(`[sync] ☁️ ${pendingClientOrders.length} commande(s) client EN ATTENTE synchronisées`);
+		}
+		
+		// 🆕 NETTOYAGE : Supprimer de MongoDB toutes les commandes confirmées qui ne devraient pas y être
+		// (en cas de commandes fantômes restantes)
+		const confirmedOrdersInMongo = await dbManager.orders.find({
+			$or: [
+				{ source: 'pos' },
+				{ id: { $ne: null }, tempId: { $exists: false } }, // Commandes POS confirmées
+				{ serverConfirmed: true } // Commandes client confirmées
+			],
+			status: { $nin: ['archived', 'declined'] } // Exclure les archivées (elles sont dans archived_orders)
+		}).toArray();
+		
+		if (confirmedOrdersInMongo.length > 0) {
+			const confirmedIds = confirmedOrdersInMongo.map(o => o._id);
+			const deleteResult = await dbManager.orders.deleteMany({
+				_id: { $in: confirmedIds }
+			});
+			if (deleteResult.deletedCount > 0) {
+				console.log(`[sync] 🗑️ ${deleteResult.deletedCount} commande(s) confirmée(s) supprimée(s) de MongoDB (ne doivent pas y être)`);
+			}
 		}
 		
 		// Synchroniser les commandes archivées

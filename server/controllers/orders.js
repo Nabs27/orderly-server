@@ -363,44 +363,35 @@ async function confirmOrderByServer(req, res) {
 	console.log('[orders] ✅ Commande client (tempId: ' + oldTempId + ', ancien ID: ' + (oldId || 'null') + ') confirmée et reçoit ID officiel #' + order.id + ' par serveur:', order.confirmedBy, 'table:', order.table);
 	console.log('[orders] ✅ Commande maintenant traitée comme commande POS normale (id=' + order.id + ', source=pos, originalSource=' + originalSource + ')');
 	
-	// 🆕 CORRECTION : Supprimer SYNCHRONEMENT l'ancienne entrée MongoDB
-	// Cela garantit que la suppression est faite avant le redémarrage
-	if (dbManager.isCloud && dbManager.db && oldTempId) {
+	// 🆕 SUPPRESSION RADICALE : Supprimer TOUJOURS de MongoDB après confirmation
+	// Une commande confirmée n'a plus sa place dans MongoDB (gérée uniquement par le serveur local)
+	// MongoDB ne doit contenir QUE les commandes client EN ATTENTE (tempId, source='client')
+	if (dbManager.db && oldTempId) {
 		try {
 			const deleteResult = await dbManager.orders.deleteMany({
 				$or: [
 					{ tempId: oldTempId },
-					{ id: null, tempId: oldTempId }
+					{ id: null, tempId: oldTempId },
+					{ id: order.id } // 🆕 Supprimer aussi si elle existe déjà avec le nouvel ID
 				]
 			});
 			if (deleteResult.deletedCount > 0) {
-				console.log(`[orders] 🗑️ Ancienne commande avec tempId ${oldTempId} supprimée de MongoDB (confirmée avec ID #${order.id})`);
+				console.log(`[orders] 🗑️ Commande ${oldTempId} → #${order.id} SUPPRIMÉE de MongoDB (confirmée et gérée localement)`);
 			}
 		} catch (e) {
-			console.error(`[orders] ⚠️ Erreur suppression ancienne entrée MongoDB: ${e.message}`);
+			console.error(`[orders] ⚠️ Erreur suppression MongoDB: ${e.message}`);
 		}
 	}
 
-	// 🆕 GESTION DIFFÉRENCIÉE SELON LE TYPE DE SERVEUR
-	if (dbManager.isCloud && dbManager.db) {
-		// SERVEUR CLOUD : Sauvegarder directement dans MongoDB
-		try {
-			const orderToSave = { ...order };
-			delete orderToSave._id;
-
-			await dbManager.orders.replaceOne(
-				{ id: order.id },
-				orderToSave,
-				{ upsert: true }
-			);
-			console.log(`[orders] ☁️ Commande confirmée sauvegardée dans MongoDB: ID #${order.id}`);
-		} catch (e) {
-			console.error('[orders] ❌ Erreur sauvegarde MongoDB:', e.message);
-		}
-	} else {
-		// SERVEUR LOCAL : Sauvegarde normale
+	// 🆕 SERVEUR LOCAL : Sauvegarde JSON uniquement (MongoDB déjà nettoyé)
+	// La commande confirmée est maintenant UNIQUEMENT dans le JSON local (source de vérité)
+	if (!dbManager.isCloud) {
 		await fileManager.savePersistedData();
+		console.log(`[orders] 💾 Commande #${order.id} sauvegardée en JSON local (source de vérité)`);
 	}
+	// 🆕 SERVEUR CLOUD : Ne PAS sauvegarder les commandes confirmées dans MongoDB
+	// Car elles sont gérées par le serveur local (source de vérité)
+	// Le serveur cloud est stateless et ne garde que les commandes en attente
 	
 	// 🆕 CORRECTION : Émettre order:new pour apparition dynamique dans le POS
 	// Cela permet à la commande d'apparaître immédiatement dans le plan de table et la page Order
