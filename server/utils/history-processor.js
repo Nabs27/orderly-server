@@ -601,13 +601,14 @@ function processServiceSessions(sessions) {
 
 				// 🆕 CORRECTION : Logique spécifique pour subnote_created
 				if (event.action === 'subnote_created') {
-					// Vérifier si cette sous-note a des paiements associés
+					// Vérifier si cette commande a été payée (peu importe le noteId)
+					// Car une sous-note envoyée séparément a ses paiements dans mainNote
 					const noteId = event.noteId;
-					const hasPaymentsForNote = (session.paymentHistory || []).some(p => p.noteId === noteId);
+					const hasAnyPayments = (session.paymentHistory || []).length > 0;
 					const subNoteStillExists = (session.subNotes || []).some(sn => sn.id === noteId && !sn.paid);
 
-					// ✅ Inclure si : elle a des articles OU des paiements OU elle existe encore (non payée)
-					if (!hasItems && !hasPaymentsForNote && !subNoteStillExists) {
+					// ✅ Inclure si : elle a des articles OU a été payée OU existe encore (non payée)
+					if (!hasItems && !hasAnyPayments && !subNoteStillExists) {
 						continue; // Ignorer seulement si elle n'a RIEN du tout
 					}
 				} else if (event.action === 'order_created' && !hasItems) {
