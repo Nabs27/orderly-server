@@ -166,32 +166,9 @@ async function smartSyncWithMongoDB() {
 			}
 		}
 
-		// 🆕 2b. SÉCURITÉ : Récupérer les commandes confirmées actives manquantes localement
-		// Ceci est une mesure de sécurité en cas de perte de données locales
-		// Ne récupère que les commandes ACTIVES (pas archivées) pour éviter de ressusciter les tables payées
-		if (dataStore.orders.length === 0) {
-			console.log(`[sync] ⚠️ Aucune commande locale détectée - vérification backup MongoDB...`);
-			
-			const activeMongoOrders = await dbManager.orders.find({
-				id: { $ne: null },
-				status: { $nin: ['archived', 'declined'] } // Exclure les archivées et déclinées
-			}).toArray();
-			
-			let recoveredCount = 0;
-			for (const order of activeMongoOrders) {
-				// Ne pas récupérer si déjà dans les archives locales (table déjà payée)
-				const isArchived = dataStore.archivedOrders.some(a => a.id === order.id);
-				if (!isArchived) {
-					dataStore.orders.push(order);
-					recoveredCount++;
-					console.log(`[sync] 🔄 Commande ${order.id} (table ${order.table}) récupérée depuis backup MongoDB`);
-				}
-			}
-			
-			if (recoveredCount > 0) {
-				console.log(`[sync] ✅ ${recoveredCount} commande(s) récupérée(s) depuis backup MongoDB`);
-			}
-		}
+		// 🆕 Le serveur local est la SEULE source de vérité
+		// On ne récupère PAS les commandes depuis MongoDB (sauf commandes client en attente)
+		// Si les fichiers JSON disent "0 commandes", alors il y a 0 commandes
 
 		// 3. Synchroniser les compteurs si nécessaire
 		const countersDoc = await dbManager.counters.findOne({ type: 'global' });
