@@ -117,6 +117,7 @@ async function createOrder(req, res) {
 		} else {
 			// SERVEUR LOCAL : Ajouter au datastore local
 			dataStore.orders.push(newOrder);
+			console.log('[orders] 🏠 Commande CLIENT ajoutée au datastore local (sera sync avec MongoDB):', newOrder.tempId);
 		}
 
 		console.log('[orders] 🆕 Commande CLIENT créée (sans ID - en attente POS):', newOrder.tempId, 'pour table', table, 'serveur assigné:', assignedServer, 'total:', total, 'status:', newOrder.status);

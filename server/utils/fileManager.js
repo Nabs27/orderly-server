@@ -148,6 +148,13 @@ async function smartSyncWithMongoDB() {
 		}).toArray();
 
 		console.log(`[sync] 📥 ${mongoOrders.length} commande(s) client trouvée(s) dans MongoDB`);
+		
+		// 🆕 DEBUG : Afficher les détails des commandes trouvées
+		if (mongoOrders.length > 0) {
+			for (const order of mongoOrders) {
+				console.log(`[sync]   - tempId: ${order.tempId}, table: ${order.table}, status: ${order.status}, serverConfirmed: ${order.serverConfirmed}`);
+			}
+		}
 
 		// 2. Merger intelligemment : ajouter seulement les nouvelles commandes clients
 		let addedCount = 0;
@@ -197,6 +204,32 @@ async function smartSyncWithMongoDB() {
 					dataStore.clientCredits.push(client);
 					console.log(`[sync] 👤 Client ${client.name} ajouté depuis MongoDB`);
 				}
+			}
+		}
+
+		// 🆕 NETTOYAGE AU DÉMARRAGE : Supprimer les commandes confirmées qui ne devraient pas être dans MongoDB
+		// Ce nettoyage se fait UNIQUEMENT au démarrage pour éviter de supprimer des commandes client en attente
+		// Une commande confirmée doit avoir :
+		// - Un ID officiel (id existe et n'est pas null)
+		// - ET (source='pos' OU serverConfirmed=true)
+		// - ET pas de tempId (car tempId est supprimé après confirmation)
+		const confirmedOrdersInMongo = await dbManager.orders.find({
+			id: { $ne: null }, // Doit avoir un ID officiel
+			tempId: { $exists: false }, // Ne doit plus avoir de tempId (supprimé après confirmation)
+			$or: [
+				{ source: 'pos' }, // Commande POS confirmée
+				{ serverConfirmed: true } // Commande client confirmée
+			],
+			status: { $nin: ['archived', 'declined'] } // Exclure les archivées
+		}).toArray();
+		
+		if (confirmedOrdersInMongo.length > 0) {
+			const confirmedIds = confirmedOrdersInMongo.map(o => o._id);
+			const deleteResult = await dbManager.orders.deleteMany({
+				_id: { $in: confirmedIds }
+			});
+			if (deleteResult.deletedCount > 0) {
+				console.log(`[sync] 🗑️ ${deleteResult.deletedCount} commande(s) confirmée(s) supprimée(s) de MongoDB au démarrage (ne doivent pas y être)`);
 			}
 		}
 
@@ -292,26 +325,8 @@ async function saveToMongoDB() {
 			console.log(`[sync] ☁️ ${pendingClientOrders.length} commande(s) client EN ATTENTE synchronisées`);
 		}
 		
-		// 🆕 NETTOYAGE : Supprimer de MongoDB toutes les commandes confirmées qui ne devraient pas y être
-		// (en cas de commandes fantômes restantes)
-		const confirmedOrdersInMongo = await dbManager.orders.find({
-			$or: [
-				{ source: 'pos' },
-				{ id: { $ne: null }, tempId: { $exists: false } }, // Commandes POS confirmées
-				{ serverConfirmed: true } // Commandes client confirmées
-			],
-			status: { $nin: ['archived', 'declined'] } // Exclure les archivées (elles sont dans archived_orders)
-		}).toArray();
-		
-		if (confirmedOrdersInMongo.length > 0) {
-			const confirmedIds = confirmedOrdersInMongo.map(o => o._id);
-			const deleteResult = await dbManager.orders.deleteMany({
-				_id: { $in: confirmedIds }
-			});
-			if (deleteResult.deletedCount > 0) {
-				console.log(`[sync] 🗑️ ${deleteResult.deletedCount} commande(s) confirmée(s) supprimée(s) de MongoDB (ne doivent pas y être)`);
-			}
-		}
+		// 🆕 Le nettoyage des commandes confirmées se fait UNIQUEMENT au démarrage dans smartSyncWithMongoDB()
+		// Pour éviter de supprimer des commandes client en attente lors de la synchronisation périodique
 		
 		// Synchroniser les commandes archivées
 		if (dataStore.archivedOrders.length > 0) {
