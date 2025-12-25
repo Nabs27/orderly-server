@@ -137,51 +137,61 @@ async function loadFromMongoDB() {
 	}
 }
 
-// 🆕 SYNCHRONISATION INTELLIGENTE : Ne pas écraser l'état local
+// 🆕 ARCHITECTURE "BOÎTE AUX LETTRES" : Le serveur local aspire les commandes et leur donne un ID
 async function smartSyncWithMongoDB() {
 	try {
-		// 1. Charger UNIQUEMENT les commandes clients non confirmées depuis MongoDB
-		// 🆕 DEBUG : Vérifier d'abord ce qui existe dans MongoDB
-		const allMongoOrders = await dbManager.orders.find({}).toArray();
-		console.log(`[sync] 🔍 DEBUG: ${allMongoOrders.length} commande(s) totale(s) dans MongoDB`);
-		
-		// Afficher toutes les commandes pour diagnostic
-		for (const order of allMongoOrders) {
-			console.log(`[sync] 🔍   - tempId: ${order.tempId || 'N/A'}, id: ${order.id || 'N/A'}, source: ${order.source || 'N/A'}, status: ${order.status || 'N/A'}, serverConfirmed: ${order.serverConfirmed || 'N/A'}`);
-		}
-		
-		// Requête pour récupérer les commandes client en attente
-		const mongoOrders = await dbManager.orders.find({
-			tempId: { $exists: true },
-			$or: [{ id: null }, { id: { $exists: false } }],
+		// 1. ASPIRER les commandes client de la "boîte aux lettres" MongoDB
+		// On cherche UNIQUEMENT les commandes avec waitingForPos=true et processedByPos=false
+		// Ces commandes n'ont PAS d'ID (le POS local va leur en donner un)
+		const waitingOrders = await dbManager.orders.find({
+			waitingForPos: true,
+			processedByPos: { $ne: true }, // Pas encore traitées
+			$or: [{ id: null }, { id: { $exists: false } }], // Pas d'ID officiel
 			source: 'client'
 		}).toArray();
 
-		console.log(`[sync] 📥 ${mongoOrders.length} commande(s) client trouvée(s) dans MongoDB (après filtrage)`);
-		
-		// 🆕 DEBUG : Afficher les détails des commandes trouvées
-		if (mongoOrders.length > 0) {
-			for (const order of mongoOrders) {
-				console.log(`[sync]   - tempId: ${order.tempId}, table: ${order.table}, status: ${order.status}, serverConfirmed: ${order.serverConfirmed}`);
-			}
-		} else if (allMongoOrders.length > 0) {
-			console.log(`[sync] ⚠️ Des commandes existent dans MongoDB mais ne correspondent pas au filtre (tempId existe, id null, source='client')`);
-		}
+		console.log(`[sync] 📬 ${waitingOrders.length} commande(s) en attente dans la boîte aux lettres MongoDB`);
 
-		// 2. Merger intelligemment : ajouter seulement les nouvelles commandes clients
-		let addedCount = 0;
-		for (const mongoOrder of mongoOrders) {
-			// Vérifier si cette commande client existe déjà localement
+		// 2. TRAITER chaque commande : lui donner un ID local et la marquer comme traitée
+		let processedCount = 0;
+		for (const mongoOrder of waitingOrders) {
+			// Vérifier si cette commande existe déjà localement (éviter doublons)
 			const existingLocal = dataStore.orders.find(o =>
 				o.tempId === mongoOrder.tempId ||
 				(o.id && o.id === mongoOrder.id)
 			);
 
 			if (!existingLocal) {
-				// Ajouter la nouvelle commande client
+				// 🆕 LE POS LOCAL DONNE L'ID (source de vérité)
+				const localId = dataStore.nextOrderId++;
+				mongoOrder.id = localId;
+				mongoOrder.waitingForPos = false; // Plus en attente
+				mongoOrder.processedByPos = true; // Traitée par le POS
+				delete mongoOrder._id; // Supprimer _id MongoDB avant ajout local
+
+				// Ajouter au datastore local
 				dataStore.orders.push(mongoOrder);
-				addedCount++;
-				console.log(`[sync] ➕ Commande client ${mongoOrder.tempId} ajoutée depuis MongoDB`);
+				processedCount++;
+				
+				console.log(`[sync] ✅ Commande ${mongoOrder.tempId} → ID #${localId} (aspirée et traitée)`);
+				
+				// Marquer comme traitée dans MongoDB (pour ne pas la reprendre)
+				try {
+					await dbManager.orders.updateOne(
+						{ tempId: mongoOrder.tempId },
+						{ 
+							$set: { 
+								id: localId,
+								processedByPos: true,
+								waitingForPos: false
+							}
+						}
+					);
+				} catch (e) {
+					console.error(`[sync] ⚠️ Erreur marquage commande ${mongoOrder.tempId} comme traitée:`, e.message);
+				}
+			} else {
+				console.log(`[sync] ⏭️ Commande ${mongoOrder.tempId} déjà présente localement, ignorée`);
 			}
 		}
 
@@ -219,33 +229,12 @@ async function smartSyncWithMongoDB() {
 			}
 		}
 
-		// 🆕 NETTOYAGE AU DÉMARRAGE : Supprimer les commandes confirmées qui ne devraient pas être dans MongoDB
-		// Ce nettoyage se fait UNIQUEMENT au démarrage pour éviter de supprimer des commandes client en attente
-		// Une commande confirmée doit avoir :
-		// - Un ID officiel (id existe et n'est pas null)
-		// - ET (source='pos' OU serverConfirmed=true)
-		// - ET pas de tempId (car tempId est supprimé après confirmation)
-		const confirmedOrdersInMongo = await dbManager.orders.find({
-			id: { $ne: null }, // Doit avoir un ID officiel
-			tempId: { $exists: false }, // Ne doit plus avoir de tempId (supprimé après confirmation)
-			$or: [
-				{ source: 'pos' }, // Commande POS confirmée
-				{ serverConfirmed: true } // Commande client confirmée
-			],
-			status: { $nin: ['archived', 'declined'] } // Exclure les archivées
-		}).toArray();
-		
-		if (confirmedOrdersInMongo.length > 0) {
-			const confirmedIds = confirmedOrdersInMongo.map(o => o._id);
-			const deleteResult = await dbManager.orders.deleteMany({
-				_id: { $in: confirmedIds }
-			});
-			if (deleteResult.deletedCount > 0) {
-				console.log(`[sync] 🗑️ ${deleteResult.deletedCount} commande(s) confirmée(s) supprimée(s) de MongoDB au démarrage (ne doivent pas y être)`);
-			}
-		}
+		// 🆕 PAS DE NETTOYAGE AUTOMATIQUE : Les commandes dans MongoDB sont soit :
+		// - En attente (waitingForPos=true) → seront aspirées par le POS
+		// - Traitées (processedByPos=true) → peuvent rester comme backup
+		// Le POS local est la source de vérité, MongoDB est juste la boîte aux lettres + backup
 
-		console.log(`[sync] ✅ Synchronisation intelligente terminée: ${addedCount} commande(s) client ajoutée(s)`);
+		console.log(`[sync] ✅ Synchronisation terminée: ${processedCount} commande(s) aspirée(s) et traitée(s)`);
 
 	} catch (e) {
 		console.error('[sync] ❌ Erreur synchronisation intelligente:', e);
@@ -310,35 +299,15 @@ async function saveToMongoDB() {
 		
 		console.log('[sync] ☁️ Synchronisation vers MongoDB (backup)...');
 		
-		// 🆕 SUPPRESSION RADICALE : Ne sauvegarder QUE les commandes client EN ATTENTE dans MongoDB
-		// Les commandes confirmées (source='pos' ou confirmées) ne doivent JAMAIS être dans MongoDB
-		// MongoDB ne doit contenir QUE :
-		// 1. Commandes client EN ATTENTE (tempId, source='client', non confirmées)
+		// 🆕 ARCHITECTURE "BOÎTE AUX LETTRES" : Le serveur local NE sauvegarde PAS les commandes client dans MongoDB
+		// Les commandes client arrivent via le serveur cloud et sont aspirées par smartSyncWithMongoDB()
+		// Une fois traitées (ID attribué), elles restent UNIQUEMENT dans le JSON local (source de vérité)
+		// MongoDB ne contient QUE :
+		// 1. Commandes client EN ATTENTE (déposées par le serveur cloud, waitingForPos=true)
 		// 2. Backups archivées (pour dashboard)
 		
-		// Filtrer uniquement les commandes client en attente
-		const pendingClientOrders = dataStore.orders.filter(o => 
-			o.source === 'client' && 
-			o.tempId && 
-			(o.status === 'pending_server_confirmation' || !o.serverConfirmed)
-		);
-		
-		if (pendingClientOrders.length > 0) {
-			for (const order of pendingClientOrders) {
-				const orderToSave = { ...order };
-				delete orderToSave._id;
-				
-				await dbManager.orders.replaceOne(
-					{ tempId: order.tempId },
-					orderToSave,
-					{ upsert: true }
-				);
-			}
-			console.log(`[sync] ☁️ ${pendingClientOrders.length} commande(s) client EN ATTENTE synchronisées`);
-		}
-		
-		// 🆕 Le nettoyage des commandes confirmées se fait UNIQUEMENT au démarrage dans smartSyncWithMongoDB()
-		// Pour éviter de supprimer des commandes client en attente lors de la synchronisation périodique
+		// 🆕 On ne sauvegarde PAS les commandes actives dans MongoDB
+		// Le serveur local est la source de vérité, MongoDB est juste la boîte aux lettres
 		
 		// Synchroniser les commandes archivées
 		if (dataStore.archivedOrders.length > 0) {

@@ -96,33 +96,31 @@ async function createOrder(req, res) {
 		});
 	}
 	
-	// 🆕 GESTION DIFFÉRENCIÉE SELON LE TYPE DE SERVEUR
+	// 🆕 ARCHITECTURE "BOÎTE AUX LETTRES" : Le Cloud est muet, le Local est le patron
 	if (isClientOrder) {
-		// SERVEUR CLOUD : Sauvegarder directement dans MongoDB (pas d'état local)
+		// SERVEUR CLOUD : Juste déposer dans la "boîte aux lettres" MongoDB
+		// Ne donne JAMAIS d'ID, ne fait AUCUN traitement, juste insertion
 		if (dbManager.isCloud && dbManager.db) {
 			try {
-				// Supprimer _id MongoDB avant sauvegarde
-				const orderToSave = { ...newOrder };
+				const orderToSave = { 
+					...newOrder,
+					waitingForPos: true, // 🆕 Marqueur : en attente du POS local
+					processedByPos: false // 🆕 Pas encore traitée par le POS
+				};
 				delete orderToSave._id;
 
-				await dbManager.orders.replaceOne(
-					{ tempId: newOrder.tempId },
-					orderToSave,
-					{ upsert: true }
-				);
-				console.log('[orders] ☁️ Commande CLIENT sauvegardée dans MongoDB:', newOrder.tempId);
+				await dbManager.orders.insertOne(orderToSave);
+				console.log('[orders] 📬 Commande CLIENT déposée dans la boîte aux lettres MongoDB:', newOrder.tempId);
 			} catch (e) {
-				console.error('[orders] ❌ Erreur sauvegarde MongoDB:', e.message);
+				console.error('[orders] ❌ Erreur dépôt MongoDB:', e.message);
+				return res.status(500).json({ error: 'Erreur lors de la création de la commande' });
 			}
 		} else {
-			// SERVEUR LOCAL : Ajouter au datastore local
+			// SERVEUR LOCAL : Ne devrait jamais recevoir de commandes client directement
+			// Les commandes client arrivent via MongoDB (aspirées par pullClientOrders)
+			console.warn('[orders] ⚠️ Commande client reçue sur serveur local - devrait venir de MongoDB');
 			dataStore.orders.push(newOrder);
-			console.log('[orders] 🏠 Commande CLIENT ajoutée au datastore local (sera sync avec MongoDB):', newOrder.tempId);
-			
-			// 🆕 CORRECTION : Sauvegarder immédiatement pour que la commande soit dans MongoDB
-			// Même si c'est le serveur local, il doit sauvegarder les commandes client dans MongoDB
-			// pour que le POS local puisse les récupérer
-			fileManager.savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde commande client:', e));
+			fileManager.savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde:', e));
 		}
 
 		console.log('[orders] 🆕 Commande CLIENT créée (sans ID - en attente POS):', newOrder.tempId, 'pour table', table, 'serveur assigné:', assignedServer, 'total:', total, 'status:', newOrder.status);
@@ -369,20 +367,20 @@ async function confirmOrderByServer(req, res) {
 	console.log('[orders] ✅ Commande client (tempId: ' + oldTempId + ', ancien ID: ' + (oldId || 'null') + ') confirmée et reçoit ID officiel #' + order.id + ' par serveur:', order.confirmedBy, 'table:', order.table);
 	console.log('[orders] ✅ Commande maintenant traitée comme commande POS normale (id=' + order.id + ', source=pos, originalSource=' + originalSource + ')');
 	
-	// 🆕 SUPPRESSION RADICALE : Supprimer TOUJOURS de MongoDB après confirmation
+	// 🆕 ARCHITECTURE "BOÎTE AUX LETTRES" : Supprimer de MongoDB après confirmation
 	// Une commande confirmée n'a plus sa place dans MongoDB (gérée uniquement par le serveur local)
-	// MongoDB ne doit contenir QUE les commandes client EN ATTENTE (tempId, source='client')
-	if (dbManager.db && oldTempId) {
+	// MongoDB ne doit contenir QUE les commandes client EN ATTENTE (waitingForPos=true)
+	if (dbManager.db) {
 		try {
 			const deleteResult = await dbManager.orders.deleteMany({
 				$or: [
 					{ tempId: oldTempId },
-					{ id: null, tempId: oldTempId },
-					{ id: order.id } // 🆕 Supprimer aussi si elle existe déjà avec le nouvel ID
+					{ id: order.id }, // Supprimer si elle existe avec le nouvel ID
+					{ tempId: oldTempId, waitingForPos: true } // Supprimer de la boîte aux lettres
 				]
 			});
 			if (deleteResult.deletedCount > 0) {
-				console.log(`[orders] 🗑️ Commande ${oldTempId} → #${order.id} SUPPRIMÉE de MongoDB (confirmée et gérée localement)`);
+				console.log(`[orders] 🗑️ Commande ${oldTempId} → #${order.id} SUPPRIMÉE de MongoDB (confirmée, gérée localement)`);
 			}
 		} catch (e) {
 			console.error(`[orders] ⚠️ Erreur suppression MongoDB: ${e.message}`);
