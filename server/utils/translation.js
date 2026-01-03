@@ -204,8 +204,32 @@ function filterAvailableItems(menu) {
 
 async function translateMenu(menu, lng) {
 	const DEEPL_KEY = process.env.DEEPL_KEY || '';
-	const targetMap = { en: 'EN', de: 'DE', ar: 'AR' };
-	const targetLang = targetMap[lng] || 'EN';
+	// 🆕 Support de TOUTES les langues DeepL (~30 langues)
+	// 🆕 Support de TOUTES les langues DeepL (~30 langues)
+	const targetMap = {
+		// Européennes
+		'en': 'EN', 'de': 'DE', 'fr': 'FR', 'es': 'ES', 'it': 'IT',
+		'pt': 'PT', 'nl': 'NL', 'pl': 'PL', 'ru': 'RU', 'cs': 'CS',
+		'da': 'DA', 'sv': 'SV', 'no': 'NO', 'fi': 'FI', 'el': 'EL',
+		'hu': 'HU', 'sk': 'SK', 'sl': 'SL', 'et': 'ET', 'lv': 'LV',
+		'lt': 'LT', 'bg': 'BG',
+		// Asiatiques
+		'ja': 'JA', 'zh': 'ZH', 'ko': 'KO',
+		// Moyen-Orient & Afrique
+		'ar': 'AR', 'he': 'HE', 'tr': 'TR', 'hi': 'HI',
+		// Asie du Sud-Est
+		'id': 'ID', 'ms': 'MS', 'th': 'TH',
+		// Autres
+		'uk': 'UK', 'vi': 'VI'
+	};
+
+	const targetLang = targetMap[lng.toLowerCase()];
+
+	// 🆕 Fallback élégant : si langue non supportée → anglais
+	if (!targetLang) {
+		console.log(`[deepl] Langue '${lng}' non supportée par DeepL, fallback vers anglais`);
+		return translateMenu(menu, 'en');
+	}
 	if (!DEEPL_KEY) {
 		console.warn('[deepl] DEEPL_KEY is missing; returning FR menu');
 		return menu;
@@ -213,7 +237,7 @@ async function translateMenu(menu, lng) {
 	
 	// 🆕 Collecter les textes avec leur contexte
 	const { texts: uniqueTexts, contexts: textContexts } = deepCollectTextsWithContext(menu);
-	console.log(`[deepl] translating ${uniqueTexts.length} unique texts to ${targetLang} (with context)`);
+	console.log(`[deepl] translating ${uniqueTexts.length} unique texts to ${targetLang} (${lng}) with context`);
 	
 	// 🆕 Traduire avec contexte
 	const mapping = await translateBatch(uniqueTexts, targetLang, DEEPL_KEY, textContexts);

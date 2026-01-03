@@ -21,22 +21,15 @@ class _WelcomePageState extends State<WelcomePage> {
   Future<void> _autoDetectAndNavigate() async {
     // Détecter la langue du téléphone
     final deviceLocale = ui.PlatformDispatcher.instance.locale;
-    final deviceLang = deviceLocale.languageCode; // 'fr', 'en', 'ar', 'de', etc.
-    
-    // Mapper vers les langues supportées
-    String lang = 'fr'; // Par défaut
-    if (deviceLang == 'ar') {
-      lang = 'ar';
-    } else if (deviceLang == 'en') {
-      lang = 'en';
-    } else if (deviceLang == 'de') {
-      lang = 'de';
-    }
-    // Sinon reste 'fr' par défaut
-    
+    final deviceLang = deviceLocale.languageCode; // 'fr', 'en', 'ar', 'de', 'it', etc.
+
+    // 🆕 Accepter TOUTES les langues détectées !
+    // Le serveur se chargera de la traduction ou du fallback
+    String lang = deviceLang ?? 'en'; // Utilise la langue détectée, fallback anglais
+
     // Initialiser la langue
     await LangService.instance.set(lang);
-    
+
     // Naviguer directement vers le menu
     if (mounted) {
       setState(() => _isDetecting = false);

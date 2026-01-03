@@ -9,7 +9,7 @@ const path = require('path');
 const { filterAvailableItems, augmentWithOriginal, getTranslatedMenuWithCache } = require('../utils/translation');
 const { loadMenu } = require('../utils/menuSync');
 
-// Charger le menu (avec traduction/caching si ?lng=de|en|ar)
+// Charger le menu (avec traduction/caching si ?lng=xx - toutes langues DeepL supportées)
 router.get('/menu/:restaurantId', async (req, res) => {
 	try {
 		const restaurantId = req.params.restaurantId;
