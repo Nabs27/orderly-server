@@ -168,9 +168,13 @@ async function translateBatchWithContext(texts, targetLang, key, context) {
 		for (let j = 0; j < translations.length; j++) {
 			const src = slice[j];
 			let trg = translations[j]?.text || src;
-			// 🆕 Retirer le préfixe de la traduction si présent
-			if (prefix && trg.startsWith(prefix)) {
-				trg = trg.substring(prefix.length);
+			// 🆕 Retirer TOUT ce qui précède ":" dans la traduction
+			// Car DeepL peut traduire le préfixe (ex: "boisson:" → "bebida:")
+			if (trg.includes(':')) {
+				const colonIndex = trg.indexOf(':');
+				if (colonIndex > 0) {
+					trg = trg.substring(colonIndex + 1).trim();
+				}
 			}
 			mapping[src] = trg;
 		}
