@@ -1,10 +1,13 @@
 # 📋 Structure du POS - Vue d'ensemble
 
-Ce document est une carte rapide du module POS (Point of Sale). Il donne la vue d'ensemble et renvoie vers trois fiches détaillées :
+Ce document est une carte rapide du module POS (Point of Sale). Il donne la vue d'ensemble et renvoie vers les fiches détaillées :
 
 - `STRUCTURE_POS_HOME.md` — plan de table (Home)
 - `STRUCTURE_POS_ORDER.md` — gestion des commandes
 - `STRUCTURE_POS_PAYMENT.md` — caisse et paiements
+- `STRUCTURE_POS_ADMIN.md` — dashboard admin (KPI, historique, rapport X)
+- `STRUCTURE_POS_CLIENT.md` — application client mobile
+- `STRUCTURE_POS_CUISINE.md` — dashboard cuisine / stations
 
 Pour la partie backend, voir `STRUCTURE_SERVEUR.md`.
 
@@ -14,11 +17,16 @@ Pour la partie backend, voir `STRUCTURE_SERVEUR.md`.
 
 - **Annulation articles** → `STRUCTURE_POS_ORDER.md` → `CancellationService`, `CancelItemsDialog`
 - **Crédit client** → `STRUCTURE_POS_PAYMENT.md` → `CreditClientDialog`, `payment_service.dart`
+- **Dashboard Admin** → `STRUCTURE_POS_ADMIN.md` → `admin_dashboard_page.dart`, `admin_dashboard_kpi_section.dart`, `enriched_history_section.dart`, `report_x_page.dart`
+- **App Client** → `STRUCTURE_POS_CLIENT.md` → `flutter_client_app/` (menu, panier, confirmation, historique, facture)
+- **Dashboard Cuisine** → `STRUCTURE_POS_CUISINE.md` → `dashboard_page.dart` (Flutter), `public/dashboard/` (Web)
 - **Historique tables** → `STRUCTURE_POS_HOME.md` → `HistoryService`, `HistoryView`
 - **Mini-X report serveur** → `STRUCTURE_POS_HOME.md` → `ServerSalesReportDialog`, `ServerSalesReportService`, `ServerSalesReportController`
 - **Paiement partiel** → `STRUCTURE_POS_PAYMENT.md` → `PartialPaymentDialog`, `payment_validation_service.dart`
 - **Paiements divisés (Split Payments)** → `STRUCTURE_POS_PAYMENT.md` → `splitPaymentId`, `payMultiOrders`, `pos-report-x.js`
-- **Source de vérité unique** → `STRUCTURE_POS_PAYMENT.md` → `_currentAllOrders`, `getAllItemsOrganized()`, `PaymentCalculator`, `PaymentValidationService`
+- **Pourboires** → `STRUCTURE_POS_PAYMENT.md` → Section "Pourboires" (calcul, `hasCashInPayment`, affichage)
+- **Source de vérité unique (paiements)** → `STRUCTURE_POS_PAYMENT.md` → Section "Single Source of Truth pour les Paiements" (`payment-processor.js`)
+- **Source de vérité unique (quantités)** → `STRUCTURE_POS_PAYMENT.md` → `_currentAllOrders`, `getAllItemsOrganized()`, `PaymentCalculator`, `PaymentValidationService`
 - **Remises** → `STRUCTURE_POS_PAYMENT.md` → `DiscountSection`, `DiscountClientNameDialog`, `PaymentSummaryDialog`, `payment_service.dart`
 - **Profils serveurs / droits** → `STRUCTURE_POS_ORDER.md` → `AdminServersPage`, `ServerPermissionsService`, `PosOrderActionPanel`
 - **Sous-notes** → `STRUCTURE_POS_ORDER.md` → `AddNoteDialog`, `NoteActions.createSubNote`
@@ -50,6 +58,12 @@ Pour la partie backend, voir `STRUCTURE_SERVEUR.md`.
 | Comment gérer les droits serveurs ? | Admin/Order | `admin_servers_page.dart`, `PosOrderPage_refactor.dart` | `ServersService`, `ServerPermissionsService`, `PosOrderActionPanel` |
 | Comment afficher le résumé du paiement ? | Payment | `PosPaymentPage_refactor.dart` | `PaymentSummaryDialog`, `PaymentSection` |
 | Comment confirmer/décliner une commande client ? | Order | `PosOrderPage_refactor.dart` | `ClientOrderConfirmationService`, `_confirmClientOrder()`, `_declineClientOrder()`, boutons dans `PosOrderAppBar` |
+| Comment accéder au dashboard admin ? | Admin | `admin_dashboard_page.dart` | Navigation depuis HeaderActions ou route directe |
+| Comment voir les KPI du jour ? | Admin | `admin_dashboard_kpi_section.dart` | Clic sur les cartes KPI dans le dashboard |
+| Comment voir l'historique des encaissements ? | Admin | `paid_history_dialog.dart` | Clic sur "Recette encaissée" dans les KPI |
+| Comment générer un rapport X ? | Admin | `report_x_page.dart` | Navigation depuis le dashboard admin |
+| Comment accéder au dashboard cuisine ? | Dashboard | `dashboard_page.dart` | Route `/dashboard` dans l'app Flutter principale |
+| Comment les clients commandent-ils ? | Client | `STRUCTURE_POS_CLIENT.md` | Application mobile dédiée (`flutter_client_app/`) |
 
 ---
 
@@ -72,7 +86,8 @@ lib/features/pos/
 |--------|-------------------|-------------|-----------------|
 | Home (plan de table) | `pages/home/PosHomePage_refactor.dart` | Grille tables, sockets, historique | `STRUCTURE_POS_HOME.md` |
 | Order (commande) | `pages/order/PosOrderPage_refactor.dart` | Notes multiples, transferts, annulations | `STRUCTURE_POS_ORDER.md` |
-| Payment (caisse) | `pages/payment/PosPaymentPage_refactor.dart` | Paiement total/partiel, crédits, factures | `STRUCTURE_POS_PAYMENT.md` |
+| Payment (caisse) | `pages/payment/PosPaymentPage_refactor.dart` | Paiement total/partiel, crédits, factures, pourboires | `STRUCTURE_POS_PAYMENT.md` |
+| Admin (dashboard) | `features/admin/admin_dashboard_page.dart` | KPI, historique enrichi, rapport X | Voir section Dashboard Admin ci-dessous |
 | Admin (profils serveurs) | `features/admin/admin_servers_page.dart` | Création profils, permissions, rôles | `STRUCTURE_SERVEUR.md` |
 
 ---
@@ -83,13 +98,17 @@ lib/features/pos/
 |--------|------|-------------|
 | `OrderNote` | Note principale ou sous-note d'une table | `id`, `name`, `covers`, `items`, `total`, `paid`, `sourceOrderId` |
 | `OrderNoteItem` | Article dans une note | `id`, `name`, `price`, `quantity`, `isSent`, `paidQuantity`, `sourceOrderId`, `sourceNoteId` |
-| `PaymentRecord` (backend) | Enregistrement de paiement | `timestamp`, `mode`, `amount`, `items`, `splitPaymentId`, `isSplitPayment`, `isCompletePayment`, `orderId`, `noteId` |
+| `PaymentRecord` (backend) | Enregistrement de paiement | `timestamp`, `mode`, `amount`, `items`, `splitPaymentId`, `isSplitPayment`, `isCompletePayment`, `orderId`, `noteId`, `enteredAmount`, `allocatedAmount`, `excessAmount`, `hasCashInPayment` |
 
 Notes principales (`id = main`) et sous-notes (`id = sub_x`) partagent la même structure. Les quantités payées (`paidQuantity`) permettent le suivi des paiements partiels.
 
 🆕 **Source de vérité unique** : Les quantités non payées (`unpaidQuantity = quantity - paidQuantity`) viennent toujours de `_currentAllOrders` (données backend) via `getAllItemsOrganized()`. Ne jamais utiliser `mainNote.items` ou `subNotes` directement pour les calculs de paiement.
 
 🆕 **Paiements divisés** : Les paiements divisés utilisent `splitPaymentId` (format: `split_TIMESTAMP`) pour regrouper tous les modes de paiement d'une même transaction. Le regroupement se fait dans les rapports KPI via `splitPaymentId` (sans le mode de paiement dans l'ID).
+
+🆕 **Pourboires** : Les pourboires sont calculés via `excessAmount = enteredAmount - allocatedAmount` pour les paiements scripturaux (TPE/CHEQUE/CARTE). Le flag `hasCashInPayment` détermine si le pourboire scriptural doit être comptabilisé : si du liquide est présent, le pourboire est purement indicatif et n'est pas inclus dans `totalRecette`. Les pourboires sont affichés séparément par serveur dans le X Report et les KPI.
+
+🆕 **Source de vérité unique pour les paiements** : Le module `server/utils/payment-processor.js` centralise la déduplication et le calcul des paiements pour garantir la cohérence entre History, KPI et X Report. Les fonctions `deduplicateAndCalculate()` et `calculatePaymentsByMode()` sont utilisées par `pos-report-x.js` et `history-processor.js`. **⚠️ En cours d'intégration complète** : `history-processor.js` doit encore être refactorisé pour utiliser ce module.
 
 🆕 **Commandes client (Architecture "Boîte aux Lettres")** : Les commandes passées depuis l'app mobile client sont déposées dans MongoDB par le serveur Cloud avec `waitingForPos: true`, `processedByPos: false`, `id: null`. Le serveur POS local les aspire automatiquement toutes les 5 secondes via `pullFromMailbox()`, leur attribue un ID local, et les marque comme traitées dans MongoDB. Une fois confirmées, elles sont gérées exactement comme les commandes POS (même structure, même traitement). Voir `STRUCTURE_SERVEUR.md` pour les détails backend.
 
@@ -125,7 +144,40 @@ Réfs : `PosHomePage_refactor.dart` – helpers `_isAdminOverviewVisible`, `_se
 - **Backend** : `server/controllers/credit.js` stocke le champ `server` et le `ticket` sur chaque transaction (création et simulation). Le module X (`pos-report-x.js`) filtre désormais `collectCreditPayments` par serveur, ce qui évite d’additionner les crédits de tous les serveurs dans l’encart Encaissements/Mini-X.
 - **Simulation** : `routes/admin-simulation.js` renseigne également le serveur lorsqu’il génère des dettes fictives pour conserver une cohérence lors des rapports.
 
-Ces éléments garantissent que les blocs “Crédit” du dashboard reflètent uniquement le serveur sélectionné et qu’un ticket peut être consulté pour chaque dette.
+Ces éléments garantissent que les blocs "Crédit" du dashboard reflètent uniquement le serveur sélectionné et qu'un ticket peut être consulté pour chaque dette.
+
+---
+
+## 📊 Dashboard Admin
+
+Le dashboard admin (`lib/features/admin/`) fournit une vue d'ensemble des performances et des encaissements du restaurant avec KPI, historique enrichi et rapport X.
+
+**Pour plus de détails** : Voir `STRUCTURE_POS_ADMIN.md` (architecture complète, indicateurs KPI, historique, source de données, tickets).
+
+---
+
+## 📱 Application Client
+
+L'application client (`flutter_client_app/`) est une application Flutter mobile dédiée **uniquement aux clients** pour commander en ligne.
+
+**Fonctionnalités principales** :
+- Menu, Panier, Confirmation de commande
+- Historique et factures
+- Architecture "Boîte aux Lettres" pour les commandes client
+
+**Pour plus de détails** : Voir `STRUCTURE_POS_CLIENT.md` (structure complète, modules, flux, API)
+
+---
+
+## 🍳 Application Cuisine / Dashboard
+
+Interface multi-stations pour gérer les commandes en temps réel : Caisse, Bar, Cuisine, Service, Serveur.
+
+**Disponible via deux canaux** :
+- **Dashboard Flutter** : `flutter_les_emirs/lib/features/dashboard/dashboard_page.dart` (onglets multi-stations, routage automatique, badges, mode kiosque)
+- **Dashboard Web** : `public/dashboard/` (interface HTML/JS simple)
+
+**Pour plus de détails** : Voir `STRUCTURE_POS_CUISINE.md` (architecture complète, routage, SLA, synchronisation temps réel)
 
 ---
 
@@ -165,7 +217,7 @@ PosPaymentPage
 - `GET /orders?table=X`, `POST /orders`, `POST /orders/:id/payment`
 - `POST /orders/:id/cancel`, `POST /api/payments`
 - `GET /api/credit/clients`, `POST /api/credit/transactions`
-- `GET /api/admin/report-x`
+- `GET /api/admin/report-x` (Dashboard Admin : KPI, historique, rapport X)
 
 (Détails complets : `STRUCTURE_POS_*` et `STRUCTURE_SERVEUR.md`)
 
@@ -173,9 +225,11 @@ PosPaymentPage
 
 ## 🔧 Maintenance
 
-1. Mettre à jour la fiche détaillée concernée (Home/Order/Payment) après toute modification.
-2. Reporter le lien ou la section touchée dans ce document si l’architecture globale change.
-3. Mentionner la date de mise à jour et le type de changement.
+1. **Mettre à jour la fiche détaillée concernée** (Home/Order/Payment/Admin) après toute modification.
+2. **Mettre à jour ce document** (`STRUCTURE_POS.md`) si l'architecture globale change (nouveau module, changement de structure).
+3. **Mentionner la date de mise à jour** et le type de changement dans le fichier concerné.
+
+**Règle** : `STRUCTURE_POS.md` reste un index/overview. Les détails doivent être dans les fichiers dédiés (`STRUCTURE_POS_*.md`).
 
 ---
 
@@ -184,7 +238,17 @@ PosPaymentPage
 - **Home** : `STRUCTURE_POS_HOME.md`
 - **Order** : `STRUCTURE_POS_ORDER.md`
 - **Payment** : `STRUCTURE_POS_PAYMENT.md`
+- **Admin Dashboard** : `STRUCTURE_POS_ADMIN.md`
+- **App Client** : `STRUCTURE_POS_CLIENT.md`
+- **Dashboard Cuisine** : `STRUCTURE_POS_CUISINE.md`
 - **Serveur** : `STRUCTURE_SERVEUR.md`
 
-**Dernière mise à jour** : 2025-01-24 (Architecture "Boîte aux Lettres" pour commandes client, polling 5s, confirmation/déclin commandes client)
+**Dernière mise à jour** : 2025-01-03 (Intégration pourboires, single source of truth pour paiements, Dashboard Admin, App Client, Dashboard Cuisine)
+
+### Changements récents (2025-01-03)
+
+- **Intégration des pourboires** : Calcul et affichage des pourboires par serveur dans X Report et KPI. Gestion du flag `hasCashInPayment` pour exclure les pourboires scripturaux quand du liquide est présent.
+- **Single source of truth pour paiements** : Création du module `payment-processor.js` pour centraliser la déduplication et les calculs. Utilisé par `pos-report-x.js` (KPI, X Report) et en cours d'intégration dans `history-processor.js`.
+- **Dashboard Admin** : Nouveau module complet avec KPI, historique enrichi et rapport X. Architecture documentée dans la section "Dashboard Admin" ci-dessus.
+- **Documentation App Client et Dashboard Cuisine** : Création de `STRUCTURE_POS_CLIENT.md` et `STRUCTURE_POS_CUISINE.md` avec structure complète, modules, flux et API.
 

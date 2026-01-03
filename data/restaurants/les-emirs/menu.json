@@ -765,6 +765,20 @@
           "price": 45,
           "type": "Pâtes",
           "available": true
+        },
+        {
+          "id": 10037,
+          "name": "djej mosli",
+          "price": 45,
+          "type": "Volaille",
+          "available": true
+        },
+        {
+          "id": 10038,
+          "name": "djej mokli",
+          "price": 40,
+          "type": "Volaille",
+          "available": true
         }
       ]
     },

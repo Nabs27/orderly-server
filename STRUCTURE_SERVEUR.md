@@ -55,7 +55,7 @@ Le serveur utilise une architecture hybride avec **source de vérité unique** g
 |---------|----------|-------------|
 | POS / Clients | `routes/pos.js`, `routes/client.js`, `routes/shared.js`, `routes/base.js` | Commandes en cours, synchronisation tables, API publiques pour les clients. |
 | Admin général | `routes/admin.js` (agrégateur) | Monte l’ensemble des routes admin. |
-| Admin spécialisés | `routes/admin-menu.js`, `admin-report-x.js`, `admin-archive.js`, `admin-restaurants.js`, `admin-system.js`, `admin-simulation.js`, `admin-invoice.js`, `admin-auth.js`, `admin-parse.js`, `admin-servers.js` | Fonctions backoffice : menus, rapports X/Z, archives, imports, authentification, gestion des profils serveurs, etc. |
+| Admin spécialisés | `routes/admin-menu.js`, `routes/admin-report-x.js`, `routes/admin-archive.js`, `routes/admin-restaurants.js`, `routes/admin-system.js`, `routes/admin-simulation.js`, `routes/admin-invoice.js`, `routes/admin-auth.js`, `routes/admin-parse.js`, `routes/admin-servers.js` | Fonctions backoffice : menus, rapports X/Z, archives, gestion système, simulations, factures, authentification, imports, profils serveurs. |
 
 Chaque route importe les contrôleurs correspondants et applique `middleware/auth.js` lorsque nécessaire (ex : routes admin).
 
@@ -67,11 +67,12 @@ Chaque route importe les contrôleurs correspondants et applique `middleware/aut
 |---------|------|
 | `controllers/orders.js` | CRUD commandes / tables (POS). **🆕 Architecture "Boîte aux Lettres"** : Si commande client (`source: 'client'`), le serveur Cloud insère dans MongoDB avec `waitingForPos: true`, `processedByPos: false`, `id: null`. Le serveur Local aspire ces commandes via `pullFromMailbox()`. |
 | `controllers/pos.js` | Coordonne les opérations POS (utilisé par `routes/pos.js`). |
-| `controllers/pos-payment.js` | Traitement des paiements, ventilation des articles, envoi d’événements. |
+| `controllers/pos-payment.js` | Traitement des paiements, ventilation des articles, calcul des pourboires (`excessAmount`), gestion du flag `hasCashInPayment`, envoi d'événements. |
 | `controllers/pos-transfer.js` | Transferts d’articles, tables, serveurs. |
 | `controllers/pos-cancellation.js` | Annulation d’articles, remboursements. |
 | `controllers/pos-archive.js` | Archivage et nettoyage des commandes. |
-| `controllers/pos-report-x.js` | Génération des rapports financiers X / ticket texte. |
+| `controllers/pos-history-unified.js` | Gestion unifiée de l'historique des commandes et transactions. |
+| `controllers/pos-report-x.js` | Génération des rapports financiers X / ticket texte. **🆕 Utilise `payment-processor.js`** pour la déduplication et le calcul des totaux (KPI, pourboires par serveur). |
 | `controllers/bills.js` | Génération de factures PDF. |
 | `controllers/credit.js` | Gestion du crédit client (DEBIT/CREDIT, balances). |
 | `controllers/admin.js` | Fonctions administrateur génériques (indicateurs, reset, etc.). |
@@ -95,6 +96,11 @@ Ces contrôleurs utilisent les utilitaires (`utils`) pour accéder aux fichiers,
 | `utils/translation.js` | Intègre DeepL / normalise les textes de menu. |
 | `utils/fileManager.js` | Lecture/écriture de fichiers (exports, sauvegardes). **🆕 Fonctions clés** : `pullFromMailbox()` (aspire les commandes client depuis MongoDB), `smartSyncWithMongoDB()` (synchronisation intelligente au démarrage), `saveToMongoDB()` (backup uniquement des commandes en attente et archives). |
 | `utils/dbManager.js` | Gestion MongoDB Atlas. **🆕 Détection mode** : `isCloud = process.env.IS_CLOUD_SERVER === 'true'` pour différencier serveur Cloud (stateless) vs Local (source de vérité). |
+| `utils/history-processor.js` | Logique de traitement et de formatage de l'historique des transactions. **🆕 En cours d'intégration** : Utilisation de `payment-processor.js` pour la déduplication. |
+| `utils/payment-processor.js` | **🆕 Source de vérité unique** pour la déduplication et le calcul des paiements. Fonctions clés : `deduplicateAndCalculate()` (déduplique les transactions multi-commandes), `calculatePaymentsByMode()` (groupe par mode, calcule les pourboires). Utilisé par `pos-report-x.js` et `history-processor.js` pour garantir la cohérence (History = KPI = X Report). |
+| `utils/menuSync.js` | Synchronisation du menu entre les différentes sources (JSON/Cloud). |
+| `utils/serverAssignment.js` | Logique d'assignation des serveurs aux tables/commandes. |
+| `utils/serverPermissionsSync.js` | Synchronisation des permissions et profils serveurs. |
 | `middleware/auth.js` | Vérifie le token admin (`x-admin-token`). |
 
 ---
@@ -107,10 +113,13 @@ Ces contrôleurs utilisent les utilitaires (`utils`) pour accéder aux fichiers,
 2. La route appelle `controllers/pos-payment.js`.
 3. Le contrôleur :
    - charge les commandes/notes depuis la source de données,
+   - calcule `allocatedAmount` (montant nécessaire après remise) et `enteredAmount` (montant réellement encaissé),
+   - calcule `excessAmount` (pourboire = `enteredAmount - allocatedAmount`) si paiement scriptural (TPE/CHEQUE/CARTE),
+   - gère le flag `hasCashInPayment` (si liquide présent, pourboire scriptural = indicatif uniquement),
    - ventile les articles payés,
    - met à jour les archives/états,
    - émet les événements Socket.IO,
-   - renvoie la réponse JSON.
+   - renvoie la réponse JSON avec `enteredAmount`, `allocatedAmount`, `excessAmount`, `hasCashInPayment`.
 
 ### Exemple : Commande client (Architecture "Boîte aux Lettres")
 
@@ -142,5 +151,5 @@ Même pattern pour les rapports X (`routes/admin-report-x.js` → `controllers/p
 - **Socket.IO** : centraliser les nouveaux événements dans `utils/socket.js` pour assurer une diffusion homogène côté clients.
 - **Documentation** : mettre à jour cette fiche à chaque ajout/suppression significative de route ou de contrôleur afin de garder la cartographie à jour.
 
-**Dernière mise à jour** : 2025-01-24 (Architecture "Boîte aux Lettres", polling 5s, différenciation Cloud/Local via IS_CLOUD_SERVER)
+**Dernière mise à jour** : 2025-01-03 (Ajout payment-processor.js, pourboires, single source of truth pour paiements)
 

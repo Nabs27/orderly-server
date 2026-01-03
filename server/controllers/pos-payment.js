@@ -16,11 +16,11 @@ function processAllItemInstances(targetNote, itemToRemove) {
 	const requestedQuantity = Number(itemToRemove.quantity || 1);
 	const itemId = itemToRemove.id;
 	const itemName = itemToRemove.name || '';
-	
+
 	if (requestedQuantity <= 0) {
 		return { paidItems, itemUpdates, removedTotal };
 	}
-	
+
 	// 🆕 Trouver TOUTES les instances de cet article dans la note
 	const matchingItems = [];
 	for (let idx = 0; idx < targetNote.items.length; idx++) {
@@ -49,32 +49,32 @@ function processAllItemInstances(targetNote, itemToRemove) {
 			}
 		}
 	}
-	
+
 	if (matchingItems.length === 0) {
 		console.log(`[payment] ⚠️ Aucune instance non payée disponible pour article ${itemName} (id: ${itemId})`);
 		return { paidItems, itemUpdates, removedTotal };
 	}
-	
+
 	// 🆕 Répartir la quantité demandée entre toutes les instances disponibles
 	let remainingQuantity = requestedQuantity;
-	
+
 	for (const match of matchingItems) {
 		if (remainingQuantity <= 0) break;
-		
+
 		// Calculer combien on peut prendre de cette instance
 		const quantityToTake = Math.min(remainingQuantity, match.unpaidQty);
-		
+
 		if (quantityToTake > 0) {
 			const itemTotal = Number(match.item.price) * quantityToTake;
-			
+
 			paidItems.push({
-			id: Number(match.item.id) || match.item.id, // 🆕 S'assurer que id est un nombre si possible
-			name: match.item.name,
-			price: Number(match.item.price) || 0,
-			quantity: quantityToTake,
+				id: Number(match.item.id) || match.item.id, // 🆕 S'assurer que id est un nombre si possible
+				name: match.item.name,
+				price: Number(match.item.price) || 0,
+				quantity: quantityToTake,
 				total: itemTotal
-		});
-			
+			});
+
 			itemUpdates.push({
 				itemIndex: match.index,
 				previousPaidQuantity: match.paidQty,
@@ -84,15 +84,15 @@ function processAllItemInstances(targetNote, itemToRemove) {
 			
 			removedTotal += itemTotal;
 			remainingQuantity -= quantityToTake;
-			
+
 			console.log(`[payment] ✅ Instance ${match.index} de ${itemName}: qté totale=${match.totalQty}, qté payée avant=${match.paidQty}, qté à payer=${quantityToTake}, qté payée après=${match.paidQty + quantityToTake}`);
 		}
 	}
-	
+
 	if (remainingQuantity > 0) {
 		console.log(`[payment] ⚠️ Quantité demandée (${requestedQuantity}) > quantité non payée disponible (${requestedQuantity - remainingQuantity}) pour article ${itemName}`);
 	}
-	
+
 	return { paidItems, itemUpdates, removedTotal };
 }
 
@@ -104,7 +104,7 @@ async function createCreditTransaction(clientId, amount, order, table, server, p
 			console.error(`[payment] Client crédit introuvable: ${clientId}`);
 			return;
 		}
-		
+
 		// Construire le ticket détaillé
 		const ticket = {
 			table: table || order.table || 'N/A',
@@ -121,13 +121,13 @@ async function createCreditTransaction(clientId, amount, order, table, server, p
 			paymentMode: 'CREDIT',
 			server: server || order.server || 'unknown'
 		};
-		
+
 		// 🆕 Description adaptée selon le nombre de commandes
 		const isMultiOrder = orderIds && Array.isArray(orderIds) && orderIds.length > 1;
-		const description = isMultiOrder 
+		const description = isMultiOrder
 			? `CREDIT • Table ${table || order.table || 'N/A'} - Paiement complet (${orderIds.length} commandes)`
 			: `CREDIT • Table ${table || order.table || 'N/A'} - Paiement partiel`;
-		
+
 		const transaction = {
 			id: Date.now(),
 			type: 'DEBIT',
@@ -140,13 +140,13 @@ async function createCreditTransaction(clientId, amount, order, table, server, p
 			server: server || order.server || 'unknown',
 			paymentMode: 'CREDIT'
 		};
-		
+
 		client.transactions.push(transaction);
 		console.log(`[payment] ✅ Transaction DEBIT créée pour client ${clientId}: ${amount} TND`);
-		
+
 		// Sauvegarder
 		await fileManager.savePersistedData();
-		
+
 		// Émettre événement socket
 		const io = getIO();
 		if (io) {
@@ -184,11 +184,11 @@ function processItemAcrossTable(tableNumber, itemToRemove, preferredNoteId = nul
 
 		// 🎯 OPTIMISATION : Ne collecter que les notes pertinentes selon preferredNoteId
 		const relevantNotes = [];
-		
+
 		if (preferredNoteId) {
 			// On cherche une note spécifique : ne prendre que celle-là
 			const effectivePreferredId = preferredNoteId === 'null' ? 'main' : preferredNoteId;
-			
+
 			if (effectivePreferredId === 'main') {
 				// Chercher uniquement dans la note principale
 				if (order.mainNote) {
@@ -217,12 +217,12 @@ function processItemAcrossTable(tableNumber, itemToRemove, preferredNoteId = nul
 
 		for (const note of relevantNotes) {
 			if (remainingQuantity <= 0) break;
-			
+
 			const effectiveNoteId = note.id || 'main';
 
 			console.log(`[payment] 🔍 Recherche de ${itemName} (ID: ${itemId}) dans Commande #${order.id}, Note: ${effectiveNoteId}`);
 			const result = processAllItemInstances(note, { ...itemToRemove, quantity: remainingQuantity });
-			
+
 			if (result.paidItems.length > 0) {
 				// 🆕 Enrichir les articles payés avec les métadonnées de commande
 				const itemsWithMetadata = result.paidItems.map(it => ({
@@ -231,9 +231,9 @@ function processItemAcrossTable(tableNumber, itemToRemove, preferredNoteId = nul
 					noteId: effectiveNoteId,
 					noteName: note.name || (effectiveNoteId === 'main' ? 'Note Principale' : 'Sous-Note')
 				}));
-				
+
 				paidItems.push(...itemsWithMetadata);
-				
+
 				// Transformer les mises à jour pour inclure la référence à l'order et la note
 				for (const update of result.itemUpdates) {
 					allItemUpdates.push({
@@ -256,7 +256,7 @@ async function deleteNoteItems(req, res) {
 	const io = getIO();
 	const { orderId, noteId } = req.params;
 	const { items, finalAmount, discount, isPercentDiscount, discountClientName, splitPayments, paymentMode, table } = req.body || {};
-	
+
 	if (!items || !Array.isArray(items) || items.length === 0) {
 		return res.status(400).json({ error: 'Articles à supprimer manquants' });
 	}
@@ -279,10 +279,15 @@ async function deleteNoteItems(req, res) {
 // Paiement multi-commandes : payer des articles de plusieurs commandes en une seule transaction
 async function payMultiOrders(req, res) {
 	const io = getIO();
-	const { table, items, paymentMode, finalAmount, discount, isPercentDiscount, discountClientName, splitPayments } = req.body || {};
-	
+	const { table, items, paymentMode, finalAmount, discount, isPercentDiscount, discountClientName, splitPayments, enteredAmount: bodyEnteredAmount } = req.body || {};
+
 	const isSplitPayment = splitPayments && Array.isArray(splitPayments) && splitPayments.length > 1;
-	
+
+	// 🆕 DEBUG: Log pour voir ce qui est reçu
+	if (paymentMode === 'TPE' || paymentMode === 'CHEQUE' || paymentMode === 'CARTE') {
+		console.log(`[PAYMENT-DEBUG] Reçu: paymentMode=${paymentMode}, bodyEnteredAmount=${bodyEnteredAmount}, finalAmount=${finalAmount}`);
+	}
+
 	console.log(`[payment-multi] 🚀 Paiement Table ${table}: ${items?.length || 0} groupes d'articles`);
 	
 	if (!table || !items || !Array.isArray(items) || items.length === 0) {
@@ -291,7 +296,7 @@ async function payMultiOrders(req, res) {
 	
 	const sharedTimestamp = new Date().toISOString();
 	const splitPaymentBaseId = isSplitPayment ? `split_${sharedTimestamp}` : null;
-	
+
 	let totalSubtotal = 0;
 	const allPaidItems = [];
 	const allItemUpdates = []; // { orderId, noteId, itemIndex, ... }
@@ -310,11 +315,11 @@ async function payMultiOrders(req, res) {
 	for (const item of normalizedItems) {
 		// 🎯 Chercher l'article dans la table (FIFO)
 		const result = processItemAcrossTable(table, item, item.noteId);
-		
+
 		if (result.paidItems.length > 0) {
 			allPaidItems.push(...result.paidItems);
 			allItemUpdates.push(...result.itemUpdates);
-			
+
 			// 🆕 Distribuer les articles payés par commande
 			result.paidItems.forEach(pi => {
 				if (!updatesByOrder[pi.orderId]) updatesByOrder[pi.orderId] = { updates: [], paidItems: [] };
@@ -333,7 +338,7 @@ async function payMultiOrders(req, res) {
 	allItemUpdates.forEach(update => {
 		if (!updatesByOrder[update.orderId]) updatesByOrder[update.orderId] = { updates: [], paidItems: [] };
 		// Eviter les doublons si on a déjà l'update
-		const exists = updatesByOrder[update.orderId].updates.some(u => 
+		const exists = updatesByOrder[update.orderId].updates.some(u =>
 			u.noteId === update.noteId && u.itemIndex === update.itemIndex
 		);
 		if (!exists) updatesByOrder[update.orderId].updates.push(update);
@@ -344,11 +349,43 @@ async function payMultiOrders(req, res) {
 	// 2. RÉPARTIR LES PAIEMENTS PAR COMMANDE
 	// Arrondir le total brut cumulé pour éviter les erreurs de virgule flottante
 	totalSubtotal = Math.round(totalSubtotal * 1000) / 1000;
-	const actualTotalPaid = finalAmount != null ? Math.round(Number(finalAmount) * 1000) / 1000 : totalSubtotal;
-	const totalDiscount = Math.round((totalSubtotal - actualTotalPaid) * 1000) / 1000;
+	
+	// 🆕 CORRECTION: Calculer la remise à partir des paramètres discount/isPercentDiscount
+	// et non comme différence (totalSubtotal - actualTotalPaid) car actualTotalPaid peut inclure le pourboire
+	let totalDiscount = 0;
+	if (discount && discount > 0) {
+		if (isPercentDiscount) {
+			// Remise en pourcentage : calculer sur le sous-total
+			totalDiscount = Math.round(totalSubtotal * (discount / 100) * 1000) / 1000;
+		} else {
+			// Remise en montant fixe
+			totalDiscount = Math.round(discount * 1000) / 1000;
+		}
+	}
+	
+	// Le montant réel du ticket après remise (sans pourboire)
+	const ticketAfterDiscount = Math.round((totalSubtotal - totalDiscount) * 1000) / 1000;
+	// actualTotalPaid peut inclure le pourboire si payé par carte/TPE/chèque
+	const actualTotalPaid = finalAmount != null ? Math.round(Number(finalAmount) * 1000) / 1000 : ticketAfterDiscount;
 
 	const ordersToArchive = new Set();
 	const serverName = req.body.server || 'unknown';
+
+	// 🆕 Calculer le total des montants non-scripturaux (ESPECE + OFFRE)
+	// Pour déterminer combien TPE/CHEQUE doivent couvrir
+	const totalNonScriptural = isSplitPayment
+		? splitPayments
+			.filter(s => s.mode === 'ESPECE' || s.mode === 'OFFRE')
+			.reduce((sum, s) => sum + (s.amount || 0), 0)
+		: ((paymentMode === 'ESPECE' || paymentMode === 'OFFRE') ? actualTotalPaid : 0);
+	
+	// 🆕 Total nécessaire pour les transactions scripturales (TPE/CHEQUE/CARTE)
+	const totalNeededForScriptural = actualTotalPaid - totalNonScriptural;
+
+	// 🆕 Détecter si ESPECE est présent dans le paiement
+	const hasCashInPayment = isSplitPayment
+		? splitPayments.some(s => s.mode === 'ESPECE')
+		: (paymentMode === 'ESPECE');
 
 	// Appliquer les changements commande par commande
 	for (const orderId in updatesByOrder) {
@@ -357,11 +394,12 @@ async function payMultiOrders(req, res) {
 
 		const orderInfo = updatesByOrder[orderId];
 		const orderSubtotal = orderInfo.paidItems.reduce((sum, it) => sum + (it.price * it.quantity), 0);
-		
+
 		// Calculer la part de remise pour cette commande
 		const proportion = totalSubtotal > 0 ? orderSubtotal / totalSubtotal : 0;
 		const orderAmount = actualTotalPaid * proportion;
 		const orderDiscountAmount = totalDiscount * proportion;
+		const orderNeededForScriptural = totalNeededForScriptural * proportion;
 
 		// Mettre à jour les paidQuantity
 		orderInfo.updates.forEach(update => {
@@ -379,12 +417,63 @@ async function payMultiOrders(req, res) {
 		let isCompletePaymentForOrder = false;
 
 		if (isSplitPayment) {
+			// 🆕 Calculer le total scriptural réel (montants saisis pour TPE/CHEQUE/CARTE)
+			const scripturalTransactions = splitPayments.filter(s => s.mode === 'TPE' || s.mode === 'CHEQUE' || s.mode === 'CARTE');
+			const totalScripturalEntered = scripturalTransactions.reduce((sum, s) => sum + (s.amount || 0), 0);
+			
+			// 🆕 CORRECTION: Calculer le total des montants saisis (avec pourboire)
+			const totalEntered = splitPayments.reduce((sum, s) => sum + (s.amount || 0), 0);
+			
+			// 🆕 Pour chaque commande, calculer combien les transactions scripturales doivent couvrir
+			const orderScripturalNeeded = orderNeededForScriptural;
+
 			for (const split of splitPayments) {
-				const splitProp = actualTotalPaid > 0 ? split.amount / actualTotalPaid : 0;
+				// 🆕 CORRECTION: splitProp doit être basé sur la proportion nécessaire (sans pourboire)
+				// On utilise actualTotalPaid (montant du ticket sans pourboire) comme base
+				// Si totalEntered > actualTotalPaid, cela signifie qu'il y a un pourboire
+				// On calcule la proportion de chaque transaction dans le total nécessaire (sans pourboire)
+				// en normalisant les proportions pour que la somme = actualTotalPaid
+				// splitProp = proportion de cette transaction dans le total nécessaire (sans pourboire)
+				// Pour cela, on calcule la proportion du montant saisi dans le total saisi
+				// puis on la normalise pour que la somme des splitProp * actualTotalPaid = actualTotalPaid
+				const enteredProp = totalEntered > 0 ? split.amount / totalEntered : 0;
+				// 🆕 splitProp = proportion nécessaire (sans pourboire) = proportion du montant saisi
+				// La somme des splitProp = 1, donc la somme des splitProp * actualTotalPaid = actualTotalPaid
+				const splitProp = enteredProp; // Proportion nécessaire basée sur la répartition des montants saisis
+				const enteredAmount = split.amount; // 🆕 Montant réellement encaissé (ce que le serveur a saisi, avec pourboire)
+				// 🆕 CORRECTION: allocatedAmount doit être basé sur (orderSubtotal - orderDiscountAmount)
+				// = montant réel de la commande APRÈS remise (sans pourboire)
+				// orderSubtotal = montant réel de la commande (sans pourboire, AVANT remise)
+				// orderDiscountAmount = montant de la remise pour cette commande
+				// splitProp = proportion de cette transaction dans le total nécessaire
+				// allocatedAmount = part nécessaire de cette transaction pour cette commande (sans pourboire, APRÈS remise)
+				const orderNetAmount = orderSubtotal - orderDiscountAmount; // Montant APRÈS remise
+				const allocatedAmount = orderNetAmount * splitProp; // 🆕 Montant nécessaire pour cette commande (APRÈS remise)
+				
+				// 🆕 Calculer l'excédent pour TPE/CHEQUE/CARTE
+				// ⚠️ Si liquide présent, pas de pourboire (le serveur prend du liquide)
+				let excessAmount = 0;
+				if (!hasCashInPayment && (split.mode === 'TPE' || split.mode === 'CHEQUE' || split.mode === 'CARTE') && totalScripturalEntered > 0) {
+					// Calculer la part de cette transaction dans le total scriptural
+					const transactionScripturalProp = totalScripturalEntered > 0 ? split.amount / totalScripturalEntered : 0;
+					// La part nécessaire de cette transaction pour cette commande
+					const transactionNeeded = orderScripturalNeeded * transactionScripturalProp;
+					// L'excédent = montant saisi - montant nécessaire
+					// ⚠️ CORRECTION: enteredAmount est le montant total saisi (pas proportionnel)
+					// Donc on doit calculer la part proportionnelle de enteredAmount pour cette commande
+					const enteredAmountProportional = enteredAmount * splitProp; // Part proportionnelle du montant saisi
+					excessAmount = Math.max(0, enteredAmountProportional - transactionNeeded);
+				}
+				// Si hasCashInPayment === true, excessAmount reste à 0 (pas de pourboire)
+
 				const paymentRecord = {
 					id: `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
 					timestamp: sharedTimestamp,
-					amount: orderAmount * splitProp,
+					amount: allocatedAmount, // Montant nécessaire (pour compatibilité)
+					enteredAmount: enteredAmount, // 🆕 Montant réellement encaissé
+					allocatedAmount: allocatedAmount, // 🆕 Montant nécessaire pour couvrir la commande
+					excessAmount: excessAmount, // 🆕 Pourboire (excédent)
+					hasCashInPayment: hasCashInPayment, // 🆕 Présence de liquide dans le paiement
 					paymentMode: split.mode,
 					items: orderInfo.paidItems,
 					subtotal: orderSubtotal * splitProp,
@@ -404,10 +493,46 @@ async function payMultiOrders(req, res) {
 				order.paymentHistory.push(paymentRecord);
 			}
 		} else {
+			// 🆕 Paiement simple : calculer excédent si TPE/CHEQUE/CARTE
+			// ⚠️ IMPORTANT: Pour paiement scriptural simple, utiliser enteredAmount du body si disponible
+			// Sinon, utiliser actualTotalPaid (pour rétrocompatibilité avec anciens paiements)
+			// ⚠️ CORRECTION: Pour paiement multi-commandes, répartir enteredAmount proportionnellement
+			const totalEnteredAmount = (paymentMode === 'TPE' || paymentMode === 'CHEQUE' || paymentMode === 'CARTE') && bodyEnteredAmount != null
+				? Number(bodyEnteredAmount)
+				: actualTotalPaid;
+			// 🆕 LOGIQUE POURBOIRE :
+			// - enteredAmount = montant réellement encaissé (avec pourboire si > total)
+			// - allocatedAmount = montant nécessaire pour couvrir la commande (SANS pourboire)
+			// - excessAmount = enteredAmount - allocatedAmount (pourboire)
+			
+			// Répartir enteredAmount proportionnellement
+			const enteredAmount = totalEnteredAmount * proportion;
+			
+			// allocatedAmount = montant nécessaire = montant réel de la commande APRÈS REMISE
+			// ⚠️ CORRECTION: Prendre en compte la remise pour calculer le pourboire correctement
+			// orderSubtotal = sous-total AVANT remise
+			// orderDiscountAmount = montant de la remise
+			// allocatedAmount = orderSubtotal - orderDiscountAmount = montant APRÈS remise
+			const allocatedAmount = orderSubtotal - orderDiscountAmount;
+			
+			let excessAmount = 0;
+			if ((paymentMode === 'TPE' || paymentMode === 'CHEQUE' || paymentMode === 'CARTE') && enteredAmount > allocatedAmount) {
+				excessAmount = Math.round((enteredAmount - allocatedAmount) * 1000) / 1000; // Arrondir à 3 décimales
+			}
+			
+			// 🆕 DEBUG: Log pour comprendre le calcul
+			if (paymentMode === 'TPE' || paymentMode === 'CHEQUE' || paymentMode === 'CARTE') {
+				console.log(`[PAYMENT-DEBUG] Commande ${order.id}: paymentMode=${paymentMode}, bodyEnteredAmount=${bodyEnteredAmount}, totalEnteredAmount=${totalEnteredAmount}, totalSubtotal=${totalSubtotal}, proportion=${proportion}, orderSubtotal=${orderSubtotal}, enteredAmount=${enteredAmount}, allocatedAmount=${allocatedAmount}, excessAmount=${excessAmount}`);
+			}
+			
 			const paymentRecord = {
 				id: `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
 				timestamp: sharedTimestamp,
-				amount: orderAmount,
+				amount: allocatedAmount, // Montant nécessaire (pour compatibilité)
+				enteredAmount: enteredAmount, // 🆕 Montant réellement encaissé (réparti proportionnellement)
+				allocatedAmount: allocatedAmount, // 🆕 Montant nécessaire pour couvrir la commande
+				excessAmount: excessAmount, // 🆕 Pourboire (excédent)
+				hasCashInPayment: hasCashInPayment, // 🆕 Présence de liquide dans le paiement
 				paymentMode: paymentMode || 'ESPECE',
 				items: orderInfo.paidItems,
 				subtotal: orderSubtotal,
@@ -441,7 +566,7 @@ async function payMultiOrders(req, res) {
 			noteUnpaid = Math.round(noteUnpaid * 1000) / 1000;
 			n.total = noteUnpaid;
 			remainingTotal += noteUnpaid;
-			
+
 			// Marquer note comme payée si vide
 			if (n.id !== 'main' && noteUnpaid <= 0.001) {
 				n.paid = true;
@@ -465,7 +590,7 @@ async function payMultiOrders(req, res) {
 		order.status = 'archived';
 		order.archivedAt = new Date().toISOString();
 		order.paid = true;
-		
+
 		// Marquer tous les derniers paiements comme complets
 		order.paymentHistory.forEach(p => {
 			if (p.timestamp === sharedTimestamp) p.isCompletePayment = true;
@@ -483,28 +608,28 @@ async function payMultiOrders(req, res) {
 		for (const split of splitPayments) {
 			if (split.mode === 'CREDIT' && split.clientId) {
 				await createCreditTransaction(
-					split.clientId, 
-					split.amount, 
+					split.clientId,
+					split.amount,
 					{ table, server: discountClientName }, // Approximation serveur
-					table, 
-					discountClientName, 
-					allPaidItems, 
-					totalDiscount, 
-					discountClientName, 
+					table,
+					discountClientName,
+					allPaidItems,
+					totalDiscount,
+					discountClientName,
 					Array.from(ordersToArchive).map(o => o.id)
 				);
 			}
 		}
 	} else if (paymentMode === 'CREDIT' && req.body.clientId) {
 		await createCreditTransaction(
-			req.body.clientId, 
-			actualTotalPaid, 
-			{ table, server: discountClientName }, 
-			table, 
-			discountClientName, 
-			allPaidItems, 
-			totalDiscount, 
-			discountClientName, 
+			req.body.clientId,
+			actualTotalPaid,
+			{ table, server: discountClientName },
+			table,
+			discountClientName,
+			allPaidItems,
+			totalDiscount,
+			discountClientName,
 			Array.from(ordersToArchive).map(o => o.id)
 		);
 	}

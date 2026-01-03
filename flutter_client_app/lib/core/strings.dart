@@ -44,6 +44,7 @@ class Strings {
       'service_glasses': 'Demander des verres',
       'service_ice': 'Demander des glaçons',
       'service_cleaning': 'Nettoyage (casse)',
+      'loading': 'Chargement...',
     },
     'en': {
       'enter': 'Enter',
@@ -87,6 +88,7 @@ class Strings {
       'service_glasses': 'Request glasses',
       'service_ice': 'Request ice',
       'service_cleaning': 'Cleaning (breakage)',
+      'loading': 'Loading...',
     },
     'ar': {
       'enter': 'دخول',
@@ -130,6 +132,7 @@ class Strings {
       'service_glasses': 'طلب كؤوس',
       'service_ice': 'طلب ثلج',
       'service_cleaning': 'تنظيف (كسر)',
+      'loading': 'جارٍ التحميل...',
     },
     'de': {
       'enter': 'Eintreten',
@@ -173,6 +176,7 @@ class Strings {
       'service_glasses': 'Gläser anfordern',
       'service_ice': 'Eis anfordern',
       'service_cleaning': 'Reinigung (Bruch)',
+      'loading': 'Laden...',
     },
   };
 

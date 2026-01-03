@@ -1,0 +1,82 @@
+[
+  {
+    "_id": "6947113b142e783ceabe358a",
+    "id": "srv-admin-default",
+    "name": "ADMIN",
+    "pin": "admin123",
+    "role": "Manager",
+    "permissions": {
+      "canTransferNote": true,
+      "canTransferTable": true,
+      "canTransferServer": true,
+      "canCancelItems": true,
+      "canEditCovers": true,
+      "canOpenDebt": true,
+      "canOpenPayment": true
+    }
+  },
+  {
+    "_id": "6947113b142e783ceabe358b",
+    "id": "srv-mohamed",
+    "name": "MOHAMED",
+    "pin": "1111",
+    "role": "Serveur",
+    "permissions": {
+      "canTransferNote": false,
+      "canTransferTable": true,
+      "canTransferServer": false,
+      "canCancelItems": false,
+      "canEditCovers": true,
+      "canOpenDebt": true,
+      "canOpenPayment": true
+    }
+  },
+  {
+    "_id": "6947113b142e783ceabe358c",
+    "id": "srv-ali",
+    "name": "ALI",
+    "pin": "2222",
+    "role": "Serveur",
+    "permissions": {
+      "canTransferNote": true,
+      "canTransferTable": true,
+      "canTransferServer": false,
+      "canCancelItems": true,
+      "canEditCovers": true,
+      "canOpenDebt": true,
+      "canOpenPayment": true
+    }
+  },
+  {
+    "_id": "6947113b142e783ceabe358d",
+    "id": "srv-fatima",
+    "name": "FATIMA",
+    "pin": "3333",
+    "role": "Serveur",
+    "permissions": {
+      "canTransferNote": true,
+      "canTransferTable": false,
+      "canTransferServer": false,
+      "canCancelItems": true,
+      "canEditCovers": true,
+      "canOpenDebt": true,
+      "canOpenPayment": true
+    }
+  },
+  {
+    "_id": "6947113b142e783ceabe358e",
+    "id": "srv-1764084208648",
+    "name": "SKANDER",
+    "pin": "2014",
+    "role": "Serveur",
+    "permissions": {
+      "canTransferNote": true,
+      "canTransferTable": true,
+      "canTransferServer": true,
+      "canCancelItems": true,
+      "canEditCovers": true,
+      "canOpenDebt": true,
+      "canOpenPayment": true
+    }
+  }
+]

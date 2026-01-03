@@ -1,0 +1,150 @@
+# Règles de développement - POS Restaurant Les Emirs
+
+## 🎯 Contexte du projet
+Ce projet est un **système POS (Point of Sale) pour restaurant** fonctionnant sur **PC Windows tactile**. 
+L'application Flutter gère les commandes, paiements, et rapports financiers en temps réel.
+
+## ⚠️ RÈGLES CRITIQUES - À RESPECTER ABSOLUMENT
+
+### 1. Calculs financiers et paiements
+**NE JAMAIS modifier les calculs de paiement, pourboires, remises, ou totaux sans :**
+- Analyser l'impact sur les rapports X, KPI, et historique
+- Comprendre la différence entre `enteredAmount`, `allocatedAmount`, et `excessAmount`
+- Vérifier les conséquences sur `totalRecette`, `chiffreAffaire`, et les pourboires par serveur
+- **Demander une autorisation explicite** avant toute modification
+
+**Fichiers critiques à manipuler avec précaution :**
+- `server/controllers/pos-payment.js` - Logique de paiement et calcul des pourboires
+- `server/controllers/pos-report-x.js` - Génération des rapports financiers
+- `server/utils/history-processor.js` - Traitement de l'historique des paiements
+- `server/utils/payment-processor.js` - **SOURCE DE VÉRITÉ UNIQUE** pour la déduplication des paiements
+- `flutter_les_emirs/lib/features/pos/pages/payment/services/payment_validation_service.dart` - Validation des paiements
+
+### 2. Source de vérité unique
+**TOUJOURS utiliser `_currentAllOrders` (backend) via `getAllItemsOrganized()`** pour les quantités non payées.
+- ❌ Ne jamais utiliser `mainNote.items` ou `subNotes` directement pour les calculs
+- ✅ Toujours passer par `PaymentValidationService.getItemsToPay()` pour obtenir les articles à payer
+- Les quantités payées (`paidQuantity`) sont la source de vérité pour le suivi des paiements partiels
+
+### 2.1. ⚠️ MULTIPLES COMMANDES PAR TABLE (CRITIQUE)
+**UNE TABLE PEUT AVOIR PLUSIEURS COMMANDES (orders) DISTINCTES** :
+- Une table peut avoir : Commande #1 (orderId: 1), Commande #2 (orderId: 2), Commande #3 (orderId: 3), etc.
+- Chaque commande a son propre `orderId`, `mainNote`, `subNotes`, et `paymentHistory`
+- **TOUJOURS considérer cette multiplicité lors des modifications** :
+  - ✅ Les calculs de totaux doivent agréger TOUTES les commandes de la table
+  - ✅ La répartition des montants/pourboires doit être **proportionnelle par commande** (voir `payMultiOrders`)
+  - ✅ `processItemAcrossTable` cherche dans TOUTES les commandes de la table (FIFO)
+  - ✅ Les paiements peuvent concerner plusieurs commandes en une seule transaction (`splitPaymentId` regroupe tout)
+  - ❌ Ne jamais supposer qu'une table = une seule commande
+  - ❌ Ne jamais calculer un total sans vérifier toutes les commandes de la table
+
+### 3. Paiements divisés (Split Payments)
+- Les paiements divisés utilisent `splitPaymentId` (format: `split_TIMESTAMP`) pour regrouper tous les modes
+- Le flag `hasCashInPayment` détermine si le pourboire scriptural doit être comptabilisé ou non
+- Quand `hasCashInPayment === true`, le pourboire est purement indicatif et ne doit PAS être inclus dans `totalRecette`
+- Regrouper les paiements par `splitPaymentId` dans les rapports (pas par mode individuel)
+- **⚠️ Paiement multi-commandes** : Un paiement peut concerner plusieurs commandes (plusieurs `orderId`) en une seule transaction
+  - La répartition proportionnelle se fait via `proportion = orderSubtotal / totalSubtotal` dans `payMultiOrders`
+  - Chaque commande enregistre son propre `paymentRecord` dans son `paymentHistory` avec le même `splitPaymentId`
+
+### 3.1. ⚠️ SOURCE DE VÉRITÉ UNIQUE POUR LA DÉDUPLICATION
+**Le module `server/utils/payment-processor.js` est la source de vérité pour la déduplication des paiements.**
+- ✅ `pos-report-x.js` (X Report, KPI) utilise `paymentProcessor.calculatePaymentsByMode()` et `paymentProcessor.deduplicateAndCalculate()`
+- ✅ `history-processor.js` (Historique) utilise les mêmes principes de déduplication
+- ✅ Cela garantit que **History = KPI = X Report** (cohérence des données)
+- **Clé de déduplication** : `splitPaymentId + mode + enteredAmount` pour identifier les transactions uniques
+- **Problème résolu** : Pour N commandes, chaque transaction apparaît N fois dans `paymentHistory`. Le module commun déduplique correctement.
+
+### 4. Interface tactile Windows
+- **Optimiser pour l'interaction tactile** : boutons suffisamment grands, espacement approprié
+- **Dialogs positionnés correctement** : utiliser `showGeneralDialog` avec `Align(topCenter)` pour éviter les conflits avec le clavier virtuel
+- **Clavier virtuel** : prévoir `selectAllOnFocus: true` pour les champs de montant (gain de temps)
+- **Scroll fluide** : utiliser `SingleChildScrollView` avec `BouncingScrollPhysics` dans les dialogs
+
+### 5. Synchronisation temps réel
+- Les données viennent du backend via **Socket.IO** (`HomeSocketService`, `OrderSocketService`)
+- **Ne jamais modifier directement** les données locales sans synchronisation backend
+- Toujours utiliser les services dédiés (`OrdersSyncService`, `PaymentService`) pour les opérations
+
+## 📋 Bonnes pratiques générales
+
+### Architecture
+- **Flutter frontend POS** : `lib/features/pos/pages/` (home, order, payment)
+- **Flutter frontend Admin** : `lib/features/admin/` (dashboard, rapport X, crédit, serveurs)
+  - `admin_dashboard_page.dart` - Dashboard principal avec KPI et historique
+  - `widgets/admin_dashboard_kpi_section.dart` - Section KPI (utilise les mêmes données que X Report)
+  - `widgets/enriched_history_section.dart` - Section historique (utilise history-processor.js)
+  - `report_x_page.dart` - Page Rapport X
+- **Node.js backend** : `server/controllers/` (pos-payment.js, pos-report-x.js, credit.js)
+- **Utilitaires backend** : `server/utils/` (payment-processor.js, history-processor.js)
+- **Documentation** : Consulter `STRUCTURE_POS.md` (vue d'ensemble) et les fichiers dédiés :
+  - `STRUCTURE_POS_HOME.md` - Module Home
+  - `STRUCTURE_POS_ORDER.md` - Module Order
+  - `STRUCTURE_POS_PAYMENT.md` - Module Payment
+  - `STRUCTURE_POS_ADMIN.md` - Module Admin Dashboard
+  - `STRUCTURE_SERVEUR.md` - Backend
+
+### Paiements
+- Distinguer **paiement simple** vs **paiement divisé** (split)
+- Gérer les **paiements partiels** via `paidQuantity` sur les articles
+- Les **remises** doivent être justifiées avec un nom de client (`discountClientName`)
+- Les **crédits clients** nécessitent nom + téléphone obligatoires
+
+### Rapports et historique
+- Les montants dans l'historique doivent utiliser `enteredAmount` (montant réellement encaissé)
+- Les pourboires sont affichés séparément en bas du récapitulatif X Report
+- La recette encaissée du jour = recette opérationnelle (sans pourboire) + pourboires
+
+### Commandes client (Architecture "Boîte aux Lettres")
+- Les commandes client arrivent via MongoDB avec `waitingForPos: true`
+- Polling automatique toutes les 5 secondes via `pullFromMailbox()`
+- Une fois confirmées, elles sont gérées comme les commandes POS normales
+
+### Documentation (Mise à jour automatique)
+**⚠️ OBLIGATOIRE : Mettre à jour la documentation après chaque modification de fonctionnalité**
+
+La documentation est organisée de manière modulaire pour éviter que `STRUCTURE_POS.md` devienne trop volumineux :
+
+- **`STRUCTURE_POS.md`** : Vue d'ensemble et index (carte de navigation)
+- **`STRUCTURE_POS_HOME.md`** : Module Home (plan de table, historique, synchronisation)
+- **`STRUCTURE_POS_ORDER.md`** : Module Order (commandes, notes, transferts, annulations)
+- **`STRUCTURE_POS_PAYMENT.md`** : Module Payment (paiements, remises, crédits, pourboires)
+- **`STRUCTURE_POS_ADMIN.md`** : Module Admin Dashboard (KPI, historique enrichi, rapport X)
+- **`STRUCTURE_SERVEUR.md`** : Backend (API, endpoints, serveurs)
+
+**Règles de mise à jour** :
+1. **Après chaque ajout/modification de fonctionnalité**, mettre à jour :
+   - Le fichier MD dédié correspondant (HOME/ORDER/PAYMENT/ADMIN/SERVEUR) avec les détails
+   - `STRUCTURE_POS.md` si l'architecture globale change (nouveau module, changement de structure)
+2. **Pour les changements critiques** (calculs financiers, architecture) :
+   - Documenter dans le fichier MD dédié
+   - Ajouter une entrée dans "Changements récents" de `STRUCTURE_POS.md`
+   - Mettre à jour la date de dernière mise à jour
+3. **Pour les nouveaux modules** :
+   - Créer un nouveau fichier `STRUCTURE_POS_[MODULE].md` si nécessaire
+   - Ajouter la référence dans `STRUCTURE_POS.md` (section Références)
+   - Mettre à jour l'index rapide et la table "Où trouver..."
+
+## 🔍 Avant de modifier du code
+
+1. **Identifier le module concerné** : Home, Order, Payment, ou Admin (voir `STRUCTURE_POS.md`)
+2. **Vérifier les dépendances** : Quels services/utilisateurs sont impactés ?
+3. **⚠️ Vérifier la multiplicité des commandes** : Est-ce que le code gère correctement plusieurs commandes par table ?
+   - Les calculs agrègent-ils toutes les commandes de la table ?
+   - La répartition proportionnelle est-elle correcte pour chaque commande ?
+   - Les paiements multi-commandes sont-ils bien gérés ?
+4. **Tester les calculs** : Vérifier les totaux, pourboires, remises dans le X Report
+5. **Valider l'UI tactile** : S'assurer que les interactions sont fluides sur écran tactile
+6. **Documenter** : Mettre à jour la documentation si l'architecture change (voir section Documentation ci-dessous)
+
+## 🚫 À éviter
+
+- Modifier les calculs financiers sans comprendre `enteredAmount` vs `allocatedAmount`
+- Utiliser `mainNote.items` directement au lieu de `getAllItemsOrganized()`
+- **Supposer qu'une table = une seule commande** (une table peut avoir plusieurs orders)
+- **Oublier la répartition proportionnelle** lors des paiements multi-commandes
+- Oublier de gérer `hasCashInPayment` pour les paiements divisés avec liquide
+- Créer des dialogs sans gestion du clavier virtuel
+- Modifier les données sans passer par les services de synchronisation
+- Calculer des totaux sans vérifier toutes les commandes de la table
+

@@ -2,6 +2,8 @@
 // Fonctions communes partagées entre pos-archive.js et pos-history-unified.js
 
 const dataStore = require('../data');
+// 🆕 Import du processeur de paiements commun (source de vérité unique)
+const paymentProcessor = require('./payment-processor');
 
 // Reconstruire les événements depuis paymentHistory (uniquement pour compatibilité avec anciennes données)
 function reconstructOrderEventsFromPayments(session) {
@@ -204,6 +206,14 @@ function groupPaymentsByTimestamp(sessions) {
 				// 🆕 Préserver le nom du client CREDIT et isCompletePayment (enrichi si manquant)
 				creditClientName: creditClientName,
 				isCompletePayment: payment.isCompletePayment === true,
+				// 🆕 CORRECTION: Préserver enteredAmount, allocatedAmount, excessAmount et hasCashInPayment
+				// pour pouvoir afficher correctement les montants dans l'historique
+				enteredAmount: payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0),
+				allocatedAmount: payment.allocatedAmount != null ? payment.allocatedAmount : (payment.amount || 0),
+				excessAmount: payment.excessAmount != null ? payment.excessAmount : 0,
+				hasCashInPayment: payment.hasCashInPayment != null ? payment.hasCashInPayment : false,
+				// 🆕 Préserver l'ID du paiement pour distinguer les paiements multiples du même mode
+				paymentId: payment.id || null,
 			});
 		}
 	}
@@ -240,10 +250,11 @@ function groupPaymentsByTimestamp(sessions) {
 		splitPaymentsByTimestamp[timestampKey].push(payment);
 	}
 	
-	// 🆕 ÉTAPE 3: Fusionner les paiements divisés par timestamp et regrouper par mode
+	// 🆕 ÉTAPE 3: Regrouper les paiements divisés par mode et créer une entrée avec tous les montants numérotés
+	// 🆕 CORRECTION: Regrouper par mode, mais inclure tous les montants avec un index (1, 2, 3...)
 	const groupedSplitPayments = [];
 	for (const [timestampKey, payments] of Object.entries(splitPaymentsByTimestamp)) {
-		// Regrouper par mode de paiement pour calculer les totaux par mode
+		// 🆕 Regrouper par mode de paiement
 		const paymentsByMode = {};
 		for (const payment of payments) {
 			const mode = payment.paymentMode || 'N/A';
@@ -253,50 +264,30 @@ function groupPaymentsByTimestamp(sessions) {
 			paymentsByMode[mode].push(payment);
 		}
 		
-		// Pour chaque mode, fusionner les paiements de toutes les commandes
-		const splitPaymentModes = [];
-		const splitPaymentAmounts = [];
+		// 🆕 Collecter les informations communes pour tous les paiements de ce split
 		const allItems = [];
 		const allOrderIds = [];
 		const noteIds = new Set();
-		// 🆕 Set pour éviter de collecter les articles plusieurs fois pour la même commande
 		const processedOrderNotePairs = new Set();
 		
-		for (const [mode, modePayments] of Object.entries(paymentsByMode)) {
-			// Fusionner les paiements de ce mode (de toutes les commandes)
-			const totalAmountForMode = modePayments.reduce((sum, p) => sum + p.amount, 0);
-			const totalSubtotalForMode = modePayments.reduce((sum, p) => sum + p.subtotal, 0);
-			
-			splitPaymentModes.push(mode);
-			splitPaymentAmounts.push({ mode: mode, amount: totalAmountForMode });
-			
-			// 🆕 Collecter les orderIds et noteIds (sans doublons)
-			for (const p of modePayments) {
-				// 🆕 Convertir sessionId en int pour éviter les erreurs de type côté Flutter
-				const orderId = typeof p.sessionId === 'number' ? p.sessionId : (typeof p.sessionId === 'string' ? parseInt(p.sessionId, 10) : null);
-				if (orderId != null && !isNaN(orderId)) {
-					allOrderIds.push(orderId);
-				}
-				noteIds.add(p.noteId || 'main');
-			}
-		}
-		
-		// 🆕 Collecter les articles UNE SEULE FOIS par commande/note (pas par mode)
-		// Tous les paiements divisés d'une même commande contiennent les mêmes articles
+		// Collecter les articles UNE SEULE FOIS par commande/note
 		for (const payment of payments) {
 			const orderId = typeof payment.sessionId === 'number' ? payment.sessionId : (typeof payment.sessionId === 'string' ? parseInt(payment.sessionId, 10) : null);
 			const noteId = payment.noteId || 'main';
 			const orderNoteKey = `${orderId}_${noteId}`;
 			
-			// Ne collecter les articles qu'une seule fois par commande/note
 			if (!processedOrderNotePairs.has(orderNoteKey) && payment.items && payment.items.length > 0) {
 				allItems.push(...payment.items);
 				processedOrderNotePairs.add(orderNoteKey);
 			}
+			
+			if (orderId != null && !isNaN(orderId)) {
+				allOrderIds.push(orderId);
+			}
+			noteIds.add(noteId);
 		}
 		
-		// 🆕 Dédupliquer les articles (même id et name) en additionnant les quantités
-		// Cela permet de consolider les articles de plusieurs commandes différentes
+		// Dédupliquer les articles
 		const uniqueItems = [];
 		const itemsMap = {};
 		for (const item of allItems) {
@@ -308,73 +299,151 @@ function groupPaymentsByTimestamp(sessions) {
 		}
 		uniqueItems.push(...Object.values(itemsMap));
 		
-		// Calculer les totaux globaux (montant, sous-total, remise)
-		const totalAmount = splitPaymentAmounts.reduce((sum, s) => sum + s.amount, 0);
-		// 🛡️ Sous-total affichage : recalculer depuis les articles dédupliqués (fiable pour l’historique)
+		// Calculer le subtotal depuis les articles
 		const itemsSubtotal = uniqueItems.reduce((sum, it) => {
 			const price = Number(it.price || 0);
 			const qty = Number(it.quantity || 0);
 			return sum + price * qty;
 		}, 0);
-		// Conserver l’ancien calcul au cas où (ex: rétro-compat), mais privilégier itemsSubtotal
 		const totalSubtotal = itemsSubtotal > 0.0001
 			? itemsSubtotal
 			: payments.reduce((sum, p) => sum + (p.subtotal || 0), 0);
 		const totalDiscountAmount = payments.reduce((sum, p) => sum + (p.discountAmount || 0), 0);
+		const ticketAmount = totalSubtotal - totalDiscountAmount;
 		
-		// Utiliser les infos du premier paiement
+		// Informations communes
 		const firstPayment = payments[0];
 		const primaryNoteId = Array.from(noteIds).find(id => id === 'main') || Array.from(noteIds)[0] || 'main';
 		const primaryNoteName = firstPayment.noteName || 'Note Principale';
+		const isCompletePayment = payments.every(p => p.isCompletePayment === true);
+		const hasCashInPayment = payments.some(p => p.hasCashInPayment === true);
 		
-		// 🆕 Récupérer le nom du client CREDIT si présent
+		// 🆕 Créer une entrée par mode avec tous les montants numérotés
+		const splitPaymentModes = [];
+		const splitPaymentAmounts = [];
+		
+		// 🆕 Calculer le nombre de commandes distinctes pour ce split payment
+		const distinctOrderIds = new Set(payments.map(p => p.sessionId)).size;
+		const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
+		
+		for (const [mode, modePayments] of Object.entries(paymentsByMode)) {
+			// 🆕 Compter les occurrences de chaque montant
+			// Chaque transaction apparaît N fois (une par commande)
+			// Ex: avec 3 commandes et 2 TPE de 80 TND chacun, TPE 80 apparaît 6 fois (2 × 3)
+			const amountCounts = {};
+			const amountPayments = {}; // Premier paiement pour chaque montant
+			
+			for (const payment of modePayments) {
+				const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
+				const amountKey = enteredAmount.toFixed(3);
+				
+				if (!amountCounts[amountKey]) {
+					amountCounts[amountKey] = 0;
+					amountPayments[amountKey] = payment;
+				}
+				amountCounts[amountKey]++;
+			}
+			
+			// 🆕 Extraire les transactions uniques
+			// Nombre de transactions = count / nbOrders
+			const uniqueTransactions = [];
+			for (const [amountKey, count] of Object.entries(amountCounts)) {
+				const nbTransactions = Math.round(count / nbOrders); // Nombre de transactions avec ce montant
+				const payment = amountPayments[amountKey];
+				const enteredAmount = parseFloat(amountKey);
+				
+				// Créer N entrées pour ce montant
+				for (let i = 0; i < nbTransactions; i++) {
+					uniqueTransactions.push({
+						payment: payment,
+						enteredAmount: enteredAmount,
+					});
+				}
+			}
+			
+			// 🆕 Ajouter tous les montants avec un index (1, 2, 3...)
+			splitPaymentModes.push(mode);
+			uniqueTransactions.forEach((transaction, index) => {
+				const creditClientName = transaction.payment.paymentMode === 'CREDIT' 
+					? (transaction.payment.creditClientName || null)
+					: null;
+				
+				splitPaymentAmounts.push({
+					mode: mode,
+					amount: transaction.enteredAmount,
+					index: index + 1, // 🆕 Index pour numéroter (1, 2, 3...)
+					clientName: creditClientName,
+				});
+			});
+		}
+		
+		// 🆕 Calculer les totaux pour l'entrée
+		// ⚠️ IMPORTANT: Utiliser totalSubtotal et ticketAmount (déjà calculés depuis les articles dédupliqués)
+		// Ne pas sommer les subtotals des paiements car ils sont multipliés par le nombre de commandes
+		const totalEnteredAmountForAll = splitPaymentAmounts.reduce((sum, s) => sum + s.amount, 0);
+		
+		// 🆕 Calculer la remise totale correctement (prendre depuis le premier paiement et multiplier par nbModes)
+		// Car chaque mode a sa propre répartition de remise
+		const nbModes = Object.keys(paymentsByMode).length;
+		const firstPaymentDiscount = (firstPayment.discountAmount || 0) * nbOrders; // Remise pour une commande × nbOrders
+		const totalDiscountAmountForAll = nbModes > 0 ? firstPaymentDiscount / nbModes : 0; // Diviser par nbModes car chaque mode a sa part
+		
+		// Calculer le pourboire total
+		// ticketAmount = totalSubtotal - totalDiscountAmount (déjà calculé correctement depuis les articles)
+		let totalExcessAmount = 0;
+		if (!hasCashInPayment && totalEnteredAmountForAll > ticketAmount) {
+			totalExcessAmount = Math.max(0, totalEnteredAmountForAll - ticketAmount);
+		}
+		
+		console.log(`[HISTORY] Split payment: totalEntered=${totalEnteredAmountForAll}, ticketAmount=${ticketAmount}, totalSubtotal=${totalSubtotal}, excessAmount=${totalExcessAmount}, hasCash=${hasCashInPayment}`);
+		
+		// Récupérer le nom du client CREDIT si présent (premier trouvé)
 		const creditPayment = payments.find(p => p.paymentMode === 'CREDIT');
 		const creditClientName = creditPayment?.creditClientName || null;
 		
-		// 🆕 Déterminer si c'est un paiement complet (tous les paiements doivent avoir isCompletePayment: true)
-		const isCompletePayment = payments.every(p => p.isCompletePayment === true);
-		// 🆕 Premier paiement avec remise (pour récupérer le taux/type si disponible)
+		// 🆕 Premier paiement avec remise pour récupérer le taux/type si disponible
 		const firstPaymentWithDiscount = payments.find(p => (p.discountAmount || 0) > 0.01 || p.hasDiscount);
 		
+		// 🆕 Créer une seule entrée avec tous les modes et montants
 		groupedSplitPayments.push({
 			timestamp: firstPayment.timestamp,
-			amount: totalAmount,
+			amount: ticketAmount, // Ticket = subtotal - remise (pas de pourboire)
 			subtotal: totalSubtotal,
 			paymentMode: splitPaymentModes.join(' + '), // Afficher tous les modes
 			splitPaymentModes: splitPaymentModes, // Liste des modes pour l'affichage
-			splitPaymentAmounts: splitPaymentAmounts.map(s => ({
-				mode: s.mode,
-				amount: s.amount,
-				// 🆕 Ajouter le nom du client si mode CREDIT
-				clientName: s.mode === 'CREDIT' ? creditClientName : null,
-			})), // Montants totaux par mode (fusionnés de toutes les commandes)
-			items: uniqueItems, // Articles dédupliqués
-			orderIds: [...new Set(allOrderIds)], // OrderIds uniques
+			splitPaymentAmounts: splitPaymentAmounts, // 🆕 Tous les montants avec index (1, 2, 3...)
+			items: uniqueItems, // Articles partagés (même ticket)
+			orderIds: [...new Set(allOrderIds)],
 			noteId: primaryNoteId,
 			noteName: primaryNoteName,
 			server: firstPayment.server || 'unknown',
 			table: firstPayment.table,
 			isSubNote: primaryNoteId.startsWith('sub_'),
 			isMainNote: primaryNoteId === 'main',
-			isPartial: !isCompletePayment, // 🆕 Utiliser isCompletePayment au lieu de la logique basée sur le nombre d'articles
+			isPartial: !isCompletePayment,
 			hasDiscount: totalDiscountAmount > 0.01,
 			discount: firstPaymentWithDiscount?.discount ?? firstPayment.discount,
 			isPercentDiscount: firstPaymentWithDiscount?.isPercentDiscount ?? firstPayment.isPercentDiscount,
 			discountAmount: totalDiscountAmount,
-			// 🆕 Flag pour indiquer que c'est un paiement divisé
 			isSplitPayment: true,
 			splitPaymentId: `split_${timestampKey}`,
-			// 🆕 Nom du client CREDIT
 			creditClientName: creditClientName,
+			excessAmount: (!hasCashInPayment && totalExcessAmount > 0.01) ? totalExcessAmount : null,
+			enteredAmount: totalEnteredAmountForAll,
 		});
 	}
 	
 	// 🆕 ÉTAPE 3: Regrouper les paiements réguliers par acte de paiement (même timestamp à la seconde, mode, remise)
+	// ⚠️ RÈGLE .cursorrules 2.1: Pour les paiements multi-commandes, chaque commande a son propre paymentRecord
+	// avec un montant proportionnel. On regroupe par timestamp + mode + remise (SANS le montant)
+	// pour fusionner les paiements multi-commandes en un seul acte visible.
 	const paymentsByAct = {};
 	for (const payment of regularPayments) {
 		let timestampKey;
 		try {
 			const roundedTimestamp = new Date(payment.timestamp).toISOString().substring(0, 19);
+			// 🆕 NE PAS inclure le montant - les paiements multi-commandes ont des montants différents
+			// mais font partie du même acte de paiement (même timestamp)
 			timestampKey = `${roundedTimestamp}_${payment.paymentMode}_${payment.discount}_${payment.isPercentDiscount}`;
 		} catch (e) {
 			timestampKey = `${payment.timestamp}_${payment.paymentMode}_${payment.discount}_${payment.isPercentDiscount}`;
@@ -404,9 +473,14 @@ function groupPaymentsByTimestamp(sessions) {
 		if (payments.length > 1) {
 			// Fusionner plusieurs paiements en un seul acte
 			const allItems = payments.flatMap(p => p.items);
-			const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
 			const totalSubtotal = payments.reduce((sum, p) => sum + p.subtotal, 0);
 			const totalDiscountAmount = payments.reduce((sum, p) => sum + (p.discountAmount || 0), 0);
+			// 🆕 Ticket = subtotal - remise (simple et correct)
+			const totalAmount = totalSubtotal - totalDiscountAmount;
+			// 🆕 Calculer le total des pourboires (excessAmount) - pour indication seulement
+			const totalExcessAmount = payments.reduce((sum, p) => sum + (p.excessAmount != null ? p.excessAmount : 0), 0);
+			// 🆕 Total réellement encaissé (avec pourboire) - pour information seulement
+			const totalEnteredAmount = payments.reduce((sum, p) => sum + (p.enteredAmount != null ? p.enteredAmount : (p.amount || 0)), 0);
 			// 🆕 Convertir sessionId en int pour éviter les erreurs de type côté Flutter
 			const orderIds = payments.map(p => {
 				const id = p.sessionId;
@@ -428,8 +502,11 @@ function groupPaymentsByTimestamp(sessions) {
 			
 			realPayments.push({
 				timestamp: act.timestamp,
-				amount: totalAmount,
+				amount: totalAmount, // 🆕 Ticket = subtotal - remise (pas de pourboire)
 				subtotal: totalSubtotal,
+				// 🆕 Informations sur le pourboire (pour indication)
+				excessAmount: totalExcessAmount > 0.01 ? totalExcessAmount : null, // 🆕 Pourboire total (si > 0)
+				enteredAmount: totalEnteredAmount, // 🆕 Montant réellement encaissé (avec pourboire) - pour information
 				paymentMode: act.paymentMode,
 				items: allItems,
 				orderIds: orderIds,
@@ -450,9 +527,14 @@ function groupPaymentsByTimestamp(sessions) {
 		} else {
 			// Un seul paiement
 			const payment = payments[0];
+			// 🆕 Ticket = subtotal - remise (simple et correct)
+			const ticketAmount = (payment.subtotal || 0) - (payment.discountAmount || 0);
+			// 🆕 Informations sur le pourboire (pour indication)
+			const excessAmount = payment.excessAmount != null && payment.excessAmount > 0.01 ? payment.excessAmount : null;
+			const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
 			realPayments.push({
 				timestamp: payment.timestamp,
-				amount: payment.amount,
+				amount: ticketAmount, // 🆕 Ticket = subtotal - remise (pas de pourboire)
 				subtotal: payment.subtotal,
 				paymentMode: payment.paymentMode,
 				items: payment.items,
@@ -472,6 +554,9 @@ function groupPaymentsByTimestamp(sessions) {
 				discount: payment.discount,
 				isPercentDiscount: payment.isPercentDiscount,
 				discountAmount: payment.discountAmount,
+				// 🆕 Informations sur le pourboire (pour indication)
+				excessAmount: excessAmount, // 🆕 Pourboire (si > 0)
+				enteredAmount: enteredAmount, // 🆕 Montant réellement encaissé (avec pourboire) - pour information
 				isSplitPayment: false, // Paiement régulier
 				creditClientName: payment.creditClientName || null, // 🆕 Nom du client CREDIT
 			});
@@ -521,9 +606,6 @@ function createMainTicket(mergedOrderEvents, groupedPayments) {
 		};
 	}
 	
-	// Calculer depuis les paiements
-	const totalFromPayments = groupedPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-	
 	// 🆕 Collecter tous les articles d'abord
 	const allItems = [];
 	for (const payment of groupedPayments) {
@@ -563,12 +645,23 @@ function createMainTicket(mergedOrderEvents, groupedPayments) {
 	const server = groupedPayments[0]?.server || 'unknown';
 	const table = groupedPayments[0]?.table;
 	
+	// 🆕 Ticket = subtotal - remise (simple et correct)
+	const ticketAmount = subtotalFromItems - totalRealDiscount;
+	
+	// 🆕 Calculer le total des pourboires (excessAmount) - pour indication seulement
+	const totalExcessAmount = groupedPayments.reduce((sum, p) => sum + (p.excessAmount != null ? p.excessAmount : 0), 0);
+	// 🆕 Total réellement encaissé (avec pourboire) - pour information seulement
+	const totalEnteredAmount = groupedPayments.reduce((sum, p) => sum + (p.enteredAmount != null ? p.enteredAmount : (p.amount || 0)), 0);
+	
 	// 🆕 Utiliser le sous-total calculé depuis les articles et la remise réelle
 	return {
 		type: 'main_ticket',
 		timestamp: groupedPayments[0]?.timestamp || mergedOrderEvents[0]?.timestamp || new Date().toISOString(),
-		total: totalFromPayments,
+		total: ticketAmount, // 🆕 Ticket = subtotal - remise (pas de pourboire)
 		subtotal: subtotalFromItems, // 🆕 Sous-total calculé depuis les articles
+		// 🆕 Informations sur le pourboire (pour indication)
+		excessAmount: totalExcessAmount > 0.01 ? totalExcessAmount : null, // 🆕 Pourboire total (si > 0)
+		enteredAmount: totalEnteredAmount, // 🆕 Montant réellement encaissé (avec pourboire) - pour information
 		items: allItems,
 		orderIds: [...new Set(groupedPayments.flatMap(p => p.orderIds || []))],
 		server: server,

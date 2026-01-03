@@ -28,10 +28,75 @@ function deepCollectTexts(menu) {
 	return Array.from(texts);
 }
 
-async function translateBatch(texts, targetLang, key) {
+// 🆕 Collecter les textes avec leur contexte
+function deepCollectTextsWithContext(menu) {
+	const texts = new Set();
+	const textContexts = new Map(); // Map texte → contexte
+	
+	if (menu.restaurant?.name) {
+		const name = String(menu.restaurant.name);
+		texts.add(name);
+		textContexts.set(name, 'restaurant'); // Contexte restaurant
+	}
+	
+	for (const cat of menu.categories || []) {
+		const group = cat.group || 'food';
+		// 🆕 Déterminer le contexte selon le groupe
+		let context = 'dish'; // Par défaut (plat)
+		if (group === 'drinks' || group === 'spirits') {
+			context = 'drink'; // Contexte "boisson"
+		} else if (cat.name?.toLowerCase().includes('dessert')) {
+			context = 'dessert'; // Contexte "dessert"
+		}
+		
+		// Ajouter le nom de catégorie avec contexte
+		if (cat.name) {
+			const name = String(cat.name);
+			texts.add(name);
+			textContexts.set(name, context);
+		}
+		
+		// Ajouter les noms d'articles avec contexte
+		for (const it of cat.items || []) {
+			if (it.name) {
+				const name = String(it.name);
+				texts.add(name);
+				textContexts.set(name, context);
+			}
+			if (it.type) {
+				const type = String(it.type);
+				texts.add(type);
+				textContexts.set(type, context);
+			}
+		}
+	}
+	
+	return { texts: Array.from(texts), contexts: textContexts };
+}
+
+async function translateBatch(texts, targetLang, key, contexts = null) {
 	const mapping = {};
 	const endpoint = key.endsWith(':fx') ? 'https://api-free.deepl.com/v2/translate' : 'https://api.deepl.com/v2/translate';
 	const batchSize = 40;
+	
+	// 🆕 Si des contextes sont fournis, grouper par contexte pour optimiser
+	if (contexts && contexts.size > 0) {
+		const byContext = new Map();
+		texts.forEach(text => {
+			const ctx = contexts.get(text) || 'dish';
+			if (!byContext.has(ctx)) byContext.set(ctx, []);
+			byContext.get(ctx).push(text);
+		});
+		
+		// Traduire chaque groupe avec son contexte
+		for (const [context, groupTexts] of byContext) {
+			const groupMapping = await translateBatchWithContext(groupTexts, targetLang, key, context);
+			Object.assign(mapping, groupMapping);
+		}
+		return mapping;
+	}
+	
+	// Ancien code sans contexte (pour compatibilité)
 	for (let i = 0; i < texts.length; i += batchSize) {
 		const slice = texts.slice(i, i + batchSize);
 		const body = new URLSearchParams();
@@ -54,6 +119,59 @@ async function translateBatch(texts, targetLang, key) {
 		for (let j = 0; j < translations.length; j++) {
 			const src = slice[j];
 			const trg = translations[j]?.text || src;
+			mapping[src] = trg;
+		}
+	}
+	return mapping;
+}
+
+// 🆕 Nouvelle fonction avec contexte (utilise des préfixes dans le texte pour DeepL)
+async function translateBatchWithContext(texts, targetLang, key, context) {
+	const mapping = {};
+	const endpoint = key.endsWith(':fx') ? 'https://api-free.deepl.com/v2/translate' : 'https://api.deepl.com/v2/translate';
+	const batchSize = 40;
+	
+	// 🆕 Mapper les contextes vers des préfixes explicites pour DeepL
+	const contextPrefixes = {
+		'drink': 'boisson:',
+		'dish': 'plat:',
+		'dessert': 'dessert:',
+		'restaurant': 'restaurant:'
+	};
+	const prefix = contextPrefixes[context] || '';
+	
+	for (let i = 0; i < texts.length; i += batchSize) {
+		const slice = texts.slice(i, i + batchSize);
+		const body = new URLSearchParams();
+		body.append('auth_key', key);
+		body.append('target_lang', targetLang);
+		body.append('source_lang', 'FR');
+		body.append('preserve_formatting', '1');
+		body.append('split_sentences', 'nonewlines');
+		
+		// 🆕 Ajouter le préfixe de contexte au texte pour DeepL
+		for (const t of slice) {
+			const textWithContext = prefix ? `${prefix}${t}` : t;
+			body.append('text', textWithContext);
+		}
+		
+		console.log(`[deepl] POST ${endpoint} batch ${i}-${i+slice.length-1} (context: ${context})`);
+		const resp = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+		if (!resp.ok) {
+			const errText = await resp.text().catch(() => '');
+			console.error('[deepl] error', resp.status, errText);
+			continue;
+		}
+		const json = await resp.json();
+		const translations = json.translations || [];
+		console.log(`[deepl] ok batch size=${translations.length}`);
+		for (let j = 0; j < translations.length; j++) {
+			const src = slice[j];
+			let trg = translations[j]?.text || src;
+			// 🆕 Retirer le préfixe de la traduction si présent
+			if (prefix && trg.startsWith(prefix)) {
+				trg = trg.substring(prefix.length);
+			}
 			mapping[src] = trg;
 		}
 	}
@@ -92,9 +210,14 @@ async function translateMenu(menu, lng) {
 		console.warn('[deepl] DEEPL_KEY is missing; returning FR menu');
 		return menu;
 	}
-	const uniqueTexts = deepCollectTexts(menu);
-	console.log(`[deepl] translating ${uniqueTexts.length} unique texts to ${targetLang}`);
-	const mapping = await translateBatch(uniqueTexts, targetLang, DEEPL_KEY);
+	
+	// 🆕 Collecter les textes avec leur contexte
+	const { texts: uniqueTexts, contexts: textContexts } = deepCollectTextsWithContext(menu);
+	console.log(`[deepl] translating ${uniqueTexts.length} unique texts to ${targetLang} (with context)`);
+	
+	// 🆕 Traduire avec contexte
+	const mapping = await translateBatch(uniqueTexts, targetLang, DEEPL_KEY, textContexts);
+	
 	const out = augmentWithOriginal(menu);
 	if (out.restaurant?.name && mapping[out.restaurant.name]) out.restaurant.name = mapping[out.restaurant.originalName] || mapping[out.restaurant.name] || out.restaurant.name;
 	for (const cat of out.categories || []) {
@@ -137,7 +260,9 @@ async function getTranslatedMenuWithCache(menu, restaurantId, lng, sourceMTime, 
 
 module.exports = {
 	deepCollectTexts,
+	deepCollectTextsWithContext, // 🆕 Export de la nouvelle fonction
 	translateBatch,
+	translateBatchWithContext, // 🆕 Export de la nouvelle fonction
 	augmentWithOriginal,
 	filterAvailableItems,
 	translateMenu,

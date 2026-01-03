@@ -1,0 +1,1027 @@
+﻿Analyzing flutter_les_emirs...                                  
+
+warning - Unused import: 'package:flutter_dotenv/flutter_dotenv.dart' - lib\core\api_client.dart:2:8 - unused_import
+warning - Two keys in a map literal shouldn't be equal - lib\core\strings.dart:40:7 - equal_keys_in_map
+warning - Two keys in a map literal shouldn't be equal - lib\core\strings.dart:41:7 - equal_keys_in_map
+warning - Two keys in a map literal shouldn't be equal - lib\core\strings.dart:83:7 - equal_keys_in_map
+warning - Two keys in a map literal shouldn't be equal - lib\core\strings.dart:84:7 - equal_keys_in_map
+warning - Two keys in a map literal shouldn't be equal - lib\core\strings.dart:126:7 - equal_keys_in_map
+warning - Two keys in a map literal shouldn't be equal - lib\core\strings.dart:127:7 - equal_keys_in_map
+warning - Two keys in a map literal shouldn't be equal - lib\core\strings.dart:169:7 - equal_keys_in_map
+warning - Two keys in a map literal shouldn't be equal - lib\core\strings.dart:170:7 - equal_keys_in_map
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\admin\admin_credit_page.dart:168:17 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\admin\admin_credit_page.dart:185:17 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\admin\admin_credit_page.dart:454:50 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\features\admin\admin_credit_page.dart:474:43 - unnecessary_underscores
+   info - Use interpolation to compose strings and values - lib\features\admin\admin_credit_page.dart:484:12 - prefer_interpolation_to_compose_strings
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\admin\admin_credit_page.dart:538:50 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\admin\admin_dashboard_page.dart:102:52 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\admin\admin_dashboard_page.dart:105:40 - use_build_context_synchronously
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\admin\admin_dashboard_page.dart:297:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\admin\admin_dashboard_page.dart:401:51 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\features\admin\admin_dashboard_page.dart:411:37 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\admin\admin_dashboard_page.dart:444:37 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\admin\admin_dashboard_page.dart:479:54 - deprecated_member_use
+   info - Unnecessary use of 'toList' in a spread - lib\features\admin\admin_dashboard_page.dart:569:18 - unnecessary_to_list_in_spreads
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\admin\admin_dashboard_page.dart:623:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\admin\admin_dashboard_page.dart:657:55 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\admin\admin_dashboard_page.dart:705:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\admin\admin_dashboard_page.dart:712:69 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\admin\admin_dashboard_page.dart:766:46 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\features\admin\admin_menu_editor_page.dart:45:7 - avoid_print
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\admin\admin_menu_editor_page.dart:110:17 - deprecated_member_use
+warning - The declaration '_deleteCategory' isn't referenced - lib\features\admin\admin_menu_editor_page.dart:143:16 - unused_element
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\admin\admin_menu_editor_page.dart:220:52 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\admin\admin_menu_editor_page.dart:222:59 - use_build_context_synchronously
+warning - The declaration '_editItem' isn't referenced - lib\features\admin\admin_menu_editor_page.dart:233:16 - unused_element
+   info - Statements in an if should be enclosed in a block - lib\features\admin\admin_menu_editor_page.dart:444:51 - curly_braces_in_flow_control_structures
+   info - Use a function declaration rather than a variable assignment to bind a function to a name - lib\features\admin\admin_menu_editor_page.dart:649:11 - prefer_function_declarations_over_variables
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\admin\admin_servers_page.dart:86:15 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\features\admin\admin_servers_page.dart:277:29 - unnecessary_underscores
+   info - Don't invoke 'print' in production code - lib\features\admin\models\kpi_model.dart:101:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\admin\models\kpi_model.dart:104:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\admin\models\kpi_model.dart:121:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\admin\models\kpi_model.dart:130:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\admin\models\kpi_model.dart:150:9 - avoid_print
+   info - Function literals shouldn't be passed to 'forEach' - lib\features\admin\models\kpi_model.dart:229:24 - avoid_function_literals_in_foreach_calls
+   info - Function literals shouldn't be passed to 'forEach' - lib\features\admin\models\kpi_model.dart:241:23 - avoid_function_literals_in_foreach_calls
+   info - Function literals shouldn't be passed to 'forEach' - lib\features\admin\models\kpi_model.dart:261:24 - avoid_function_literals_in_foreach_calls
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\admin\report_x_page.dart:270:39 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\admin\report_x_page.dart:288:25 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\admin\report_x_page.dart:304:25 - deprecated_member_use
+warning - The value of the local variable 'unpaidTables' isn't used - lib\features\admin\report_x_page.dart:412:11 - unused_local_variable
+warning - The operand can't be 'null', so the condition is always 'true' - lib\features\admin\report_x_page.dart:582:57 - unnecessary_null_comparison
+warning - The value of the local variable 'itemsTotal' isn't used - lib\features\admin\report_x_page.dart:1015:35 - unused_local_variable
+   info - Unnecessary use of 'toList' in a spread - lib\features\admin\report_x_page.dart:1174:38 - unnecessary_to_list_in_spreads
+   info - Unnecessary use of 'toList' in a spread - lib\features\admin\report_x_page.dart:1262:30 - unnecessary_to_list_in_spreads
+   info - Unnecessary use of string interpolation - lib\features\admin\report_x_page.dart:1301:34 - unnecessary_string_interpolations
+   info - Unnecessary use of string interpolation - lib\features\admin\report_x_page.dart:1403:49 - unnecessary_string_interpolations
+   info - Unnecessary use of 'toList' in a spread - lib\features\admin\report_x_page.dart:1412:30 - unnecessary_to_list_in_spreads
+   info - Don't invoke 'print' in production code - lib\features\admin\services\kpi_service.dart:45:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\admin\services\kpi_service.dart:46:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\admin\services\kpi_service.dart:53:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\admin\services\kpi_service.dart:54:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\admin\services\kpi_service.dart:55:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\admin\services\kpi_service.dart:59:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\admin\services\kpi_service.dart:60:7 - avoid_print
+warning - Unused import: 'package:dio/dio.dart' - lib\features\admin\services\servers_service.dart:1:8 - unused_import
+   info - Use interpolation to compose strings and values - lib\features\admin\widgets\admin_dashboard_kpi_section.dart:213:12 - prefer_interpolation_to_compose_strings
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\admin\widgets\admin_dashboard_kpi_section.dart:371:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\admin\widgets\admin_dashboard_kpi_section.dart:374:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\admin\widgets\admin_dashboard_kpi_section.dart:387:73 - deprecated_member_use
+   info - Use interpolation to compose strings and values - lib\features\admin\widgets\ca_details_dialog.dart:73:12 - prefer_interpolation_to_compose_strings
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\admin\widgets\ca_details_dialog.dart:473:71 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\features\admin\widgets\ca_details_dialog.dart:645:47 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\admin\widgets\credit_details_dialog.dart:102:30 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\features\admin\widgets\credit_details_dialog.dart:131:31 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\admin\widgets\credit_details_dialog.dart:180:31 - unnecessary_underscores
+   info - Use interpolation to compose strings and values - lib\features\admin\widgets\credit_details_dialog.dart:229:12 - prefer_interpolation_to_compose_strings
+   info - Unnecessary use of multiple underscores - lib\features\admin\widgets\discount_details_dialog.dart:158:45 - unnecessary_underscores
+   info - Use interpolation to compose strings and values - lib\features\admin\widgets\discount_details_dialog.dart:335:12 - prefer_interpolation_to_compose_strings
+warning - A value for optional parameter 'total' isn't ever given - lib\features\admin\widgets\discount_details_dialog.dart:411:22 - unused_element_parameter
+warning - A value for optional parameter 'count' isn't ever given - lib\features\admin\widgets\discount_details_dialog.dart:411:40 - unused_element_parameter
+warning - Unused import: 'package:dio/dio.dart' - lib\features\admin\widgets\enriched_history_section.dart:2:8 - unused_import
+warning - Unused import: '../../../core/api_client.dart' - lib\features\admin\widgets\enriched_history_section.dart:3:8 - unused_import
+   info - Use interpolation to compose strings and values - lib\features\admin\widgets\enriched_history_section.dart:57:12 - prefer_interpolation_to_compose_strings
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\admin\widgets\enriched_history_section.dart:83:33 - deprecated_member_use
+   info - Unnecessary use of 'toList' in a spread - lib\features\admin\widgets\enriched_history_section.dart:233:26 - unnecessary_to_list_in_spreads
+   info - The imported package 'intl' isn't a dependency of the importing package - lib\features\admin\widgets\paid_history_dialog.dart:3:8 - depend_on_referenced_packages
+warning - Unused import: 'package:intl/intl.dart' - lib\features\admin\widgets\paid_history_dialog.dart:3:8 - unused_import
+   info - Unnecessary use of multiple underscores - lib\features\admin\widgets\paid_history_dialog.dart:96:45 - unnecessary_underscores
+   info - Use interpolation to compose strings and values - lib\features\admin\widgets\paid_history_dialog.dart:162:12 - prefer_interpolation_to_compose_strings
+   info - Use interpolation to compose strings and values - lib\features\admin\widgets\paid_history_dialog.dart:434:12 - prefer_interpolation_to_compose_strings
+   info - Unnecessary use of 'toList' in a spread - lib\features\admin\widgets\paid_history_dialog.dart:704:24 - unnecessary_to_list_in_spreads
+   info - Use interpolation to compose strings and values - lib\features\admin\widgets\paid_history_dialog.dart:716:12 - prefer_interpolation_to_compose_strings
+   info - Use interpolation to compose strings and values - lib\features\admin\widgets\paid_ticket_dialog.dart:12:12 - prefer_interpolation_to_compose_strings
+   info - Unnecessary use of 'toList' in a spread - lib\features\admin\widgets\paid_ticket_dialog.dart:138:24 - unnecessary_to_list_in_spreads
+   info - Use interpolation to compose strings and values - lib\features\admin\widgets\provisional_ticket_dialog.dart:12:12 - prefer_interpolation_to_compose_strings
+   info - Unnecessary use of 'toList' in a spread - lib\features\admin\widgets\provisional_ticket_dialog.dart:120:24 - unnecessary_to_list_in_spreads
+   info - Use interpolation to compose strings and values - lib\features\admin\widgets\unpaid_tables_dialog.dart:13:12 - prefer_interpolation_to_compose_strings
+   info - Unnecessary use of multiple underscores - lib\features\admin\widgets\unpaid_tables_dialog.dart:86:45 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\bill\bill_page.dart:106:35 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\cart\cart_page.dart:86:43 - unnecessary_underscores
+   info - Unnecessary use of string interpolation - lib\features\cart\cart_page.dart:176:75 - unnecessary_string_interpolations
+   info - Don't invoke 'print' in production code - lib\features\confirm\confirm_page.dart:105:7 - avoid_print
+   info - Unnecessary use of multiple underscores - lib\features\confirm\confirm_page.dart:119:35 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\dashboard\dashboard_page.dart:207:35 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\dashboard\dashboard_page.dart:307:29 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\dashboard\dashboard_page.dart:341:35 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\dashboard\dashboard_page.dart:378:29 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\dashboard_page.dart:387:24 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\features\dashboard\dashboard_page.dart:433:39 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\dashboard\dashboard_page.dart:434:22 - curly_braces_in_flow_control_structures
+   info - Unnecessary use of multiple underscores - lib\features\dashboard\dashboard_page.dart:447:29 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\dashboard_page.dart:454:24 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\features\dashboard\dashboard_page.dart:478:29 - unnecessary_underscores
+   info - Unnecessary use of string interpolation - lib\features\dashboard\dashboard_page.dart:590:21 - unnecessary_string_interpolations
+warning - The declaration '_statusLabel' isn't referenced - lib\features\dashboard\dashboard_page.dart:761:8 - unused_element
+   info - 'ButtonBar' is deprecated and shouldn't be used. Use OverflowBar instead. This feature was deprecated after v3.21.0-10.0.pre - lib\features\history\history_page.dart:81:21 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\features\menu\menu_page.dart:54:7 - avoid_print
+warning - The declaration '_firstTypeForGroup' isn't referenced - lib\features\menu\menu_page.dart:106:11 - unused_element
+   info - Use a function declaration rather than a variable assignment to bind a function to a name - lib\features\menu\menu_page.dart:199:11 - prefer_function_declarations_over_variables
+warning - The value of the local variable 'categories' isn't used - lib\features\menu\menu_page.dart:229:11 - unused_local_variable
+   info - Unnecessary braces in a string interpolation - lib\features\menu\menu_page.dart:240:40 - unnecessary_brace_in_string_interps
+   info - Unnecessary braces in a string interpolation - lib\features\menu\menu_page.dart:372:45 - unnecessary_brace_in_string_interps
+   info - Unnecessary braces in a string interpolation - lib\features\menu\menu_page.dart:372:60 - unnecessary_brace_in_string_interps
+   info - Unnecessary braces in a string interpolation - lib\features\menu\menu_page.dart:372:74 - unnecessary_brace_in_string_interps
+   info - Unnecessary use of multiple underscores - lib\features\menu\menu_page.dart:374:47 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\menu\menu_page.dart:386:31 - unnecessary_underscores
+warning - The value of the local variable 'was' isn't used - lib\features\menu\menu_page.dart:467:25 - unused_local_variable
+warning - The declaration '_categoriesForActiveGroup' isn't referenced - lib\features\menu\menu_page.dart:488:34 - unused_element
+   info - Unnecessary use of multiple underscores - lib\features\menu\menu_page.dart:513:29 - unnecessary_underscores
+warning - The declaration '_buildCategoryCard' isn't referenced - lib\features\menu\menu_page.dart:614:10 - unused_element
+   info - Don't use 'BuildContext's across async gaps - lib\features\menu\menu_page.dart:810:105 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\menu\menu_page.dart:813:105 - use_build_context_synchronously
+warning - The value of the field '_justAddedItemId' isn't used - lib\features\menu\menu_page.dart:829:8 - unused_field
+warning - The operand can't be 'null', so the condition is always 'false' - lib\features\menu\menu_page.dart:845:17 - unnecessary_null_comparison
+warning - Dead code - lib\features\menu\menu_page.dart:845:26 - dead_code
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\menu\menu_page.dart:887:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\menu\menu_page.dart:888:28 - use_build_context_synchronously
+warning - The declaration '_shortName' isn't referenced - lib\features\menu\menu_page.dart:927:10 - unused_element
+   info - Use interpolation to compose strings and values - lib\features\menu\menu_page.dart:929:12 - prefer_interpolation_to_compose_strings
+   info - Unnecessary use of multiple underscores - lib\features\menu\menu_page.dart:954:20 - unnecessary_underscores
+   info - Use interpolation to compose strings and values - lib\features\menu\menu_page.dart:993:12 - prefer_interpolation_to_compose_strings
+warning - Unused import: 'package:flutter/material.dart' - lib\features\menu\options.dart:1:8 - unused_import
+warning - Unused import: 'package:dio/dio.dart' - lib\features\payment\pay_confirm_page.dart:1:8 - unused_import
+   info - Use the '??' operator rather than '?:' when testing for 'null' - lib\features\pos\models\order_note.dart:138:15 - prefer_if_null_operators
+   info - The file name 'PosHomePage_refactor.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\PosHomePage_refactor.dart:1:1 - file_names
+warning - Unused import: 'package:dio/dio.dart' - lib\features\pos\pages\home\PosHomePage_refactor.dart:3:8 - unused_import
+warning - Unused import: 'dart:convert' - lib\features\pos\pages\home\PosHomePage_refactor.dart:6:8 - unused_import
+warning - Unused import: '../order/PosOrderPage_refactor.dart' - lib\features\pos\pages\home\PosHomePage_refactor.dart:8:8 - unused_import
+   info - The prefix 'OrderPaymentService' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\PosHomePage_refactor.dart:11:52 - library_prefixes
+warning - Unused import: 'services/history_service.dart' - lib\features\pos\pages\home\PosHomePage_refactor.dart:36:8 - unused_import
+warning - The value of the field '_homeController' isn't used - lib\features\pos\pages\home\PosHomePage_refactor.dart:56:29 - unused_field
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:139:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:141:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:149:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:151:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:162:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:167:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:186:13 - avoid_print
+warning - The declaration '_openTable' isn't referenced - lib\features\pos\pages\home\PosHomePage_refactor.dart:206:8 - unused_element
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:220:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:355:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\home\PosHomePage_refactor.dart:622:32 - use_build_context_synchronously
+warning - The declaration '_showCleanupDialog' isn't referenced - lib\features\pos\pages\home\PosHomePage_refactor.dart:702:8 - unused_element
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\home\PosHomePage_refactor.dart:707:11 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:752:5 - avoid_print
+warning - The declaration '_testApiConnection' isn't referenced - lib\features\pos\pages\home\PosHomePage_refactor.dart:772:16 - unused_element
+warning - The declaration '_clearHistory' isn't referenced - lib\features\pos\pages\home\PosHomePage_refactor.dart:794:16 - unused_element
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:810:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:819:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:835:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:854:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:858:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:864:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:883:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:896:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:901:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:910:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:917:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:923:9 - avoid_print
+warning - The declaration '_loadApiPrefs' isn't referenced - lib\features\pos\pages\home\PosHomePage_refactor.dart:930:8 - unused_element
+warning - The declaration '_getTableIcon' isn't referenced - lib\features\pos\pages\home\PosHomePage_refactor.dart:974:12 - unused_element
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:988:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\PosHomePage_refactor.dart:1185:9 - avoid_print
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\home\PosHomePage_refactor.dart:1247:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\home\PosHomePage_refactor.dart:1259:52 - deprecated_member_use
+warning - Unused import: 'package:shared_preferences/shared_preferences.dart' - lib\features\pos\pages\home\services\admin_actions.dart:3:8 - unused_import
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\home\services\admin_actions.dart:107:7 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\home\services\admin_actions.dart:146:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\home\services\admin_actions.dart:147:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\home\services\admin_actions.dart:151:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\home\services\admin_actions.dart:152:28 - use_build_context_synchronously
+warning - Unused import: 'package:flutter/material.dart' - lib\features\pos\pages\home\services\history_controller.dart:1:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\history_controller.dart:18:7 - avoid_print
+warning - Unused import: 'package:dio/dio.dart' - lib\features\pos\pages\home\services\history_service.dart:1:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\history_service.dart:24:7 - avoid_print
+warning - Unused import: 'package:dio/dio.dart' - lib\features\pos\pages\home\services\orders_sync_service.dart:1:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\orders_sync_service.dart:11:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\orders_sync_service.dart:16:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\orders_sync_service.dart:20:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\orders_sync_service.dart:94:15 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\orders_sync_service.dart:105:19 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\orders_sync_service.dart:107:19 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\orders_sync_service.dart:116:21 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\orders_sync_service.dart:123:17 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\orders_sync_service.dart:126:13 - avoid_print
+   info - Redundant initialization to 'null' - lib\features\pos\pages\home\services\orders_sync_service.dart:141:23 - avoid_init_to_null
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\server_sales_report_controller.dart:18:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\socket_service.dart:9:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\socket_service.dart:16:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\socket_service.dart:26:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\socket_service.dart:45:7 - avoid_print
+   info - The local variable '_resync' starts with an underscore - lib\features\pos\pages\home\services\socket_service.dart:48:10 - no_leading_underscores_for_local_identifiers
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\socket_service.dart:49:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\socket_service.dart:53:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\socket_service.dart:62:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\socket_service.dart:68:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\socket_service.dart:83:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\socket_service.dart:89:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\socket_service.dart:100:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\socket_service.dart:106:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\socket_service.dart:109:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\socket_service.dart:114:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\socket_service.dart:116:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\socket_service.dart:137:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\socket_service.dart:143:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\home\services\socket_service.dart:149:9 - avoid_print
+warning - Unused import: 'package:flutter/material.dart' - lib\features\pos\pages\home\state\home_controller.dart:1:8 - unused_import
+   info - The file name 'AddTableDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\AddTableDialog.dart:1:1 - file_names
+   info - The file name 'ApiConfigDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\ApiConfigDialog.dart:1:1 - file_names
+   info - The file name 'BottomToolbar.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\BottomToolbar.dart:1:1 - file_names
+   info - The file name 'CleanupEmptyTablesDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\CleanupEmptyTablesDialog.dart:1:1 - file_names
+   info - The file name 'DateTimeBadge.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\DateTimeBadge.dart:1:1 - file_names
+   info - The file name 'HeaderActions.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\HeaderActions.dart:1:1 - file_names
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\home\widgets\HeaderActions.dart:47:9 - use_build_context_synchronously
+   info - The file name 'HeaderLogoTitle.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\HeaderLogoTitle.dart:1:1 - file_names
+   info - The file name 'HistoryTableCard.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\HistoryTableCard.dart:1:1 - file_names
+   info - The file name 'HistoryView.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\HistoryView.dart:1:1 - file_names
+warning - Unused import: '../services/history_service.dart' - lib\features\pos\pages\home\widgets\HistoryView.dart:2:8 - unused_import
+warning - Unnecessary cast - lib\features\pos\pages\home\widgets\HistoryView.dart:110:77 - unnecessary_cast
+   info - The file name 'ReservationDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\ReservationDialog.dart:1:1 - file_names
+   info - The file name 'ServerSalesReportDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\ServerSalesReportDialog.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\home\widgets\ServerSalesReportDialog.dart:225:41 - deprecated_member_use
+   info - Use interpolation to compose strings and values - lib\features\pos\pages\home\widgets\ServerSalesReportDialog.dart:292:12 - prefer_interpolation_to_compose_strings
+   info - The file name 'SimulationDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\SimulationDialog.dart:1:1 - file_names
+   info - The file name 'TableCard.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\TableCard.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\home\widgets\TableCard.dart:219:53 - deprecated_member_use
+   info - The file name 'TableFiltersBar.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\TableFiltersBar.dart:1:1 - file_names
+   info - The file name 'TableGrid.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\TableGrid.dart:1:1 - file_names
+   info - The file name 'TableHistoryDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\TableHistoryDialog.dart:1:1 - file_names
+warning - Unnecessary cast - lib\features\pos\pages\home\widgets\TableHistoryDialog.dart:141:39 - unnecessary_cast
+warning - The value of the local variable 'mergedOrderEvents' isn't used - lib\features\pos\pages\home\widgets\TableHistoryDialog.dart:244:11 - unused_local_variable
+warning - The value of the local variable 'cancellationEvents' isn't used - lib\features\pos\pages\home\widgets\TableHistoryDialog.dart:245:11 - unused_local_variable
+warning - The value of the local variable 'groupedPayments' isn't used - lib\features\pos\pages\home\widgets\TableHistoryDialog.dart:246:11 - unused_local_variable
+warning - The value of the local variable 'cancellationEvents' isn't used - lib\features\pos\pages\home\widgets\TableHistoryDialog.dart:282:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\home\widgets\TableHistoryDialog.dart:466:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\home\widgets\TableHistoryDialog.dart:544:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\home\widgets\TableHistoryDialog.dart:650:43 - deprecated_member_use
+warning - The value of the local variable 'table' isn't used - lib\features\pos\pages\home\widgets\TableHistoryDialog.dart:831:11 - unused_local_variable
+warning - The value of the local variable 'cancelledItemsCount' isn't used - lib\features\pos\pages\home\widgets\TableHistoryDialog.dart:1064:9 - unused_local_variable
+warning - The value of the local variable 'orderIds' isn't used - lib\features\pos\pages\home\widgets\TableHistoryDialog.dart:1235:11 - unused_local_variable
+warning - The value of the local variable 'table' isn't used - lib\features\pos\pages\home\widgets\TableHistoryDialog.dart:1237:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\home\widgets\TableHistoryDialog.dart:1455:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\home\widgets\TableHistoryDialog.dart:1517:50 - deprecated_member_use
+   info - Unnecessary use of 'toList' in a spread - lib\features\pos\pages\home\widgets\TableHistoryDialog.dart:1519:22 - unnecessary_to_list_in_spreads
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\home\widgets\TableHistoryDialog.dart:1535:48 - deprecated_member_use
+   info - The file name 'TableLegendBar.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\TableLegendBar.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\home\widgets\TableLegendBar.dart:34:26 - deprecated_member_use
+   info - The file name 'TableOptionsDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\TableOptionsDialog.dart:1:1 - file_names
+   info - The file name 'TableSearchBar.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\TableSearchBar.dart:1:1 - file_names
+   info - The file name 'TableSyncBanner.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\home\widgets\TableSyncBanner.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\home\widgets\TableSyncBanner.dart:14:22 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\home\widgets\TableSyncBanner.dart:15:41 - deprecated_member_use
+  error - The getter 'shade700' isn't defined for the type 'Color' - lib\features\pos\pages\home\widgets\TableSyncBanner.dart:25:45 - undefined_getter
+   info - The file name 'PosOrderPage_refactor.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1:1 - file_names
+warning - Unused import: 'package:shared_preferences/shared_preferences.dart' - lib\features\pos\pages\order\PosOrderPage_refactor.dart:4:8 - unused_import
+warning - Unused import: 'package:socket_io_client/socket_io_client.dart' - lib\features\pos\pages\order\PosOrderPage_refactor.dart:5:8 - unused_import
+warning - Unused import: 'dart:convert' - lib\features\pos\pages\order\PosOrderPage_refactor.dart:6:8 - unused_import
+warning - Unused import: '../../widgets/pos_numpad.dart' - lib\features\pos\pages\order\PosOrderPage_refactor.dart:8:8 - unused_import
+warning - Unused import: '../../widgets/pos_menu_grid.dart' - lib\features\pos\pages\order\PosOrderPage_refactor.dart:9:8 - unused_import
+warning - Unused import: 'widgets/DebtPaymentDialog.dart' - lib\features\pos\pages\order\PosOrderPage_refactor.dart:20:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:186:5 - avoid_print
+   info - Unnecessary braces in a string interpolation - lib\features\pos\pages\order\PosOrderPage_refactor.dart:186:58 - unnecessary_brace_in_string_interps
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\pos\pages\order\PosOrderPage_refactor.dart:230:22 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:321:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:341:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:411:17 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:413:17 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:423:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:425:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:436:17 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:438:17 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:454:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:463:17 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:465:17 - avoid_print
+warning - The value of the local variable 'confirmedCount' isn't used - lib\features\pos\pages\order\PosOrderPage_refactor.dart:533:13 - unused_local_variable
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:540:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:553:15 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:559:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:562:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:615:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:625:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:629:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:631:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:652:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:716:15 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:994:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1037:7 - use_build_context_synchronously
+warning - The value of the local variable 'item' isn't used - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1050:19 - unused_local_variable
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1097:15 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1098:15 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1099:15 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1208:24 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1256:18 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1278:9 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1282:11 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1297:11 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1299:24 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1464:7 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1497:7 - use_build_context_synchronously
+warning - The declaration '_cleanupDuplicates' isn't referenced - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1515:16 - unused_element
+warning - The declaration '_transferItemsDirectly' isn't referenced - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1524:16 - unused_element
+   info - The parameter name 'num' matches a visible type name - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1628:41 - avoid_types_as_parameter_names
+warning - The declaration '_buildActionButton' isn't referenced - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1659:10 - unused_element
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1750:22 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1796:20 - use_build_context_synchronously
+warning - The declaration '_OrderHistoryState' isn't referenced - lib\features\pos\pages\order\PosOrderPage_refactor.dart:1802:7 - unused_element
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\services\admin_service.dart:23:30 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\admin_service.dart:33:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\services\admin_service.dart:34:28 - use_build_context_synchronously
+warning - Unused import: 'package:dio/dio.dart' - lib\features\pos\pages\order\services\cancellation_service.dart:1:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\cancellation_service.dart:23:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\note_actions.dart:29:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\note_actions.dart:59:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\note_actions.dart:75:5 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\services\note_actions.dart:97:30 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\note_actions.dart:110:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\services\note_actions.dart:111:28 - use_build_context_synchronously
+warning - Unused import: 'package:dio/dio.dart' - lib\features\pos\pages\order\services\order_repository.dart:1:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_repository.dart:14:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_repository.dart:29:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_repository.dart:33:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_repository.dart:104:15 - avoid_print
+warning - Dead code - lib\features\pos\pages\order\services\order_repository.dart:166:51 - dead_code
+warning - The left operand can't be null, so the right operand is never executed - lib\features\pos\pages\order\services\order_repository.dart:166:54 - dead_null_aware_expression
+warning - The left operand can't be null, so the right operand is never executed - lib\features\pos\pages\order\services\order_repository.dart:166:79 - dead_null_aware_expression
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_repository.dart:175:15 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_repository.dart:177:15 - avoid_print
+warning - Dead code - lib\features\pos\pages\order\services\order_repository.dart:226:45 - dead_code
+warning - The left operand can't be null, so the right operand is never executed - lib\features\pos\pages\order\services\order_repository.dart:226:48 - dead_null_aware_expression
+warning - The left operand can't be null, so the right operand is never executed - lib\features\pos\pages\order\services\order_repository.dart:226:73 - dead_null_aware_expression
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_repository.dart:228:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_repository.dart:244:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_repository.dart:354:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_repository.dart:360:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_socket_service.dart:25:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_socket_service.dart:29:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_socket_service.dart:35:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_socket_service.dart:41:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_socket_service.dart:48:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_socket_service.dart:59:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_socket_service.dart:76:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_socket_service.dart:82:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\order_socket_service.dart:88:9 - avoid_print
+warning - Unused import: 'package:dio/dio.dart' - lib\features\pos\pages\order\services\payment_service.dart:2:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\payment_service.dart:13:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\payment_service.dart:16:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\payment_service.dart:38:7 - avoid_print
+warning - The value of the local variable 'currentSubNotes' isn't used - lib\features\pos\pages\order\services\payment_service.dart:46:17 - unused_local_variable
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\payment_service.dart:58:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\payment_service.dart:68:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\payment_service.dart:73:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\payment_service.dart:75:15 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\payment_service.dart:79:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\payment_service.dart:81:15 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\payment_service.dart:102:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\sync_service.dart:10:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\sync_service.dart:12:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\services\transfer_service.dart:58:32 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\transfer_service.dart:77:9 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\services\transfer_service.dart:84:28 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\transfer_service.dart:92:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\services\transfer_service.dart:93:28 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\transfer_service.dart:159:9 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\services\transfer_service.dart:166:28 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\transfer_service.dart:175:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\services\transfer_service.dart:176:28 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\transfer_service.dart:225:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\transfer_service.dart:230:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\services\transfer_service.dart:254:30 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\transfer_service.dart:264:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\services\transfer_service.dart:265:28 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\transfer_service.dart:291:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\transfer_service.dart:305:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\transfer_service.dart:427:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\order\services\transfer_service.dart:489:9 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\transfer_service.dart:504:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\transfer_service.dart:522:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\transfer_service.dart:526:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\transfer_service.dart:547:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\transfer_service.dart:550:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\services\transfer_service.dart:583:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\utils\order_helpers.dart:29:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\utils\order_helpers.dart:36:5 - avoid_print
+   info - The file name 'AddNoteDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\widgets\AddNoteDialog.dart:1:1 - file_names
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\widgets\AddNoteDialog.dart:24:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\widgets\AddNoteDialog.dart:54:5 - avoid_print
+   info - The file name 'CancelItemsDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\widgets\CancelItemsDialog.dart:1:1 - file_names
+warning - The value of the local variable 'selectedItems' isn't used - lib\features\pos\pages\order\widgets\CancelItemsDialog.dart:169:11 - unused_local_variable
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\pos\pages\order\widgets\CancelItemsDialog.dart:304:41 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\pos\pages\order\widgets\CancelItemsDialog.dart:335:41 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\pos\pages\order\widgets\CancelItemsDialog.dart:395:45 - deprecated_member_use
+   info - The file name 'CompleteTableTransferDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\widgets\CompleteTableTransferDialog.dart:1:1 - file_names
+   info - The file name 'CoversDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\widgets\CoversDialog.dart:1:1 - file_names
+   info - The file name 'CreateNoteForTransferDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\widgets\CreateNoteForTransferDialog.dart:1:1 - file_names
+   info - The file name 'CreateTableForNoteTransferDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\widgets\CreateTableForNoteTransferDialog.dart:1:1 - file_names
+   info - The file name 'CreateTableForTransferDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\widgets\CreateTableForTransferDialog.dart:1:1 - file_names
+   info - The file name 'DebtPaymentDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\widgets\DebtPaymentDialog.dart:1:1 - file_names
+   info - The import of 'package:flutter/services.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\pos\pages\order\widgets\DebtPaymentDialog.dart:2:8 - unnecessary_import
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\widgets\DebtPaymentDialog.dart:37:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\widgets\DebtPaymentDialog.dart:72:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\widgets\DebtPaymentDialog.dart:79:7 - avoid_print
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\pos\pages\order\widgets\DebtPaymentDialog.dart:765:15 - deprecated_member_use
+   info - The file name 'DebtSettlementDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\widgets\DebtSettlementDialog.dart:1:1 - file_names
+   info - The file name 'IngredientDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\widgets\IngredientDialog.dart:1:1 - file_names
+   info - The file name 'NotesDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\widgets\NotesDialog.dart:1:1 - file_names
+   info - The file name 'ServerSelectionDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\widgets\ServerSelectionDialog.dart:1:1 - file_names
+   info - The file name 'TableDestinationDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\widgets\TableDestinationDialog.dart:1:1 - file_names
+   info - Unnecessary braces in a string interpolation - lib\features\pos\pages\order\widgets\TableDestinationDialog.dart:63:43 - unnecessary_brace_in_string_interps
+   info - The file name 'TransferDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\widgets\TransferDialog.dart:1:1 - file_names
+   info - The file name 'TransferItemsSelectionDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\widgets\TransferItemsSelectionDialog.dart:1:1 - file_names
+   info - The file name 'TransferServerDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\widgets\TransferServerDialog.dart:1:1 - file_names
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\order\widgets\TransferServerDialog.dart:75:7 - avoid_print
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\pos\pages\order\widgets\TransferServerDialog.dart:90:15 - deprecated_member_use
+   info - The file name 'TransferToNoteDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\widgets\TransferToNoteDialog.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\order\widgets\TransferToNoteDialog.dart:98:52 - deprecated_member_use
+   info - The file name 'TransferToTableDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\order\widgets\TransferToTableDialog.dart:1:1 - file_names
+   info - The imported package 'intl' isn't a dependency of the importing package - lib\features\pos\pages\order\widgets\chronological_order_view.dart:2:8 - depend_on_referenced_packages
+warning - Unused import: '../../../models/order_note.dart' - lib\features\pos\pages\order\widgets\chronological_order_view.dart:3:8 - unused_import
+warning - Unused import: 'ServerSelectionDialog.dart' - lib\features\pos\pages\order\widgets\pos_order_app_bar.dart:3:8 - unused_import
+warning - Unused import: 'CoversDialog.dart' - lib\features\pos\pages\order\widgets\pos_order_app_bar.dart:4:8 - unused_import
+warning - Unused import: 'NotesDialog.dart' - lib\features\pos\pages\order\widgets\pos_order_app_bar.dart:5:8 - unused_import
+   info - Unnecessary use of 'toList' in a spread - lib\features\pos\pages\order\widgets\pos_order_app_bar.dart:100:16 - unnecessary_to_list_in_spreads
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\order\widgets\pos_order_ticket_panel.dart:66:41 - deprecated_member_use
+   info - Unnecessary use of 'toList' in a spread - lib\features\pos\pages\order\widgets\pos_order_ticket_panel.dart:175:28 - unnecessary_to_list_in_spreads
+   info - Unnecessary use of string interpolation - lib\features\pos\pages\order\widgets\pos_order_ticket_panel.dart:373:37 - unnecessary_string_interpolations
+   info - Unnecessary use of string interpolation - lib\features\pos\pages\order\widgets\pos_order_ticket_panel.dart:384:37 - unnecessary_string_interpolations
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\order\widgets\pos_order_ticket_panel.dart:424:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\order\widgets\pos_order_ticket_panel.dart:447:39 - deprecated_member_use
+   info - The file name 'PosPaymentPage_refactor.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1:1 - file_names
+   info - The import of 'package:flutter/services.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:2:8 - unnecessary_import
+warning - Unused import: 'package:dio/dio.dart' - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:3:8 - unused_import
+warning - Unused import: 'package:shared_preferences/shared_preferences.dart' - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:4:8 - unused_import
+warning - Unused import: 'dart:convert' - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:5:8 - unused_import
+warning - Unused import: 'widgets/ClientHistoryPage.dart' - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:11:8 - unused_import
+warning - Unused import: 'widgets/NoteSelectionSection.dart' - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:15:8 - unused_import
+warning - Unused import: 'widgets/ItemsDetailSection.dart' - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:16:8 - unused_import
+warning - Unused import: 'widgets/TotalsSection.dart' - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:17:8 - unused_import
+warning - Unused import: 'widgets/DiscountSection.dart' - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:18:8 - unused_import
+warning - Unused import: 'widgets/PaymentModesSection.dart' - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:19:8 - unused_import
+   info - The prefix 'OrderPaymentService' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:27:52 - library_prefixes
+   info - Redundant initialization to 'null' - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:80:21 - avoid_init_to_null
+   info - Redundant initialization to 'null' - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:81:24 - avoid_init_to_null
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:264:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:265:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:266:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:270:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:276:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:277:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:279:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:284:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:286:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:293:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:298:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:302:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:308:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:315:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:321:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:335:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:337:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:341:5 - avoid_print
+warning - The value of the field '_cachedOrganizedItems' isn't used - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:407:31 - unused_field
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:470:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:481:17 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:488:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:559:5 - avoid_print
+warning - The declaration '_detectSingleUnpaidSubNoteId' isn't referenced - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:637:11 - unused_element
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1021:7 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1086:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1087:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1088:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1089:5 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1092:7 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1111:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1112:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1113:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1114:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1117:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1127:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1202:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1203:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1204:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1205:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1206:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1251:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1252:28 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1258:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1271:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1272:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1273:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1281:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1283:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1321:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1327:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1328:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1337:13 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1432:24 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1446:26 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1457:24 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1498:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1499:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1500:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1501:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1502:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1504:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1508:7 - avoid_print
+   info - Unnecessary braces in a string interpolation - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1508:23 - unnecessary_brace_in_string_interps
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1510:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1526:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1527:5 - avoid_print
+  error - The returned type 'SplitPaymentDialog' isn't returnable from a 'Widget' function, as required by the closure's context - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1533:35 - return_of_invalid_type_from_closure
+  error - The argument type 'Null Function(Map<String, double>, Map<String, int>?)' can't be assigned to the parameter type 'dynamic Function(Map<String, double>, Map<String, int>?, {Map<String, Map<String, dynamic>>? checkInfos, Map<String, double>? receivedAmounts})'.  - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1536:20 - argument_type_not_assignable
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1538:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1542:11 - avoid_print
+warning - Unnecessary type check; the result is always 'true' - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1547:27 - unnecessary_type_check
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1548:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1567:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1582:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1583:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1585:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1588:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1616:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1620:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\PosPaymentPage_refactor.dart:1622:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\credit_socket_service.dart:36:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\credit_socket_service.dart:41:17 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\credit_socket_service.dart:47:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\credit_socket_service.dart:52:17 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\credit_socket_service.dart:65:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\credit_socket_service.dart:70:17 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\credit_socket_service.dart:76:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\credit_socket_service.dart:81:17 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\credit_socket_service.dart:106:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\credit_socket_service.dart:110:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\credit_socket_service.dart:122:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:37:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:39:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:57:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:59:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:79:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:87:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:114:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:121:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:178:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:231:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:238:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:241:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:243:9 - avoid_print
+   info - Use 'rethrow' to rethrow a caught exception - lib\features\pos\pages\payment\services\payment_service.dart:246:7 - use_rethrow_when_possible
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:270:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:309:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:323:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:325:7 - avoid_print
+   info - Use 'rethrow' to rethrow a caught exception - lib\features\pos\pages\payment\services\payment_service.dart:326:7 - use_rethrow_when_possible
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:333:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:339:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:341:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:362:15 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:365:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:370:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:372:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:413:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:416:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:420:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:456:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\services\payment_service.dart:458:7 - avoid_print
+   info - Use 'rethrow' to rethrow a caught exception - lib\features\pos\pages\payment\services\payment_service.dart:459:7 - use_rethrow_when_possible
+warning - Unused import: 'package:flutter/material.dart' - lib\features\pos\pages\payment\services\payment_validation_service.dart:1:8 - unused_import
+warning - The declaration '_organizeWithoutGrouping' isn't referenced - lib\features\pos\pages\payment\utils\item_organizer.dart:115:37 - unused_element
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\utils\item_organizer.dart:137:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\utils\item_organizer.dart:144:9 - avoid_print
+   info - The local variable '_isName' starts with an underscore - lib\features\pos\pages\payment\utils\item_organizer.dart:168:10 - no_leading_underscores_for_local_identifiers
+   info - The local variable '_pick' starts with an underscore - lib\features\pos\pages\payment\utils\item_organizer.dart:176:32 - no_leading_underscores_for_local_identifiers
+   info - The file name 'ChequeInfoDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\ChequeInfoDialog.dart:1:1 - file_names
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\pos\pages\payment\widgets\ChequeInfoDialog.dart:113:19 - deprecated_member_use
+   info - The file name 'ClientHistoryPage.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\ClientHistoryPage.dart:1:1 - file_names
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\widgets\ClientHistoryPage.dart:101:7 - avoid_print
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\pos\pages\payment\widgets\ClientHistoryPage.dart:128:17 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\payment\widgets\ClientHistoryPage.dart:174:30 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\widgets\ClientHistoryPage.dart:183:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\payment\widgets\ClientHistoryPage.dart:184:28 - use_build_context_synchronously
+   info - The file name 'CreditClientDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\CreditClientDialog.dart:1:1 - file_names
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\widgets\CreditClientDialog.dart:52:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\widgets\CreditClientDialog.dart:90:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\widgets\CreditClientDialog.dart:110:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\widgets\CreditClientDialog.dart:123:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pages\payment\widgets\CreditClientDialog.dart:134:28 - use_build_context_synchronously
+   info - The file name 'DiscountClientNameDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\DiscountClientNameDialog.dart:1:1 - file_names
+   info - The import of 'package:flutter/services.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\pos\pages\payment\widgets\DiscountClientNameDialog.dart:2:8 - unnecessary_import
+   info - The file name 'DiscountSection.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\DiscountSection.dart:1:1 - file_names
+   info - The file name 'InvoiceForm.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\InvoiceForm.dart:1:1 - file_names
+   info - The file name 'InvoicePreviewDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\InvoicePreviewDialog.dart:1:1 - file_names
+   info - The file name 'ItemsDetailSection.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\ItemsDetailSection.dart:1:1 - file_names
+   info - Unnecessary use of multiple underscores - lib\features\pos\pages\payment\widgets\ItemsDetailSection.dart:69:41 - unnecessary_underscores
+   info - Unnecessary use of string interpolation - lib\features\pos\pages\payment\widgets\ItemsDetailSection.dart:101:31 - unnecessary_string_interpolations
+   info - Unnecessary use of string interpolation - lib\features\pos\pages\payment\widgets\ItemsDetailSection.dart:109:31 - unnecessary_string_interpolations
+   info - The file name 'NoteSelectionSection.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\NoteSelectionSection.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\payment\widgets\NoteSelectionSection.dart:61:36 - deprecated_member_use
+   info - The file name 'PartialPaymentDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\PartialPaymentDialog.dart:1:1 - file_names
+   info - The file name 'PaymentAppBar.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\PaymentAppBar.dart:1:1 - file_names
+   info - The file name 'PaymentLeftPanel.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\PaymentLeftPanel.dart:1:1 - file_names
+   info - The file name 'PaymentModesSection.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\PaymentModesSection.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\payment\widgets\PaymentModesSection.dart:69:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\payment\widgets\PaymentModesSection.dart:224:46 - deprecated_member_use
+   info - The file name 'PaymentSection.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\PaymentSection.dart:1:1 - file_names
+   info - The file name 'PaymentSummaryDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\PaymentSummaryDialog.dart:1:1 - file_names
+   info - Use interpolation to compose strings and values - lib\features\pos\pages\payment\widgets\PaymentSummaryDialog.dart:45:12 - prefer_interpolation_to_compose_strings
+   info - Unnecessary use of 'toList' in a spread - lib\features\pos\pages\payment\widgets\PaymentSummaryDialog.dart:192:18 - unnecessary_to_list_in_spreads
+   info - The file name 'SplitPaymentDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:1:1 - file_names
+  error - Classes can only extend other classes - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:4:34 - extends_non_class
+  error - No associated named super constructor parameter - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:15:11 - super_formal_parameter_without_associated_named
+  error - Undefined class 'State' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:23:3 - undefined_class
+warning - The method doesn't override an inherited method - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:23:29 - override_on_non_overriding_member
+  error - Classes can only extend other classes - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:26:40 - extends_non_class
+  error - The name 'TextEditingController' isn't a type, so it can't be used as a type argument - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:27:21 - non_type_as_type_argument
+  error - The name 'TextEditingController' isn't a type, so it can't be used as a type argument - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:28:21 - non_type_as_type_argument
+   info - The private field _creditClientForMode could be 'final' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:32:25 - prefer_final_fields
+warning - The method doesn't override an inherited method - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:35:8 - override_on_non_overriding_member
+  error - The method 'initState' isn't defined in a superclass of '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:36:11 - undefined_super_member
+  error - The method 'TextEditingController' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:39:34 - undefined_method
+  error - The method 'TextEditingController' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:40:36 - undefined_method
+warning - The method doesn't override an inherited method - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:46:8 - override_on_non_overriding_member
+  error - The method 'dispose' isn't defined in a superclass of '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:53:11 - undefined_super_member
+  error - Undefined name 'widget' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:68:12 - undefined_identifier
+  error - The method 'setState' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:78:5 - undefined_method
+  error - Undefined name 'widget' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:97:11 - undefined_identifier
+  error - The method 'showDialog' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:99:26 - undefined_method
+  error - Undefined name 'context' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:100:16 - undefined_identifier
+  error - Undefined name 'Navigator' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:103:11 - undefined_identifier
+  error - The method 'setState' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:110:7 - undefined_method
+  error - The method 'setState' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:115:7 - undefined_method
+  error - Undefined name 'widget' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:125:27 - undefined_identifier
+  error - The method 'setState' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:126:5 - undefined_method
+  error - Undefined name 'ScaffoldMessenger' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:148:11 - undefined_identifier
+  error - Undefined name 'context' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:148:32 - undefined_identifier
+  error - The method 'SnackBar' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:149:13 - undefined_method
+  error - The method 'Text' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:149:31 - undefined_method
+  error - Undefined name 'ScaffoldMessenger' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:155:11 - undefined_identifier
+  error - Undefined name 'context' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:155:32 - undefined_identifier
+  error - The method 'SnackBar' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:156:13 - undefined_method
+  error - The method 'Text' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:156:31 - undefined_method
+  error - Undefined name 'ScaffoldMessenger' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:166:13 - undefined_identifier
+  error - Undefined name 'context' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:166:34 - undefined_identifier
+  error - The name 'SnackBar' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:167:21 - creation_with_non_type
+  error - The method 'Text' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:167:39 - undefined_method
+  error - Undefined name 'ScaffoldMessenger' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:178:13 - undefined_identifier
+  error - Undefined name 'context' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:178:34 - undefined_identifier
+  error - The name 'SnackBar' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:179:21 - creation_with_non_type
+  error - The method 'Text' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:179:39 - undefined_method
+  error - Undefined name 'ScaffoldMessenger' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:189:7 - undefined_identifier
+  error - Undefined name 'context' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:189:28 - undefined_identifier
+  error - The name 'SnackBar' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:190:15 - creation_with_non_type
+  error - The method 'Text' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:190:33 - undefined_method
+  error - Undefined name 'widget' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:196:33 - undefined_identifier
+  error - Undefined name 'ScaffoldMessenger' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:199:7 - undefined_identifier
+  error - Undefined name 'context' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:199:28 - undefined_identifier
+  error - The method 'SnackBar' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:200:9 - undefined_method
+  error - The method 'Text' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:201:20 - undefined_method
+  error - Undefined name 'widget' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:202:100 - undefined_identifier
+  error - Undefined name 'Navigator' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:210:5 - undefined_identifier
+  error - Undefined name 'context' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:210:19 - undefined_identifier
+  error - Undefined class 'Color' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:237:3 - undefined_class
+  error - The name 'Color' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:240:22 - creation_with_non_type
+  error - The name 'Color' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:242:22 - creation_with_non_type
+  error - The name 'Color' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:244:22 - creation_with_non_type
+  error - The name 'Color' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:246:22 - creation_with_non_type
+  error - The name 'Color' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:248:22 - creation_with_non_type
+  error - The name 'Color' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:250:22 - creation_with_non_type
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:252:16 - undefined_identifier
+  error - Undefined class 'IconData' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:256:3 - undefined_class
+  error - Undefined name 'Icons' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:259:16 - undefined_identifier
+  error - Undefined name 'Icons' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:261:16 - undefined_identifier
+  error - Undefined name 'Icons' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:263:16 - undefined_identifier
+  error - Undefined name 'Icons' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:265:16 - undefined_identifier
+  error - Undefined name 'Icons' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:267:16 - undefined_identifier
+  error - Undefined name 'Icons' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:269:16 - undefined_identifier
+  error - Undefined name 'Icons' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:271:16 - undefined_identifier
+  error - Undefined class 'Widget' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:276:3 - undefined_class
+warning - The method doesn't override an inherited method - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:276:10 - override_on_non_overriding_member
+  error - Undefined class 'BuildContext' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:276:16 - undefined_class
+  error - The method 'Dialog' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:281:12 - undefined_method
+  error - The method 'Container' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:282:14 - undefined_method
+  error - Undefined name 'EdgeInsets' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:284:24 - undefined_identifier
+  error - The method 'Column' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:285:16 - undefined_method
+  error - Undefined name 'MainAxisSize' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:286:25 - undefined_identifier
+  error - Undefined name 'CrossAxisAlignment' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:287:31 - undefined_identifier
+  error - The method 'Row' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:289:13 - undefined_method
+  error - The method 'Icon' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:291:17 - undefined_method
+  error - Undefined name 'Icons' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:291:22 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:291:59 - undefined_identifier
+  error - The name 'SizedBox' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:292:23 - creation_with_non_type
+  error - The name 'Expanded' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:293:23 - creation_with_non_type
+  error - The method 'Text' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:294:26 - undefined_method
+  error - The method 'TextStyle' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:296:28 - undefined_method
+  error - Undefined name 'FontWeight' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:296:64 - undefined_identifier
+  error - The method 'IconButton' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:299:17 - undefined_method
+  error - The name 'Icon' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:300:31 - creation_with_non_type
+  error - Undefined name 'Icons' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:300:36 - undefined_identifier
+  error - Undefined name 'widget' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:302:21 - undefined_identifier
+  error - Undefined name 'Navigator' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:303:21 - undefined_identifier
+  error - The name 'SizedBox' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:308:19 - creation_with_non_type
+  error - The method 'Text' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:309:13 - undefined_method
+  error - Undefined name 'widget' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:310:33 - undefined_identifier
+  error - The method 'TextStyle' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:311:22 - undefined_method
+  error - Undefined name 'FontWeight' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:311:58 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:311:82 - undefined_identifier
+  error - The name 'SizedBox' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:313:19 - creation_with_non_type
+  error - The name 'Text' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:314:19 - creation_with_non_type
+  error - The method 'TextStyle' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:316:22 - undefined_method
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:316:53 - undefined_identifier
+  error - The name 'SizedBox' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:318:19 - creation_with_non_type
+  error - The method 'Expanded' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:319:13 - undefined_method
+  error - Undefined name 'ListView' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:320:22 - undefined_identifier
+  error - The method 'Container' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:330:26 - undefined_method
+  error - Undefined name 'EdgeInsets' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:331:35 - undefined_identifier
+  error - Undefined name 'EdgeInsets' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:332:36 - undefined_identifier
+  error - The method 'BoxDecoration' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:333:33 - undefined_method
+  error - Undefined name 'Border' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:334:31 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:335:53 - undefined_identifier
+  error - Undefined name 'BorderRadius' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:338:37 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:339:69 - undefined_identifier
+  error - The method 'Column' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:341:28 - undefined_method
+  error - Undefined name 'CrossAxisAlignment' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:342:43 - undefined_identifier
+  error - The method 'Row' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:344:25 - undefined_method
+  error - The method 'Checkbox' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:346:29 - undefined_method
+  error - The method 'Icon' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:351:29 - undefined_method
+  error - The name 'SizedBox' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:352:35 - creation_with_non_type
+  error - The method 'Expanded' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:353:29 - undefined_method
+  error - The method 'Text' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:354:38 - undefined_method
+  error - The method 'TextStyle' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:356:40 - undefined_method
+  error - Undefined name 'FontWeight' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:358:47 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:359:63 - undefined_identifier
+  error - The name 'SizedBox' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:366:33 - creation_with_non_type
+  error - The method 'Row' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:367:27 - undefined_method
+  error - The method 'Expanded' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:369:31 - undefined_method
+  error - The method 'TextField' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:370:40 - undefined_method
+  error - Undefined name 'TextInputType' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:372:55 - undefined_identifier
+  error - Undefined name 'FilteringTextInputFormatter' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:374:37 - undefined_identifier
+  error - The method 'InputDecoration' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:376:47 - undefined_method
+  error - The method 'OutlineInputBorder' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:378:45 - undefined_method
+  error - Undefined name 'BorderRadius' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:379:53 - undefined_identifier
+  error - The name 'Icon' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:381:55 - creation_with_non_type
+  error - Undefined name 'Icons' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:381:60 - undefined_identifier
+  error - The method 'setState' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:389:37 - undefined_method
+  error - The name 'SizedBox' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:397:35 - creation_with_non_type
+  error - The method 'Row' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:398:29 - undefined_method
+  error - The method 'Expanded' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:400:33 - undefined_method
+  error - The method 'TextField' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:401:42 - undefined_method
+  error - Undefined name 'TextInputType' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:403:57 - undefined_identifier
+  error - Undefined name 'FilteringTextInputFormatter' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:405:39 - undefined_identifier
+  error - The method 'InputDecoration' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:407:49 - undefined_method
+  error - The method 'TextStyle' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:409:51 - undefined_method
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:409:68 - undefined_identifier
+  error - The method 'OutlineInputBorder' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:410:47 - undefined_method
+  error - Undefined name 'BorderRadius' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:411:55 - undefined_identifier
+  error - The method 'BorderSide' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:412:53 - undefined_method
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:412:71 - undefined_identifier
+  error - The method 'Icon' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:414:51 - undefined_method
+  error - Undefined name 'Icons' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:414:56 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:414:83 - undefined_identifier
+  error - The method 'TextStyle' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:419:52 - undefined_method
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:419:69 - undefined_identifier
+  error - Undefined name 'FontWeight' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:419:105 - undefined_identifier
+  error - The method 'setState' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:421:59 - undefined_method
+  error - The name 'SizedBox' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:429:35 - creation_with_non_type
+  error - The method 'SizedBox' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:430:29 - undefined_method
+  error - Undefined name 'ElevatedButton' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:432:38 - undefined_identifier
+  error - The method 'showDialog' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:435:56 - undefined_method
+  error - The method 'setState' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:443:37 - undefined_method
+  error - The method 'Icon' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:448:39 - undefined_method
+  error - Undefined name 'Icons' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:448:44 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:448:99 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:448:114 - undefined_identifier
+  error - The method 'Text' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:449:40 - undefined_method
+  error - Undefined name 'ElevatedButton' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:450:40 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:451:83 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:451:99 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:452:83 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:452:98 - undefined_identifier
+  error - The name 'SizedBox' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:458:35 - creation_with_non_type
+  error - The method 'Container' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:459:29 - undefined_method
+  error - Undefined name 'EdgeInsets' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:460:46 - undefined_identifier
+  error - The method 'BoxDecoration' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:461:43 - undefined_method
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:462:40 - undefined_identifier
+  error - Undefined name 'BorderRadius' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:463:47 - undefined_identifier
+  error - Undefined name 'Border' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:464:41 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:464:59 - undefined_identifier
+  error - The method 'Row' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:466:38 - undefined_method
+  error - The method 'Icon' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:468:35 - undefined_method
+  error - Undefined name 'Icons' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:468:40 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:468:71 - undefined_identifier
+  error - The name 'SizedBox' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:469:41 - creation_with_non_type
+  error - The method 'Expanded' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:470:35 - undefined_method
+  error - The method 'Text' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:471:44 - undefined_method
+  error - The method 'TextStyle' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:473:46 - undefined_method
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:473:77 - undefined_identifier
+  error - The method 'TextButton' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:476:35 - undefined_method
+  error - The name 'Text' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:478:50 - creation_with_non_type
+  error - The method 'TextStyle' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:478:73 - undefined_method
+  error - The name 'SizedBox' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:491:19 - creation_with_non_type
+  error - Undefined name 'TextButton' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:493:15 - undefined_identifier
+  error - The name 'Icon' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:495:29 - creation_with_non_type
+  error - Undefined name 'Icons' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:495:34 - undefined_identifier
+  error - The name 'Text' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:496:30 - creation_with_non_type
+  error - The name 'SizedBox' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:498:19 - creation_with_non_type
+  error - The method 'Container' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:499:13 - undefined_method
+  error - Undefined name 'EdgeInsets' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:500:30 - undefined_identifier
+  error - The method 'BoxDecoration' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:501:27 - undefined_method
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:502:49 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:502:72 - undefined_identifier
+  error - Undefined name 'BorderRadius' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:503:31 - undefined_identifier
+  error - Undefined name 'Border' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:504:25 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:505:51 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:505:75 - undefined_identifier
+  error - The method 'Row' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:508:22 - undefined_method
+  error - Undefined name 'MainAxisAlignment' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:509:36 - undefined_identifier
+  error - The method 'Text' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:511:19 - undefined_method
+  error - The method 'TextStyle' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:513:28 - undefined_method
+  error - Undefined name 'FontWeight' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:513:64 - undefined_identifier
+  error - The method 'Text' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:515:19 - undefined_method
+  error - The method 'TextStyle' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:517:28 - undefined_method
+  error - Undefined name 'FontWeight' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:519:35 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:520:55 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:520:79 - undefined_identifier
+  error - The name 'SizedBox' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:527:21 - creation_with_non_type
+  error - The method 'Text' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:528:15 - undefined_method
+  error - The method 'TextStyle' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:532:24 - undefined_method
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:534:42 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:534:67 - undefined_identifier
+  error - Undefined name 'FontWeight' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:535:31 - undefined_identifier
+  error - The name 'SizedBox' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:539:19 - creation_with_non_type
+  error - The method 'Row' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:540:13 - undefined_method
+  error - Undefined name 'MainAxisAlignment' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:541:34 - undefined_identifier
+  error - The method 'TextButton' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:543:17 - undefined_method
+  error - Undefined name 'widget' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:545:21 - undefined_identifier
+  error - Undefined name 'Navigator' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:546:21 - undefined_identifier
+  error - The name 'Text' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:548:32 - creation_with_non_type
+  error - The name 'SizedBox' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:550:23 - creation_with_non_type
+  error - The method 'ElevatedButton' isn't defined for the type '_SplitPaymentDialogState' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:551:17 - undefined_method
+  error - Undefined name 'ElevatedButton' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:553:26 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:554:38 - undefined_identifier
+  error - Undefined name 'Colors' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:555:38 - undefined_identifier
+  error - Undefined name 'EdgeInsets' - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:556:36 - undefined_identifier
+  error - The name 'Text' isn't a class - lib\features\pos\pages\payment\widgets\SplitPaymentDialog.dart:558:32 - creation_with_non_type
+   info - The file name 'TableInfoCard.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\TableInfoCard.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\payment\widgets\TableInfoCard.dart:33:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\payment\widgets\TableInfoCard.dart:45:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\payment\widgets\TableInfoCard.dart:74:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\payment\widgets\TableInfoCard.dart:81:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\payment\widgets\TableInfoCard.dart:90:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\payment\widgets\TableInfoCard.dart:97:47 - deprecated_member_use
+   info - The file name 'TicketPreviewDialog.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\TicketPreviewDialog.dart:1:1 - file_names
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\widgets\TicketPreviewDialog.dart:32:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\widgets\TicketPreviewDialog.dart:33:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\widgets\TicketPreviewDialog.dart:34:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pages\payment\widgets\TicketPreviewDialog.dart:35:5 - avoid_print
+   info - Unnecessary use of 'toList' in a spread - lib\features\pos\pages\payment\widgets\TicketPreviewDialog.dart:81:24 - unnecessary_to_list_in_spreads
+   info - Unnecessary use of 'toList' in a spread - lib\features\pos\pages\payment\widgets\TicketPreviewDialog.dart:188:32 - unnecessary_to_list_in_spreads
+   info - The file name 'TotalsSection.dart' isn't a lower_case_with_underscores identifier - lib\features\pos\pages\payment\widgets\TotalsSection.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\payment\widgets\TotalsSection.dart:48:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\payment\widgets\TotalsSection.dart:50:60 - deprecated_member_use
+   info - Use interpolation to compose strings and values - lib\features\pos\pages\payment\widgets\TotalsSection.dart:73:12 - prefer_interpolation_to_compose_strings
+warning - The declaration '_getAmountColor' isn't referenced - lib\features\pos\pages\payment\widgets\TotalsSection.dart:79:9 - unused_element
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pages\payment\widgets\TotalsSection.dart:105:33 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:58:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:60:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:68:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:70:7 - avoid_print
+warning - The declaration '_openTable' isn't referenced - lib\features\pos\pos_home_page.dart:160:8 - unused_element
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:183:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:538:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:561:7 - avoid_print
+warning - The declaration '_showCleanupDialog' isn't referenced - lib\features\pos\pos_home_page.dart:575:8 - unused_element
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:636:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:638:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:680:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:706:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:709:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:715:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:736:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:738:7 - avoid_print
+warning - The declaration '_testApiConnection' isn't referenced - lib\features\pos\pos_home_page.dart:826:16 - unused_element
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:828:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:832:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:839:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:849:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:860:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:875:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:893:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:910:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:911:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:945:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:964:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pos_home_page.dart:999:9 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1021:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pos_home_page.dart:1037:30 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1051:7 - avoid_print
+warning - The declaration '_clearHistory' isn't referenced - lib\features\pos\pos_home_page.dart:1068:16 - unused_element
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pos_home_page.dart:1137:40 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pos_home_page.dart:1140:40 - use_build_context_synchronously
+   info - Unnecessary braces in a string interpolation - lib\features\pos\pos_home_page.dart:1142:70 - unnecessary_brace_in_string_interps
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1148:19 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pos_home_page.dart:1154:38 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pos_home_page.dart:1157:38 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1165:17 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1183:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1192:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1198:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1202:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1205:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1210:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1241:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1275:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1307:21 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1309:21 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1344:21 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1346:21 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1368:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1374:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1398:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1412:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1420:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1422:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1425:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1468:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1473:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1477:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1481:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1486:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1491:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1494:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1496:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1501:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1507:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1514:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1520:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1527:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1533:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1542:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1585:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1594:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1604:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1626:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1638:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1652:7 - avoid_print
+   info - Use interpolation to compose strings and values - lib\features\pos\pos_home_page.dart:1652:13 - prefer_interpolation_to_compose_strings
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pos_home_page.dart:1696:28 - use_build_context_synchronously
+warning - The declaration '_getTableIcon' isn't referenced - lib\features\pos\pos_home_page.dart:1732:12 - unused_element
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1747:5 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pos_home_page.dart:1749:20 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1761:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1767:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_home_page.dart:1771:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pos_home_page.dart:1773:20 - use_build_context_synchronously
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\pos\pos_home_page.dart:1845:17 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pos_home_page.dart:1858:42 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pos_home_page.dart:1866:42 - use_build_context_synchronously
+warning - The value of the local variable 'server' isn't used - lib\features\pos\pos_home_page.dart:2048:31 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\pos_home_page.dart:2304:26 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_invoice_viewer_page.dart:34:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_invoice_viewer_page.dart:35:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_invoice_viewer_page.dart:36:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_invoice_viewer_page.dart:37:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_invoice_viewer_page.dart:42:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_invoice_viewer_page.dart:105:25 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_invoice_viewer_page.dart:108:25 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_invoice_viewer_page.dart:115:29 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_invoice_viewer_page.dart:117:29 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pos_invoice_viewer_page.dart:118:50 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_invoice_viewer_page.dart:126:27 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\pos\pos_invoice_viewer_page.dart:127:48 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\pos\pos_invoice_viewer_page.dart:148:25 - avoid_print
+   info - The import of 'package:flutter/services.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\pos\pos_login_page.dart:2:8 - unnecessary_import
+   info - Don't invoke 'print' in production code - lib\features\pos\services\server_permissions_service.dart:18:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\services\server_permissions_service.dart:30:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\pos\services\server_permissions_service.dart:49:7 - avoid_print
+warning - The value of the field '_isPressed' isn't used - lib\features\pos\widgets\pos_menu_grid.dart:25:8 - unused_field
+warning - The value of the local variable 'foodCategories' isn't used - lib\features\pos\widgets\pos_menu_grid.dart:57:11 - unused_local_variable
+   info - Use a function declaration rather than a variable assignment to bind a function to a name - lib\features\pos\widgets\pos_menu_grid.dart:207:11 - prefer_function_declarations_over_variables
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\widgets\pos_menu_grid.dart:463:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\widgets\pos_note_items.dart:52:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\widgets\virtual_keyboard\keyboards\alpha_keyboard.dart:111:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\widgets\virtual_keyboard\keyboards\alpha_keyboard.dart:211:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\widgets\virtual_keyboard\keyboards\numeric_keyboard.dart:86:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\widgets\virtual_keyboard\keyboards\numeric_keyboard.dart:124:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\widgets\virtual_keyboard\keyboards\numeric_keyboard.dart:158:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\widgets\virtual_keyboard\keyboards\numeric_keyboard.dart:190:41 - deprecated_member_use
+   info - The private field _isShiftPressed could be 'final' - lib\features\pos\widgets\virtual_keyboard\virtual_keyboard_widget.dart:32:8 - prefer_final_fields
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\pos\widgets\virtual_keyboard\virtual_keyboard_wrapper.dart:221:41 - deprecated_member_use
+   info - Use interpolation to compose strings and values - lib\features\pos\widgets\virtual_keyboard\virtual_keyboard_wrapper.dart:441:33 - prefer_interpolation_to_compose_strings
+warning - Unused import: 'features/pos/pos_login_page.dart' - lib\main.dart:11:8 - unused_import
+   info - The prefix 'refHome' isn't a lower_case_with_underscores identifier - lib\main.dart:12:63 - library_prefixes
+warning - Unused import: 'features/pos/pos_invoice_viewer_page.dart' - lib\main.dart:14:8 - unused_import
+warning - Unused import: 'core/api_client.dart' - lib\main.dart:15:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\main.dart:27:5 - avoid_print
+
+flutter : 1014 issues found. (ran in 10.8s)
+Au caractère Ligne:1 : 1
++ flutter analyze > analysis_output.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( 
+   1014 issues found. (ran in 10.8s):String)  
+   [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandEr 
+   ror
+ 

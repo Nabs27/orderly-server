@@ -1,21 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../../widgets/virtual_keyboard/keyboards/numeric_keyboard.dart';
 
-class PaymentModesSection extends StatefulWidget {
+class PaymentModesSection extends StatelessWidget {
   final String selectedPaymentMode;
   final Map<String, dynamic>? selectedClientForCredit;
   final bool isSplitPayment;
   final Function(String) onPaymentModeSelected;
   final Function() onShowCreditClientDialog;
   final Function() onClearCreditClient;
-  // 🆕 Paiement divisé
   final Function()? onShowSplitPaymentDialog;
-  // 🆕 Pourboire scriptural
-  final TextEditingController? receivedController;
-  final FocusNode? receivedFocusNode;
-  final double tipAmount;
-  final bool hasCheckInfo;
-  final Function()? onAddCheckInfo;
 
   const PaymentModesSection({
     super.key,
@@ -26,18 +18,91 @@ class PaymentModesSection extends StatefulWidget {
     required this.onShowCreditClientDialog,
     required this.onClearCreditClient,
     this.onShowSplitPaymentDialog,
-    this.receivedController,
-    this.receivedFocusNode,
-    this.tipAmount = 0,
-    this.hasCheckInfo = false,
-    this.onAddCheckInfo,
   });
 
-  @override
-  State<PaymentModesSection> createState() => _PaymentModesSectionState();
-}
+  String _getPaymentModeTooltip(String mode) {
+    switch (mode) {
+      case 'ESPECE':
+        return 'Paiement en espèces';
+      case 'CARTE':
+        return 'Paiement par carte bancaire';
+      case 'CHEQUE':
+        return 'Paiement par chèque';
+      case 'TPE':
+        return 'Paiement par terminal de paiement électronique';
+      case 'OFFRE':
+        return 'Offre promotionnelle (gratuit)';
+      case 'CREDIT':
+        return 'Paiement à crédit (créera une dette client)';
+      default:
+        return mode;
+    }
+  }
 
-class _PaymentModesSectionState extends State<PaymentModesSection> {
+  Widget _buildPaymentModeButton(String mode, IconData icon, Color color, bool isSelected) {
+    return Tooltip(
+      message: _getPaymentModeTooltip(mode),
+      child: InkWell(
+        onTap: () => onPaymentModeSelected(mode),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isSelected ? color : Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: isSelected ? color : Colors.grey.shade400,
+              width: isSelected ? 2.5 : 1.5,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: color.withOpacity(0.4),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Stack(
+                children: [
+                  Icon(icon, size: 20, color: isSelected ? Colors.white : Colors.grey.shade600),
+                  if (isSelected)
+                    Positioned(
+                      right: -2,
+                      top: -2,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.check_circle,
+                          color: color,
+                          size: 10,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 3),
+              Text(
+                mode,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.white : Colors.grey.shade600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -47,210 +112,162 @@ class _PaymentModesSectionState extends State<PaymentModesSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
                 'Mode de paiement',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2C3E50)),
               ),
-              if (widget.isSplitPayment)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.blue.shade200),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.call_split, size: 14, color: Colors.blue.shade700),
-                      const SizedBox(width: 4),
-                      Text(
-                        'DIVISÉ',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade700,
-                        ),
-                      ),
-                    ],
-                  ),
+              const SizedBox(width: 8),
+              Tooltip(
+                message: 'Sélectionnez le mode de paiement utilisé par le client',
+                child: Icon(
+                  Icons.help_outline,
+                  size: 18,
+                  color: Colors.grey.shade600,
                 ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          
           GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             crossAxisCount: 3,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: 1.8,
+            crossAxisSpacing: 4,
+            mainAxisSpacing: 4,
+            childAspectRatio: 2.2,
             children: [
-              _buildPaymentModeButton('ESPECE', Icons.money, const Color(0xFF27AE60)),
-              _buildPaymentModeButton('CARTE', Icons.credit_card, const Color(0xFF3498DB)),
-              _buildPaymentModeButton('CHEQUE', Icons.receipt, const Color(0xFF9B59B6)),
-              _buildPaymentModeButton('TPE', Icons.payment, const Color(0xFFE67E22)),
-              _buildPaymentModeButton('OFFRE', Icons.card_giftcard, const Color(0xFFE74C3C)),
-              _buildPaymentModeButton('CREDIT', Icons.account_balance_wallet, const Color(0xFF34495E)),
+              _buildPaymentModeButton('ESPECE', Icons.money, const Color(0xFF27AE60), selectedPaymentMode == 'ESPECE' && !isSplitPayment),
+              _buildPaymentModeButton('CARTE', Icons.credit_card, const Color(0xFF3498DB), selectedPaymentMode == 'CARTE' && !isSplitPayment),
+              _buildPaymentModeButton('CHEQUE', Icons.receipt, const Color(0xFF9B59B6), selectedPaymentMode == 'CHEQUE' && !isSplitPayment),
+              _buildPaymentModeButton('TPE', Icons.payment, const Color(0xFFE67E22), selectedPaymentMode == 'TPE' && !isSplitPayment),
+              _buildPaymentModeButton('OFFRE', Icons.card_giftcard, const Color(0xFFE74C3C), selectedPaymentMode == 'OFFRE' && !isSplitPayment),
+              _buildPaymentModeButton('CREDIT', Icons.account_balance_wallet, const Color(0xFF34495E), selectedPaymentMode == 'CREDIT' && !isSplitPayment),
             ],
           ),
-
-          if (!widget.isSplitPayment) ...[
+          
+          // 🆕 Bouton paiement divisé
+          if (onShowSplitPaymentDialog != null) ...[
             const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: widget.onShowSplitPaymentDialog,
-                icon: const Icon(Icons.call_split),
-                label: const Text('PASSER EN PAIEMENT DIVISÉ (SPLIT)'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  foregroundColor: Colors.blue.shade700,
-                  side: BorderSide(color: Colors.blue.shade300),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: isSplitPayment ? Colors.blue.shade700 : Colors.grey.shade400,
+                  width: isSplitPayment ? 2.5 : 1.5,
+                ),
+                borderRadius: BorderRadius.circular(6),
+                color: isSplitPayment ? Colors.blue.shade50 : Colors.grey.shade100,
+                boxShadow: isSplitPayment
+                    ? [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: InkWell(
+                onTap: onShowSplitPaymentDialog,
+                borderRadius: BorderRadius.circular(6),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.account_balance_wallet,
+                        color: isSplitPayment ? Colors.blue.shade700 : Colors.grey.shade600,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Paiement divisé',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: isSplitPayment ? Colors.blue.shade700 : Colors.grey.shade600,
+                        ),
+                      ),
+                      if (isSplitPayment) ...[
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.check_circle,
+                          color: Colors.blue.shade700,
+                          size: 16,
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
             ),
           ],
 
-          // 🆕 Champ montant reçu et CLAVIER INLINE
-          if (!widget.isSplitPayment && (widget.selectedPaymentMode == 'TPE' || widget.selectedPaymentMode == 'CHEQUE' || widget.selectedPaymentMode == 'ESPECE')) ...[
-            const SizedBox(height: 20),
-            const Divider(),
-            const SizedBox(height: 12),
+          // 🆕 Affichage du client sélectionné pour crédit
+          if (selectedPaymentMode == 'CREDIT' && selectedClientForCredit != null) ...[
+            const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: (widget.selectedPaymentMode == 'ESPECE') ? Colors.green.shade50 : Colors.orange.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: (widget.selectedPaymentMode == 'ESPECE') ? Colors.green.shade200 : Colors.orange.shade200,
-                  width: 2
-                ),
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.shade200),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      Icon(Icons.person, color: Colors.blue.shade700, size: 20),
+                      const SizedBox(width: 8),
                       Text(
-                        (widget.selectedPaymentMode == 'ESPECE') ? 'ESPÈCES REÇUES' : 'MONTANT RÉEL TICKET', 
+                        'Client Crédit Sélectionné',
                         style: TextStyle(
-                          fontWeight: FontWeight.bold, 
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade700,
                           fontSize: 16,
-                          color: (widget.selectedPaymentMode == 'ESPECE') ? Colors.green.shade700 : Colors.orange.shade800
                         ),
                       ),
-                      if (widget.receivedController != null && widget.receivedController!.text.isNotEmpty)
-                        IconButton(
-                          icon: const Icon(Icons.backspace_outlined),
-                          onPressed: () {
-                            final text = widget.receivedController!.text;
-                            if (text.isNotEmpty) {
-                              widget.receivedController!.text = text.substring(0, text.length - 1);
-                            }
-                          },
-                          color: (widget.selectedPaymentMode == 'ESPECE') ? Colors.green : Colors.orange,
-                        ),
                     ],
-                  ),
-                  const SizedBox(height: 12),
-                  // Affichage du montant en gros
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Text(
-                      widget.receivedController?.text.isEmpty ?? true 
-                          ? '0.000' 
-                          : widget.receivedController!.text,
-                      style: const TextStyle(
-                        fontSize: 32, 
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2
-                      ),
-                      textAlign: TextAlign.right,
-                    ),
                   ),
                   const SizedBox(height: 8),
-                  // Aide contextuelle (Rendu ou Pourboire)
+                  Text(
+                    'Nom: ${selectedClientForCredit!['name']}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  Text(
+                    'Téléphone: ${selectedClientForCredit!['phone']}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  if (selectedClientForCredit!['balance'] != null)
+                    Text(
+                      'Solde actuel: ${((selectedClientForCredit!['balance'] as num).toDouble()).toStringAsFixed(2)} TND',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: ((selectedClientForCredit!['balance'] as num).toDouble()) > 0 
+                          ? Colors.red 
+                          : Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  const SizedBox(height: 12),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      if (widget.selectedPaymentMode == 'ESPECE' && widget.tipAmount < 0)
-                        Text(
-                          'RENDU : ${(-widget.tipAmount).toStringAsFixed(3)} TND',
-                          style: TextStyle(color: Colors.green.shade800, fontWeight: FontWeight.bold, fontSize: 16),
-                        )
-                      else if (widget.tipAmount > 0)
-                        Text(
-                          'POURBOIRE : ${widget.tipAmount.toStringAsFixed(3)} TND',
-                          style: TextStyle(color: Colors.orange.shade800, fontWeight: FontWeight.bold, fontSize: 16),
-                        )
-                      else 
-                        Text(
-                          'Saisir le montant reçu...',
-                          style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: onClearCreditClient,
+                          icon: const Icon(Icons.edit, size: 18),
+                          label: const Text('Changer Client'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey.shade600,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
                         ),
+                      ),
                     ],
                   ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // CLAVIER NUMÉRIQUE INLINE (Ergonomie POS)
-                  Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 400),
-                      child: NumericKeyboard(
-                        showDecimal: true,
-                        onKeyPressed: (key) {
-                          if (widget.receivedController != null) {
-                            // Empêcher plusieurs points décimaux
-                            if (key == '.' && widget.receivedController!.text.contains('.')) return;
-                            widget.receivedController!.text += key;
-                          }
-                        },
-                        onBackspace: () {
-                          if (widget.receivedController != null && widget.receivedController!.text.isNotEmpty) {
-                            final text = widget.receivedController!.text;
-                            widget.receivedController!.text = text.substring(0, text.length - 1);
-                          }
-                        },
-                        onClear: () {
-                          widget.receivedController?.clear();
-                        },
-                      ),
-                    ),
-                  ),
-                  
-                  if (widget.selectedPaymentMode == 'CHEQUE') ...[
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton.icon(
-                        onPressed: widget.onAddCheckInfo,
-                        icon: Icon(Icons.edit_note, color: widget.hasCheckInfo ? Colors.white : Colors.purple),
-                        label: Text(
-                          widget.hasCheckInfo ? 'INFOS CHÈQUE ENREGISTRÉES' : 'CONFIGURER LES INFOS DU CHÈQUE',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: widget.hasCheckInfo ? Colors.purple : Colors.purple.shade50,
-                          foregroundColor: widget.hasCheckInfo ? Colors.white : Colors.purple,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -259,63 +276,6 @@ class _PaymentModesSectionState extends State<PaymentModesSection> {
       ),
     );
   }
-
-  Widget _buildPaymentModeButton(String mode, IconData icon, Color color) {
-    final bool isSelected = widget.selectedPaymentMode == mode && !widget.isSplitPayment;
-    final hasClient = mode == 'CREDIT' && widget.selectedClientForCredit != null;
-    final label = hasClient ? widget.selectedClientForCredit!['name'] : _getModeName(mode);
-
-    return InkWell(
-      onTap: () => widget.onPaymentModeSelected(mode),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isSelected ? color : Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? color : Colors.grey.shade300,
-            width: isSelected ? 3 : 1,
-          ),
-          boxShadow: isSelected ? [BoxShadow(color: color.withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 2))] : null,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: isSelected ? Colors.white : color, size: 28),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.grey.shade800,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (mode == 'CREDIT' && isSelected && hasClient)
-              GestureDetector(
-                onTap: widget.onClearCreditClient,
-                child: const Padding(
-                  padding: EdgeInsets.only(top: 2),
-                  child: Icon(Icons.cancel, size: 14, color: Colors.white70),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _getModeName(String mode) {
-    switch (mode) {
-      case 'ESPECE': return 'ESPÈCES';
-      case 'CARTE': return 'CARTE';
-      case 'CHEQUE': return 'CHÈQUE';
-      case 'TPE': return 'BANQUE TPE';
-      case 'OFFRE': return 'OFFERT';
-      case 'CREDIT': return 'CRÉDIT';
-      default: return mode;
-    }
-  }
 }
+
+
