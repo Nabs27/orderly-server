@@ -75,10 +75,13 @@ class _PosOrderPageState extends State<PosOrderPage> {
   int? selectedLineIndex;
   Map<String, dynamic>? menu;
   bool loadingMenu = true;
-  
+
   // Gestion serveur
   String selectedServer = '';
   String currentTableNumber = '1';
+
+  // 🆕 Gestion de la saisie de quantité
+  Map<String, dynamic>? _pendingItemForQuantity;
   String currentTableId = '1';
   
   // 🆕 Gestion des notes (principale + sous-notes)
@@ -857,9 +860,16 @@ class _PosOrderPageState extends State<PosOrderPage> {
   }
 
   void _addItem(Map<String, dynamic> item) {
+    // 🆕 Si un article est en attente de quantité, l'ajouter avec cette quantité
+    if (_pendingItemForQuantity != null) {
+      _addItemWithQuantity(_pendingItemForQuantity!, 1); // Par défaut 1 si pas spécifié
+      setState(() => _pendingItemForQuantity = null);
+      return;
+    }
+
     // 🆕 Sauvegarder l'état avant d'ajouter un article
     _saveHistoryState('add');
-    
+
     final result = NoteActions.addItem(
       item: item,
       activeNoteId: activeNoteId,
@@ -868,13 +878,53 @@ class _PosOrderPageState extends State<PosOrderPage> {
       newlyAddedItems: newlyAddedItems,
       newlyAddedQuantities: newlyAddedQuantities,
     );
-    
+
     setState(() {
       mainNote = result['mainNote'] as OrderNote;
         subNotes = (result['subNotes'] as List<OrderNote>?) ?? [];
       newlyAddedItems = result['newlyAddedItems'] as Set<int>;
       newlyAddedQuantities = result['newlyAddedQuantities'] as Map<int, int>;
     });
+  }
+
+  // 🆕 Ajouter un article avec une quantité spécifique
+  void _addItemWithQuantity(Map<String, dynamic> item, int quantity) {
+    if (quantity <= 0) return;
+
+    _saveHistoryState('add');
+
+    // Créer un item avec la quantité souhaitée
+    final itemWithQuantity = Map<String, dynamic>.from(item);
+    itemWithQuantity['quantity'] = quantity;
+
+    final result = NoteActions.addItem(
+      item: itemWithQuantity,
+      activeNoteId: activeNoteId,
+      mainNote: mainNote,
+      subNotes: subNotes,
+      newlyAddedItems: newlyAddedItems,
+      newlyAddedQuantities: newlyAddedQuantities,
+    );
+
+    setState(() {
+      mainNote = result['mainNote'] as OrderNote;
+        subNotes = (result['subNotes'] as List<OrderNote>?) ?? [];
+      newlyAddedItems = result['newlyAddedItems'] as Set<int>;
+      newlyAddedQuantities = result['newlyAddedQuantities'] as Map<int, int>;
+    });
+  }
+
+  // 🆕 Gérer la saisie de quantité depuis le numpad
+  void _onQuantityEntered(int quantity) {
+    if (_pendingItemForQuantity != null && quantity > 0) {
+      _addItemWithQuantity(_pendingItemForQuantity!, quantity);
+      setState(() => _pendingItemForQuantity = null);
+    }
+  }
+
+  // 🆕 Activer le mode quantité pour un article
+  void _activateQuantityModeForItem(Map<String, dynamic> item) {
+    setState(() => _pendingItemForQuantity = item);
   }
 
   void _updateQuantity(int index, int newQty) {
@@ -1644,12 +1694,14 @@ class _PosOrderPageState extends State<PosOrderPage> {
             onShowTransferDialog: _showTransferDialog,
             onShowTransferToTableDialog: _showTransferToTableDialog,
             onOpenPayment: _openPayment,
+            onQuantityEntered: _onQuantityEntered, // 🆕 Callback pour quantité saisie
+            pendingItemForQuantity: _pendingItemForQuantity, // 🆕 Article en attente de quantité
           ),
           const SizedBox(width: 16),
           PosOrderMenuPanel(
             loadingMenu: loadingMenu,
             menu: menu,
-                        onItemSelected: _addItem,
+                        onItemSelected: _pendingItemForQuantity != null ? _addItem : _activateQuantityModeForItem,
           ),
         ],
       ),

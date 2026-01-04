@@ -18,6 +18,8 @@ class PosOrderActionPanel extends StatelessWidget {
   final Function() onShowTransferDialog;
   final Function() onShowTransferToTableDialog;
   final Function() onOpenPayment;
+  final Function(int)? onQuantityEntered; // 🆕 Callback pour quantité saisie
+  final Map<String, dynamic>? pendingItemForQuantity; // 🆕 Article en attente de quantité
 
   const PosOrderActionPanel({
     super.key,
@@ -36,6 +38,8 @@ class PosOrderActionPanel extends StatelessWidget {
     required this.onShowTransferDialog,
     required this.onShowTransferToTableDialog,
     required this.onOpenPayment,
+    this.onQuantityEntered, // 🆕 Optionnel
+    this.pendingItemForQuantity, // 🆕 Optionnel
   });
 
   @override
@@ -75,6 +79,8 @@ class PosOrderActionPanel extends StatelessWidget {
                 onNote: onNote,
                 onIngredient: onIngredient,
                 onBack: onBack,
+                onQuantityEntered: onQuantityEntered, // 🆕 Callback pour quantité
+                enableQuantityMode: pendingItemForQuantity != null, // 🆕 Activer si article en attente
               ),
             ),
 
