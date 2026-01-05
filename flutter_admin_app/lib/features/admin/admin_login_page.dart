@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/api_client.dart';
 import '../../core/auth_service.dart';
 import 'admin_dashboard_page.dart';
@@ -14,7 +15,25 @@ class AdminLoginPage extends StatefulWidget {
 class _AdminLoginPageState extends State<AdminLoginPage> {
   final _passwordCtrl = TextEditingController();
   bool _loading = false;
+  bool _rememberMe = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials();
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedPwd = prefs.getString('admin_password');
+    if (savedPwd != null && savedPwd.isNotEmpty) {
+      setState(() {
+        _passwordCtrl.text = savedPwd;
+        _rememberMe = true;
+      });
+    }
+  }
 
   Future<void> _login() async {
     final password = _passwordCtrl.text.trim();
@@ -37,6 +56,15 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
       }
       // Stocker le token (en mémoire et en persistance)
       await AuthService.setToken(token);
+
+      // Gérer la sauvegarde du mot de passe
+      final prefs = await SharedPreferences.getInstance();
+      if (_rememberMe) {
+        await prefs.setString('admin_password', password);
+      } else {
+        await prefs.remove('admin_password');
+      }
+
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const AdminDashboardPage()),
@@ -101,6 +129,16 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                     prefixIcon: Icon(Icons.lock),
                   ),
                   onSubmitted: (_) => _login(),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Checkbox(
+                      value: _rememberMe,
+                      onChanged: (v) => setState(() => _rememberMe = v ?? false),
+                    ),
+                    const Text('Se souvenir de moi'),
+                  ],
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 12),
