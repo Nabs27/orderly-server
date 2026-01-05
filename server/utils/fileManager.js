@@ -389,6 +389,13 @@ async function saveToMongoDB() {
 				);
 			}
 			console.log(`[sync] ☁️ ${dataStore.archivedOrders.length} commandes archivées synchronisées`);
+		} else {
+			// 🆕 Si le tableau est vide (après reset), supprimer toutes les archives de MongoDB
+			// pour garantir que l'état vide est bien synchronisé
+			const deleteResult = await dbManager.archivedOrders.deleteMany({});
+			if (deleteResult.deletedCount > 0) {
+				console.log(`[sync] 🗑️ ${deleteResult.deletedCount} commande(s) archivée(s) supprimée(s) de MongoDB (état vide synchronisé)`);
+			}
 
 			// 🆕 SUPPRIMER les commandes archivées de la collection orders principale
 			// pour éviter qu'elles réapparaissent au redémarrage
@@ -463,6 +470,13 @@ async function saveToMongoDB() {
 				);
 			}
 			console.log(`[sync] ☁️ ${dataStore.clientCredits.length} clients crédit synchronisés`);
+		} else {
+			// 🆕 Si le tableau est vide (après reset), supprimer tous les crédits de MongoDB
+			// pour garantir que l'état vide est bien synchronisé
+			const deleteResult = await dbManager.clientCredits.deleteMany({});
+			if (deleteResult.deletedCount > 0) {
+				console.log(`[sync] 🗑️ ${deleteResult.deletedCount} crédit(s) client(s) supprimé(s) de MongoDB (état vide synchronisé)`);
+			}
 		}
 		
 		// Mise à jour des compteurs
