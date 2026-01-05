@@ -153,10 +153,11 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 		const dbManager = require('../utils/dbManager');
 		let cloudDeleted = { orders: 0, archivedOrders: 0, bills: 0, archivedBills: 0, services: 0, clientCredits: 0 };
 		
-		// 🆕 CORRECTION : Nettoyer aussi MongoDB Cloud si configuré
-		if (dbManager.isCloud && dbManager.db) {
+		// 🆕 CORRECTION : Nettoyer MongoDB si disponible (peu importe si serveur local ou cloud)
+		// MongoDB est partagé entre local et cloud, donc il doit être nettoyé dans tous les cas
+		if (dbManager.db) {
 			try {
-				console.log('[admin] ☁️ Nettoyage MongoDB Cloud...');
+				console.log('[admin] ☁️ Nettoyage MongoDB...');
 				
 				// Supprimer toutes les commandes (POS + client)
 				const ordersResult = await dbManager.orders.deleteMany({});
@@ -197,11 +198,13 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 					{ upsert: true }
 				);
 				
-				console.log(`[admin] ☁️ MongoDB Cloud nettoyé: ${cloudDeleted.orders} commandes, ${cloudDeleted.bills} factures, ${cloudDeleted.services} services, ${cloudDeleted.clientCredits} crédits clients`);
+				console.log(`[admin] ☁️ MongoDB nettoyé: ${cloudDeleted.orders} commandes, ${cloudDeleted.archivedOrders} archivées, ${cloudDeleted.bills} factures, ${cloudDeleted.services} services, ${cloudDeleted.clientCredits} crédits clients`);
 			} catch (cloudError) {
-				console.error('[admin] ⚠️ Erreur nettoyage MongoDB Cloud:', cloudError.message);
+				console.error('[admin] ⚠️ Erreur nettoyage MongoDB:', cloudError.message);
 				// Continuer même en cas d'erreur cloud pour nettoyer le local
 			}
+		} else {
+			console.log('[admin] ⚠️ MongoDB non disponible - nettoyage MongoDB ignoré');
 		}
 		
 		// Supprimer les fichiers de persistance locaux
@@ -242,8 +245,8 @@ router.post('/full-reset', authAdmin, async (req, res) => {
 		dataStore.nextServiceId = 1;
 		dataStore.nextClientId = 1;
 		
-		// 💾 Sauvegarder pour synchroniser l'état vide avec MongoDB
-		if (dbManager.isCloud) {
+		// 💾 Sauvegarder pour synchroniser l'état vide avec MongoDB (si MongoDB disponible)
+		if (dbManager.db) {
 			try {
 				await fileManager.savePersistedData();
 				console.log('[admin] ☁️ État vide synchronisé avec MongoDB');

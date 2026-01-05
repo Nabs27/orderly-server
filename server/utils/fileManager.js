@@ -83,80 +83,19 @@ async function loadFromMongoDB() {
 		// Charger les commandes
 		const orders = await dbManager.orders.find({}).toArray();
 
-		// 🆕 SOLUTION RADICALE : Nettoyer automatiquement les commandes très anciennes (>48h)
-		// Ces commandes sont des "déchets" qui restent dans MongoDB même après un reset local
-		const now = new Date();
-		const maxAgeHours = 48; // Maximum 48 heures d'inactivité
-		const maxAgeMs = maxAgeHours * 60 * 60 * 1000;
-		
-		const ordersToDelete = [];
-		const ordersToKeep = [];
-		
-		for (const order of orders) {
-			// Toujours garder les commandes client en attente (waitingForPos=true)
-			if (order.waitingForPos === true && order.source === 'client') {
-				ordersToKeep.push(order);
-				continue;
-			}
-			
-			// Pour les autres commandes, vérifier l'âge
-			const lastActivity = order.updatedAt || order.createdAt;
-			if (lastActivity) {
-				try {
-					const lastActivityDate = new Date(lastActivity);
-					const ageMs = now.getTime() - lastActivityDate.getTime();
-					
-					if (ageMs > maxAgeMs) {
-						// Commande trop ancienne (>48h) → à supprimer
-						ordersToDelete.push(order);
-						console.log(`[persistence] 🗑️ Commande obsolète détectée: ID=${order.id || order.tempId || 'N/A'}, table=${order.table}, age=${Math.round(ageMs / (60 * 60 * 1000))}h`);
-						continue;
-					}
-				} catch (e) {
-					// Si la date est invalide, garder la commande (par sécurité)
-					console.warn(`[persistence] ⚠️ Date invalide pour commande ${order.id || order.tempId || 'N/A'}: ${lastActivity}`);
-				}
-			}
-			
-			// Commande récente → à garder
-			ordersToKeep.push(order);
-		}
-		
-		// 🆕 Supprimer les commandes obsolètes de MongoDB
-		if (ordersToDelete.length > 0) {
-			const idsToDelete = ordersToDelete
-				.map(o => o.id || o._id)
-				.filter(id => id != null);
-			
-			if (idsToDelete.length > 0) {
-				try {
-					const deleteResult = await dbManager.orders.deleteMany({
-						$or: [
-							{ id: { $in: idsToDelete.filter(id => typeof id === 'number') } },
-							{ _id: { $in: idsToDelete.filter(id => typeof id === 'object') } },
-							{ tempId: { $in: ordersToDelete.filter(o => o.tempId).map(o => o.tempId) } }
-						]
-					});
-					console.log(`[persistence] 🧹 ${deleteResult.deletedCount} commande(s) obsolète(s) supprimée(s) de MongoDB (âge > ${maxAgeHours}h)`);
-				} catch (e) {
-					console.error(`[persistence] ⚠️ Erreur suppression commandes obsolètes: ${e.message}`);
-				}
-			}
-		}
-
 		// 🆕 SOLUTION : Identifier les commandes confirmées par leur originalTempId
 		const confirmedTempIds = new Set(
-			ordersToKeep
+			orders
 				.filter(o => o.id && o.originalTempId && o.source === 'pos')
 				.map(o => o.originalTempId)
 		);
 
 		// 🆕 Filtrer : exclure les commandes client qui ont déjà été confirmées
-		const filteredOrders = ordersToKeep.filter(o => {
+		const filteredOrders = orders.filter(o => {
 			// Si c'est une commande client avec tempId mais sans id, vérifier si elle a été confirmée
 			if (o.tempId && (!o.id || o.id === null) && o.source === 'client') {
 				if (confirmedTempIds.has(o.tempId)) {
-					console.log(`[persistence] 🧹 Commande client ${o.tempId} ignorée: déjà confirmée (ID #${ordersToKeep.find(oo => oo.originalTempId === o.tempId && oo.id)?.id})`);
+					console.log(`[persistence] 🧹 Commande client ${o.tempId} ignorée: déjà confirmée (ID #${orders.find(oo => oo.originalTempId === o.tempId && oo.id)?.id})`);
 					// Supprimer de MongoDB aussi
 					dbManager.orders.deleteMany({ tempId: o.tempId }).catch(e =>
 						console.error(`[persistence] ⚠️ Erreur suppression doublon: ${e.message}`)
