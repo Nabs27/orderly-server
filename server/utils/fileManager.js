@@ -19,17 +19,28 @@ async function ensureDir(p) {
 async function loadPersistedData() {
 	console.log('[persistence] 🔄 Chargement des données persistées...');
 
-	// 🆕 SERVEUR LOCAL = SOURCE DE VERITE : TOUJOURS charger depuis JSON local d'abord
-	await loadFromJSON();
-	console.log('[persistence] ✅ Données chargées depuis fichiers locaux');
-
-	// Puis synchroniser intelligemment avec MongoDB si disponible (pour commandes clients + backup)
-	if (dbManager.db) {
-		console.log('[persistence] ☁️ Synchronisation intelligente avec MongoDB...');
-		await smartSyncWithMongoDB();
-		console.log('[persistence] ✅ Synchronisation terminée');
+	if (dbManager.isCloud) {
+		// 🆕 SERVEUR CLOUD : Charger UNIQUEMENT depuis MongoDB (stateless)
+		if (dbManager.db) {
+			console.log('[persistence] ☁️ Serveur cloud détecté - Chargement depuis MongoDB...');
+			await loadFromMongoDB();
+			console.log('[persistence] ✅ Données chargées depuis MongoDB');
+		} else {
+			console.log('[persistence] ⚠️ Serveur cloud mais MongoDB non disponible - Données vides');
+		}
 	} else {
-		console.log('[persistence] ℹ️ MongoDB non disponible - fonctionnement en mode local seulement');
+		// 🆕 SERVEUR LOCAL = SOURCE DE VERITE : TOUJOURS charger depuis JSON local d'abord
+		await loadFromJSON();
+		console.log('[persistence] ✅ Données chargées depuis fichiers locaux');
+
+		// Puis synchroniser intelligemment avec MongoDB si disponible (pour commandes clients + backup)
+		if (dbManager.db) {
+			console.log('[persistence] ☁️ Synchronisation intelligente avec MongoDB...');
+			await smartSyncWithMongoDB();
+			console.log('[persistence] ✅ Synchronisation terminée');
+		} else {
+			console.log('[persistence] ℹ️ MongoDB non disponible - fonctionnement en mode local seulement');
+		}
 	}
 }
 
