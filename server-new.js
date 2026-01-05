@@ -75,6 +75,10 @@ dbManager.connect().then(() => {
 	if (isLocalServer && dbManager.db) {
 		const POLLING_INTERVAL = 5000; // Vérifier toutes les 5 secondes
 		
+		// 🆕 SYNCHRONISATION PÉRIODIQUE : Synchroniser les commandes actives vers MongoDB
+		// pour que le dashboard admin en ligne puisse voir les tables non payées
+		const SYNC_INTERVAL = 10000; // Synchroniser toutes les 10 secondes
+		
 		setInterval(async () => {
 			try {
 				const processedCount = await fileManager.pullFromMailbox();
@@ -92,7 +96,24 @@ dbManager.connect().then(() => {
 			}
 		}, POLLING_INTERVAL);
 		
+		// 🆕 Synchroniser les commandes actives vers MongoDB périodiquement
+		setInterval(async () => {
+			try {
+				const activeOrders = dataStore.orders.filter(o => o.status !== 'archived');
+				if (activeOrders.length > 0) {
+					// Synchroniser uniquement les commandes actives (via saveToMongoDB)
+					// On appelle directement saveToMongoDB pour éviter de sauvegarder le JSON
+					const fileManager = require('./server/utils/fileManager');
+					await fileManager.savePersistedData();
+					console.log(`[sync] 🔄 ${activeOrders.length} commande(s) active(s) synchronisée(s) vers MongoDB`);
+				}
+			} catch (e) {
+				console.error('[sync] ⚠️ Erreur synchronisation commandes actives:', e.message);
+			}
+		}, SYNC_INTERVAL);
+		
 		console.log(`[server] 📬 Polling boîte aux lettres activé (toutes les ${POLLING_INTERVAL/1000}s)`);
+		console.log(`[server] 🔄 Synchronisation commandes actives activée (toutes les ${SYNC_INTERVAL/1000}s)`);
 	} else if (dbManager.isCloud && dbManager.db && !isLocalServer) {
 		// 🆕 DÉTECTION RESET pour serveur cloud : vérifier périodiquement si reset détecté
 		const CLOUD_RESET_CHECK_INTERVAL = 5000; // Vérifier toutes les 5 secondes
