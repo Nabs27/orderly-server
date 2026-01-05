@@ -14,6 +14,7 @@ const dataStore = require('./server/data');
 const fileManager = require('./server/utils/fileManager');
 const socketManager = require('./server/utils/socket');
 const dbManager = require('./server/utils/dbManager');
+const cloudSyncClient = require('./server/utils/cloudSyncClient');
 
 // Importer les routes
 const baseRoutes = require('./server/routes/base');
@@ -67,18 +68,18 @@ dbManager.connect().then(() => {
 	return fileManager.loadPersistedData();
 }).then(() => {
 	console.log('[server] Données initialisées');
-	
+
 	// 🆕 ARCHITECTURE "BOÎTE AUX LETTRES" : Polling périodique pour aspirer les commandes
 	// Le serveur local vérifie la boîte aux lettres MongoDB toutes les 5 secondes
 	// Cela permet de recevoir les commandes client rapidement sans redémarrer le serveur
 	const isLocalServer = !dbManager.isCloud;
 	if (isLocalServer && dbManager.db) {
 		const POLLING_INTERVAL = 5000; // Vérifier toutes les 5 secondes
-		
+
 		// 🆕 SYNCHRONISATION PÉRIODIQUE : Synchroniser les commandes actives vers MongoDB
 		// pour que le dashboard admin en ligne puisse voir les tables non payées
 		const SYNC_INTERVAL = 10000; // Synchroniser toutes les 10 secondes
-		
+
 		setInterval(async () => {
 			try {
 				const processedCount = await fileManager.pullFromMailbox();
@@ -86,7 +87,7 @@ dbManager.connect().then(() => {
 					// Notifier via Socket.IO les nouvelles commandes
 					const { getIO } = require('./server/utils/socket');
 					const io = getIO();
-					
+
 					// Émettre un événement pour rafraîchir les tables
 					io.emit('orders:sync', { timestamp: new Date().toISOString() });
 					console.log(`[sync] 📡 Notification Socket.IO envoyée pour ${processedCount} nouvelle(s) commande(s)`);
@@ -95,13 +96,13 @@ dbManager.connect().then(() => {
 				console.error('[sync] ⚠️ Erreur polling boîte aux lettres:', e.message);
 			}
 		}, POLLING_INTERVAL);
-		
+
 		// 🆕 Synchroniser les commandes actives vers MongoDB périodiquement
 		setInterval(async () => {
 			try {
 				const activeOrders = dataStore.orders.filter(o => o.status !== 'archived');
 				console.log(`[sync] 🔄 DEBUG: Tentative synchronisation périodique - ${activeOrders.length} commande(s) active(s) locale(s)`);
-				
+
 				if (activeOrders.length > 0) {
 					// Synchroniser uniquement les commandes actives (via saveToMongoDB)
 					// On appelle directement saveToMongoDB pour éviter de sauvegarder le JSON
@@ -116,16 +117,16 @@ dbManager.connect().then(() => {
 				console.error('[sync] ⚠️ Stack:', e.stack);
 			}
 		}, SYNC_INTERVAL);
-		
-		console.log(`[server] 📬 Polling boîte aux lettres activé (toutes les ${POLLING_INTERVAL/1000}s)`);
-		console.log(`[server] 🔄 Synchronisation commandes actives activée (toutes les ${SYNC_INTERVAL/1000}s)`);
-		
+
+		console.log(`[server] 📬 Polling boîte aux lettres activé (toutes les ${POLLING_INTERVAL / 1000}s)`);
+		console.log(`[server] 🔄 Synchronisation commandes actives activée (toutes les ${SYNC_INTERVAL / 1000}s)`);
+
 		// 🆕 Synchronisation immédiate au démarrage pour les commandes existantes
 		setTimeout(async () => {
 			try {
 				const activeOrders = dataStore.orders.filter(o => o.status !== 'archived');
 				console.log(`[sync] 🚀 DEBUG: Synchronisation démarrage - ${activeOrders.length} commande(s) active(s) locale(s)`);
-				
+
 				if (activeOrders.length > 0) {
 					await fileManager.savePersistedData();
 					console.log(`[sync] 🚀 ${activeOrders.length} commande(s) active(s) synchronisée(s) au démarrage`);
@@ -137,38 +138,49 @@ dbManager.connect().then(() => {
 				console.error('[sync] ⚠️ Stack:', e.stack);
 			}
 		}, 2000); // Attendre 2 secondes après le démarrage pour laisser MongoDB se connecter
+
+		// 🔄 SYNCHRONISATION CLOUD : Se connecter au serveur Cloud pour recevoir les notifications
+		// de synchronisation (menu, permissions, etc.) en temps réel
+		const cloudServerUrl = process.env.CLOUD_SERVER_URL;
+		if (cloudServerUrl) {
+			console.log(`[server] 🔄 Connexion au serveur Cloud pour synchronisation...`);
+			cloudSyncClient.connect(cloudServerUrl);
+		} else {
+			console.log(`[server] ⚠️ CLOUD_SERVER_URL non défini - synchronisation Cloud désactivée`);
+			console.log(`[server] 💡 Pour activer : ajouter CLOUD_SERVER_URL=https://votre-serveur.railway.app dans .env`);
+		}
 	} else if (dbManager.isCloud && dbManager.db && !isLocalServer) {
 		// 🆕 DÉTECTION RESET pour serveur cloud : vérifier périodiquement si reset détecté
 		const CLOUD_RESET_CHECK_INTERVAL = 5000; // Vérifier toutes les 5 secondes
-		
+
 		setInterval(async () => {
 			try {
 				const countersDoc = await dbManager.counters.findOne({ type: 'global' });
 				if (countersDoc && countersDoc.nextOrderId === 1) {
 					// Vérifier si nous avons des commandes avec des IDs élevés en mémoire
-					const maxOrderId = dataStore.orders.length > 0 
+					const maxOrderId = dataStore.orders.length > 0
 						? Math.max(...dataStore.orders.map(o => o.id || 0))
 						: 0;
-					
+
 					// 🆕 Vérifier aussi si MongoDB contient des commandes avec des IDs élevés
 					const mongoOrders = await dbManager.orders.find({}).toArray();
 					const maxMongoOrderId = mongoOrders.length > 0
 						? Math.max(...mongoOrders.map(o => o.id || 0))
 						: 0;
-					
+
 					if (maxOrderId > 1 || maxMongoOrderId > 1) {
 						console.log(`[server] 🔄 RESET DÉTECTÉ sur serveur cloud : Compteur MongoDB à 1 mais ${dataStore.orders.length} commande(s) en mémoire (max ID: ${maxOrderId}) et ${mongoOrders.length} dans MongoDB (max ID: ${maxMongoOrderId})`);
 						console.log('[server] 🔄 Vidage mémoire et nettoyage MongoDB...');
-						
+
 						// 🆕 Supprimer toutes les commandes de MongoDB si le compteur est à 1
 						if (maxMongoOrderId > 1) {
 							const deleteResult = await dbManager.orders.deleteMany({});
 							console.log(`[server] 🗑️ ${deleteResult.deletedCount} commande(s) supprimée(s) de MongoDB (reset détecté)`);
 						}
-						
+
 						// Vider la mémoire et recharger depuis MongoDB (qui sera vide)
 						await fileManager.loadFromMongoDB();
-						
+
 						console.log(`[server] ✅ Mémoire serveur cloud synchronisée après reset : ${dataStore.orders.length} commande(s) chargée(s)`);
 					}
 				}
@@ -176,8 +188,8 @@ dbManager.connect().then(() => {
 				console.error('[server] ⚠️ Erreur vérification reset serveur cloud:', e.message);
 			}
 		}, CLOUD_RESET_CHECK_INTERVAL);
-		
-		console.log(`[server] ☁️ Serveur cloud détecté (port ${process.env.PORT || 3000}), vérification reset activée (toutes les ${CLOUD_RESET_CHECK_INTERVAL/1000}s)`);
+
+		console.log(`[server] ☁️ Serveur cloud détecté (port ${process.env.PORT || 3000}), vérification reset activée (toutes les ${CLOUD_RESET_CHECK_INTERVAL / 1000}s)`);
 	}
 }).catch(err => {
 	console.error('[server] ❌ Erreur initialisation données:', err);
@@ -224,18 +236,18 @@ const gracefulShutdown = (signal) => {
 		process.exit(1);
 		return;
 	}
-	
+
 	isShuttingDown = true;
 	console.log(`\n[server] 📴 Signal ${signal} reçu, arrêt gracieux en cours...`);
-	
+
 	// Fermer le serveur HTTP
 	server.close(() => {
 		console.log('[server] ✅ Serveur HTTP fermé');
-		
+
 		// Fermer Socket.IO
 		io.close(() => {
 			console.log('[server] ✅ Socket.IO fermé');
-			
+
 			// Sauvegarder les données avant de quitter
 			fileManager.savePersistedData().then(() => {
 				console.log('[server] ✅ Données sauvegardées');
@@ -247,7 +259,7 @@ const gracefulShutdown = (signal) => {
 			});
 		});
 	});
-	
+
 	// Forcer l'arrêt après 10 secondes si nécessaire
 	setTimeout(() => {
 		console.log('[server] ⚠️ Arrêt forcé après timeout');

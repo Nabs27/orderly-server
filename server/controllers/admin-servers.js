@@ -3,6 +3,20 @@ const path = require('path');
 const dataStore = require('../data');
 const { ensureDir } = require('../utils/fileManager');
 const { loadServerProfiles, saveServerProfiles } = require('../utils/serverPermissionsSync');
+const socketManager = require('../utils/socket');
+const dbManager = require('../utils/dbManager');
+
+// 🔄 Émettre un événement de synchronisation permissions vers les serveurs locaux
+function emitPermissionsSync() {
+	const io = socketManager.getIO();
+	if (io && dbManager.isCloud) {
+		io.emit('sync:permissions', {
+			timestamp: new Date().toISOString(),
+			source: 'cloud-admin'
+		});
+		console.log(`[admin-servers] 📡 Événement sync:permissions émis`);
+	}
+}
 
 const DEFAULT_PERMISSIONS = {
 	canTransferNote: true,
@@ -124,6 +138,7 @@ async function createServerProfile(req, res) {
 
 		profiles.push(profile);
 		await writeProfiles(profiles);
+		emitPermissionsSync();
 		res.status(201).json(profile);
 	} catch (e) {
 		console.error('[admin-servers] Erreur création profil:', e);
@@ -160,6 +175,7 @@ async function updateServerProfile(req, res) {
 
 		profiles[index] = profile;
 		await writeProfiles(profiles);
+		emitPermissionsSync();
 		res.json(profile);
 	} catch (e) {
 		console.error('[admin-servers] Erreur mise à jour profil:', e);
@@ -177,6 +193,7 @@ async function deleteServerProfile(req, res) {
 
 		profiles.splice(index, 1);
 		await writeProfiles(profiles);
+		emitPermissionsSync();
 		res.json({ ok: true });
 	} catch (e) {
 		console.error('[admin-servers] Erreur suppression profil:', e);

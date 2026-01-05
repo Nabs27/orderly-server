@@ -96,14 +96,51 @@ Ces contrôleurs utilisent les utilitaires (`utils`) pour accéder aux fichiers,
 | `utils/translation.js` | Intègre DeepL / normalise les textes de menu. |
 | `utils/fileManager.js` | Lecture/écriture de fichiers (exports, sauvegardes). **🆕 Fonctions clés** : `pullFromMailbox()` (aspire les commandes client depuis MongoDB), `smartSyncWithMongoDB()` (synchronisation intelligente au démarrage), `saveToMongoDB()` (backup uniquement des commandes en attente et archives). |
 | `utils/dbManager.js` | Gestion MongoDB Atlas. **🆕 Détection mode** : `isCloud = process.env.IS_CLOUD_SERVER === 'true'` pour différencier serveur Cloud (stateless) vs Local (source de vérité). |
+| `utils/cloudSyncClient.js` | **🆕 Synchronisation Cloud → Local** : Client Socket.IO pour que le serveur local se connecte au Cloud et reçoive les notifications de synchronisation (menu, permissions) en temps réel. Activé via `CLOUD_SERVER_URL` dans `.env`. |
 | `utils/history-processor.js` | Logique de traitement et de formatage de l'historique des transactions. **🆕 En cours d'intégration** : Utilisation de `payment-processor.js` pour la déduplication. |
 | `utils/payment-processor.js` | **🆕 Source de vérité unique** pour la déduplication et le calcul des paiements. Fonctions clés : `deduplicateAndCalculate()` (déduplique les transactions multi-commandes), `calculatePaymentsByMode()` (groupe par mode, calcule les pourboires). Utilisé par `pos-report-x.js` et `history-processor.js` pour garantir la cohérence (History = KPI = X Report). |
-| `utils/menuSync.js` | Synchronisation du menu entre les différentes sources (JSON/Cloud). |
+| `utils/menuSync.js` | Synchronisation du menu entre les différentes sources (JSON/Cloud). **🆕 Émet `sync:menu`** lors des modifications côté Cloud. |
 | `utils/serverAssignment.js` | Logique d'assignation des serveurs aux tables/commandes. |
-| `utils/serverPermissionsSync.js` | Synchronisation des permissions et profils serveurs. |
+| `utils/serverPermissionsSync.js` | Synchronisation des permissions et profils serveurs. **🆕 Émet `sync:permissions`** lors des modifications côté Cloud. |
 | `middleware/auth.js` | Vérifie le token admin (`x-admin-token`). |
 
 ---
+
+## 🔄 Synchronisation Cloud → Local (Admin App)
+
+L'application Admin Android (`flutter_admin_app`) permet de modifier le menu et les permissions serveurs à distance via le serveur Cloud. Ces modifications doivent être **synchronisées en temps réel** vers le serveur local (POS).
+
+### Architecture
+
+```
+[Admin App Android]
+        ↓ modifie via API
+[Serveur Cloud (Railway)]
+        ↓ sauvegarde dans MongoDB + émet Socket.IO
+        ↓ 'sync:menu' ou 'sync:permissions'
+[Serveur Local POS]
+        ↓ reçoit l'événement via cloudSyncClient
+        ↓ recharge depuis MongoDB
+        ↓ met à jour les fichiers JSON locaux
+        ↓ émet événement local pour rafraîchir l'interface
+```
+
+### Configuration
+
+1. **Sur le serveur local** : Ajouter dans `.env` :
+   ```
+   CLOUD_SERVER_URL=https://votre-serveur.railway.app
+   ```
+
+2. **Événements Socket.IO** :
+   - `sync:menu` : Émis par le Cloud après modification du menu
+   - `sync:permissions` : Émis par le Cloud après modification des profils serveurs
+
+3. **Fichiers concernés** :
+   - `server/utils/cloudSyncClient.js` : Client de connexion au Cloud
+   - `server/routes/admin-menu.js` : Émet `sync:menu`
+   - `server/controllers/admin-servers.js` : Émet `sync:permissions`
+
 
 ## 🔄 Flux type
 

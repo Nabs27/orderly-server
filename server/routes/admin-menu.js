@@ -7,6 +7,21 @@ const fsp = require('fs').promises;
 const path = require('path');
 const { authAdmin } = require('../middleware/auth');
 const { saveMenu, loadMenu } = require('../utils/menuSync');
+const socketManager = require('../utils/socket');
+const dbManager = require('../utils/dbManager');
+
+// 🔄 Émettre un événement de synchronisation menu vers les serveurs locaux
+function emitMenuSync(restaurantId) {
+	const io = socketManager.getIO();
+	if (io && dbManager.isCloud) {
+		io.emit('sync:menu', {
+			restaurantId,
+			timestamp: new Date().toISOString(),
+			source: 'cloud-admin'
+		});
+		console.log(`[admin-menu] 📡 Événement sync:menu émis pour ${restaurantId}`);
+	}
+}
 
 // Fonction utilitaire pour vider le cache des traductions
 async function clearTranslationsCache(restaurantId) {
@@ -15,11 +30,11 @@ async function clearTranslationsCache(restaurantId) {
 		const files = await fsp.readdir(translationsDir).catch(() => []);
 		for (const f of files) {
 			if (f.startsWith(`${restaurantId}_`)) {
-				await fsp.unlink(path.join(translationsDir, f)).catch(() => {});
+				await fsp.unlink(path.join(translationsDir, f)).catch(() => { });
 			}
 		}
 		console.log(`[admin] cleared translations cache for ${restaurantId}`);
-	} catch {}
+	} catch { }
 }
 
 // Récupérer un menu
@@ -45,6 +60,8 @@ router.patch('/menu/:restaurantId', authAdmin, async (req, res) => {
 		console.log(`[admin] updated menu for ${restaurantId}`);
 		// Vider les traductions en cache pour forcer une retraduction
 		await clearTranslationsCache(restaurantId);
+		// 🔄 Notifier les serveurs locaux
+		emitMenuSync(restaurantId);
 		return res.json({ ok: true });
 	} catch (e) {
 		console.error('[admin] update menu error', e);
@@ -66,6 +83,7 @@ router.post('/menu/:restaurantId/categories', authAdmin, async (req, res) => {
 		menu.categories.push({ name, group: group || 'food', items: [] });
 		await saveMenu(restaurantId, menu);
 		await clearTranslationsCache(restaurantId);
+		emitMenuSync(restaurantId);
 		return res.status(201).json({ ok: true });
 	} catch (e) {
 		console.error('[admin] add category error', e);
@@ -82,6 +100,7 @@ router.delete('/menu/:restaurantId/categories/:categoryName', authAdmin, async (
 		menu.categories = (menu.categories || []).filter(c => c.name !== decodeURIComponent(categoryName));
 		await saveMenu(restaurantId, menu);
 		await clearTranslationsCache(restaurantId);
+		emitMenuSync(restaurantId);
 		return res.json({ ok: true });
 	} catch (e) {
 		console.error('[admin] delete category error', e);
@@ -115,6 +134,7 @@ router.post('/menu/:restaurantId/items', authAdmin, async (req, res) => {
 		});
 		await saveMenu(restaurantId, menu);
 		await clearTranslationsCache(restaurantId);
+		emitMenuSync(restaurantId);
 		return res.status(201).json({ ok: true, id: newId });
 	} catch (e) {
 		console.error('[admin] add item error', e);
@@ -145,9 +165,10 @@ router.patch('/menu/:restaurantId/items/:itemId', authAdmin, async (req, res) =>
 		if (!found) return res.status(404).json({ error: 'Article introuvable' });
 		await saveMenu(restaurantId, menu);
 		await clearTranslationsCache(restaurantId);
-		
+		emitMenuSync(restaurantId);
+
 		console.log(`[menu] item ${itemId} updated`);
-		
+
 		return res.json({ ok: true });
 	} catch (e) {
 		console.error('[admin] update item error', e);
@@ -166,6 +187,7 @@ router.delete('/menu/:restaurantId/items/:itemId', authAdmin, async (req, res) =
 		}
 		await saveMenu(restaurantId, menu);
 		await clearTranslationsCache(restaurantId);
+		emitMenuSync(restaurantId);
 		return res.json({ ok: true });
 	} catch (e) {
 		console.error('[admin] delete item error', e);
