@@ -654,11 +654,6 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	});
 	const totalDebitsInPeriod = debitsInPeriod.reduce((sum, tx) => sum + (tx.amount || 0), 0);
 
-	console.log(`[report-x] DEBIT dans la période (${effectiveDateFrom} à ${effectiveDateTo}): ${debitsInPeriod.length} transaction(s), total: ${totalDebitsInPeriod.toFixed(3)} TND`);
-	for (const tx of debitsInPeriod) {
-		console.log(`[report-x]   - ${tx.clientName || 'N/A'}: ${tx.amount || 0} TND le ${tx.date || 'N/A'}`);
-	}
-
 	// 🆕 Le montant CREDIT = seulement les dettes créées dans la période (pas les soldes de la veille)
 	// On utilise directement totalDebitsInPeriod qui est la somme des DEBIT dans creditData.details (déjà filtrés)
 	if (totalDebitsInPeriod > 0.0001) {
@@ -670,10 +665,8 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			count: creditPayers.length,
 			payers: creditPayers,
 		};
-		console.log(`[report-x] CREDIT mode créé: total=${totalDebitsInPeriod.toFixed(3)} TND, count=${creditPayers.length}, payers=${creditPayers.join(', ')}`);
 	} else if (paymentsByMode['CREDIT']) {
 		delete paymentsByMode['CREDIT'];
-		console.log(`[report-x] CREDIT mode supprimé (aucun DEBIT dans la période)`);
 	}
 
 	const reportId = `X-${new Date().toISOString().split('T')[0]}-${period || 'ALL'}-${Date.now().toString().slice(-3)}`;
