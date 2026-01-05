@@ -104,8 +104,9 @@ async function loadMenu(restaurantId) {
 		const menuPath = path.join(RESTAURANTS_DIR, restaurantId, 'menu.json');
 		const fileExists = fs.existsSync(menuPath);
 
-		// 1. Vérifier le cache en mémoire (seulement si fichier existe)
-		if (fileExists) {
+		// 1. Vérifier le cache en mémoire
+		// 🆕 On ignore le cache sur le Cloud pour éviter les désynchronisations avec l'app Admin
+		if (!dbManager.isCloud && fileExists) {
 			const cached = menuCache.get(restaurantId);
 			if (cached) {
 				// Vérifier si le cache est encore valide (TTL)

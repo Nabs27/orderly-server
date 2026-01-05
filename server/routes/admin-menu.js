@@ -6,12 +6,15 @@ const router = express.Router();
 const fsp = require('fs').promises;
 const path = require('path');
 const { authAdmin } = require('../middleware/auth');
-const { saveMenu, loadMenu } = require('../utils/menuSync');
+const { saveMenu, loadMenu, clearMenuCache } = require('../utils/menuSync');
 const socketManager = require('../utils/socket');
 const dbManager = require('../utils/dbManager');
 
 // 🔄 Émettre un événement de synchronisation menu vers les serveurs locaux
 function emitMenuSync(restaurantId) {
+	// 🆕 Vider le cache du serveur Cloud lui-même avant d'émettre
+	clearMenuCache(restaurantId);
+
 	const io = socketManager.getIO();
 	if (io && dbManager.isCloud) {
 		io.emit('sync:menu', {
