@@ -712,12 +712,14 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 
 	const reportId = `X-${new Date().toISOString().split('T')[0]}-${period || 'ALL'}-${Date.now().toString().slice(-3)}`;
 
-	// 🆕 Filtrer les paiements encaissés (exclure NON PAYÉ et CREDIT qui sont des dettes)
+	// 🆕 Filtrer les paiements encaissés (exclure seulement NON PAYÉ)
+	// ⚠️ IMPORTANT : Inclure CREDIT pour qu'il apparaisse dans l'historique et les tickets
+	// même s'il n'est pas comptabilisé dans "encaissé" (c'est une dette différée)
 	const filteredPaidPayments = allPayments.filter(payment => {
 		return payment.type === 'payment' &&
 			payment.paymentMode &&
-			payment.paymentMode !== 'NON PAYÉ' &&
-			payment.paymentMode !== 'CREDIT';
+			payment.paymentMode !== 'NON PAYÉ';
+		// 🆕 CREDIT est maintenant inclus pour affichage dans l'historique
 	});
 
 	// 🆕 Regrouper les paiements par acte de paiement (même timestamp à la seconde, même table, mode, remise)
@@ -988,7 +990,25 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 					return uniqueAmounts;
 				})() : undefined,
 				// 🆕 Ticket encaissé (format ticket de caisse)
-				ticket: {
+				ticket: (() => {
+					// 🆕 Calculer le montant total encaissé (exclut CREDIT car c'est une dette différée)
+					const totalAmountEncaisse = act.isSplitPayment ? (() => {
+						const processedTxs = new Set();
+						let total = 0;
+						for (const p of payments) {
+							// Exclure CREDIT du montant encaissé
+							if (p.paymentMode === 'CREDIT') continue;
+							const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
+							const txKey = `${p.paymentMode}_${enteredAmount.toFixed(3)}`;
+							if (!processedTxs.has(txKey)) {
+								processedTxs.add(txKey);
+								total += enteredAmount;
+							}
+						}
+						return total;
+					})() : (payments[0].paymentMode === 'CREDIT' ? 0 : totalEnteredAmount);
+					
+					return {
 					table: table,
 					date: act.timestamp || new Date().toISOString(),
 					items: allItems.map(item => ({
@@ -1004,8 +1024,34 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 					paymentMode: paymentModeDisplay, // 🆕 Utiliser le mode calculé
 					isSplitPayment: act.isSplitPayment || false, // 🆕 Ajouter le flag
 					covers: covers,
-					server: server
-				}
+					server: server,
+					// 🆕 Ajouter les détails des paiements et le montant total encaissé
+					paymentDetails: act.isSplitPayment ? (() => {
+						const processedTxs = new Set();
+						const uniqueDetails = [];
+						for (const p of payments) {
+							const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
+							const txKey = `${p.paymentMode}_${enteredAmount.toFixed(3)}`;
+							if (!processedTxs.has(txKey)) {
+								processedTxs.add(txKey);
+								const detail = { mode: p.paymentMode, amount: enteredAmount };
+								// 🆕 Ajouter le nom du client pour les paiements CREDIT
+								if (p.paymentMode === 'CREDIT' && p.creditClientName) {
+									detail.clientName = p.creditClientName;
+								}
+								uniqueDetails.push(detail);
+							}
+						}
+						return uniqueDetails;
+					})() : [{
+						mode: payments[0].paymentMode,
+						amount: payments[0].enteredAmount != null ? payments[0].enteredAmount : (payments[0].amount || 0),
+						...(payments[0].paymentMode === 'CREDIT' && payments[0].creditClientName ? { clientName: payments[0].creditClientName } : {})
+					}],
+					totalAmount: totalAmountEncaisse > 0.01 ? totalAmountEncaisse : undefined, // 🆕 Montant total encaissé (exclut CREDIT)
+					excessAmount: totalExcessAmount > 0.01 ? totalExcessAmount : undefined // 🆕 Pourboire
+					};
+				})()
 			});
 		} else {
 			// Un seul paiement
@@ -1039,7 +1085,12 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				})),
 				covers: payment.covers || 1,
 				// 🆕 Ticket encaissé (format ticket de caisse)
-				ticket: {
+				ticket: (() => {
+					// 🆕 Calculer le montant total encaissé (exclut CREDIT car c'est une dette différée)
+					const totalAmountEncaisse = payment.paymentMode === 'CREDIT' ? 0 : 
+						(payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0));
+					
+					return {
 					table: payment.table,
 					date: payment.timestamp || new Date().toISOString(),
 					items: (payment.items || []).map(item => ({
@@ -1055,8 +1106,17 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 					paymentMode: payment.paymentMode,
 					isSplitPayment: payment.isSplitPayment || false, // 🆕 Ajouter le flag
 					covers: payment.covers || 1,
-					server: payment.server
-				}
+					server: payment.server,
+					// 🆕 Ajouter les détails des paiements et le montant total encaissé
+					paymentDetails: [{
+						mode: payment.paymentMode,
+						amount: payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0),
+						...(payment.paymentMode === 'CREDIT' && payment.creditClientName ? { clientName: payment.creditClientName } : {})
+					}],
+					totalAmount: totalAmountEncaisse > 0.01 ? totalAmountEncaisse : undefined, // 🆕 Montant total encaissé (exclut CREDIT)
+					excessAmount: payment.excessAmount != null && payment.excessAmount > 0.01 ? payment.excessAmount : undefined // 🆕 Pourboire
+					};
+				})()
 			});
 		}
 	}
