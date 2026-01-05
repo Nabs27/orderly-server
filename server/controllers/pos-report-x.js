@@ -1653,7 +1653,13 @@ function collectCancellations(orders, period, dateFrom, dateTo) {
 function calculateUnpaidTables(server) {
 	// 🆕 Utiliser la même logique que le POS : vérifier mainNote.paid et subNote.paid
 	// Le POS n'affiche que les tables avec des notes non payées, pas celles avec order.total > 0
+	// 🆕 CORRECTION : Filtrer aussi les commandes archivées (comme getAllOrders)
 	const unpaidOrders = dataStore.orders.filter(order => {
+		// 🆕 Exclure les commandes archivées (comme getAllOrders)
+		if (order.status === 'archived') {
+			return false;
+		}
+		
 		// Filtrer par serveur si fourni
 		if (server && order.server) {
 			if (String(order.server).toUpperCase() !== String(server).toUpperCase()) {
@@ -1803,21 +1809,22 @@ function calculateUnpaidTables(server) {
 					const paidQty = item.paidQuantity || 0;
 					const unpaidQty = Math.max(0, (item.quantity || 0) - paidQty);
 					if (unpaidQty > 0) {
-					// Chercher si l'article existe déjà (même ID et nom)
-					const existingIndex = tableData.allItems.findIndex(i => i.id === item.id && i.name === item.name);
-					if (existingIndex !== -1) {
-						// Agréger les quantités
-						tableData.allItems[existingIndex].quantity += unpaidQty;
-						tableData.allItems[existingIndex].subtotal = tableData.allItems[existingIndex].price * tableData.allItems[existingIndex].quantity;
-					} else {
-						// Nouvel article
-						tableData.allItems.push({
-							id: Number(item.id) || item.id, // 🆕 S'assurer que id est un nombre si possible
-							name: item.name,
-							price: Number(item.price) || 0,
-							quantity: Number(unpaidQty) || 0,
-							subtotal: (Number(item.price) || 0) * (Number(unpaidQty) || 0)
-						});
+						// Chercher si l'article existe déjà (même ID et nom)
+						const existingIndex = tableData.allItems.findIndex(i => i.id === item.id && i.name === item.name);
+						if (existingIndex !== -1) {
+							// Agréger les quantités
+							tableData.allItems[existingIndex].quantity += unpaidQty;
+							tableData.allItems[existingIndex].subtotal = tableData.allItems[existingIndex].price * tableData.allItems[existingIndex].quantity;
+						} else {
+							// Nouvel article
+							tableData.allItems.push({
+								id: Number(item.id) || item.id, // 🆕 S'assurer que id est un nombre si possible
+								name: item.name,
+								price: Number(item.price) || 0,
+								quantity: Number(unpaidQty) || 0,
+								subtotal: (Number(item.price) || 0) * (Number(unpaidQty) || 0)
+							});
+						}
 					}
 				}
 			}
