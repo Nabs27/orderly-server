@@ -382,6 +382,21 @@ function extractPaymentsFromOrder(order, server, period, dateFrom, dateTo) {
 async function buildReportData({ server, period, dateFrom, dateTo, restaurantId }) {
 	const itemIdToCategory = await loadMenuAndCreateMapping(restaurantId || 'les-emirs');
 
+	// 🆕 CORRECTION : Recharger les archives depuis MongoDB si serveur cloud
+	// Le serveur cloud charge les données uniquement au démarrage, donc il faut recharger
+	// les archives à chaque génération de rapport pour avoir les données à jour
+	const dbManager = require('../utils/dbManager');
+	if (dbManager.isCloud && dbManager.db) {
+		try {
+			const archived = await dbManager.archivedOrders.find({}).toArray();
+			dataStore.archivedOrders.length = 0;
+			dataStore.archivedOrders.push(...archived);
+			console.log(`[report-x] ☁️ ${dataStore.archivedOrders.length} commandes archivées rechargées depuis MongoDB`);
+		} catch (e) {
+			console.error('[report-x] ⚠️ Erreur rechargement archives:', e.message);
+		}
+	}
+
 	// 🆕 SOURCE DE VÉRITÉ UNIQUE : Définir des valeurs par défaut cohérentes
 	// Si aucune date n'est fournie, utiliser aujourd'hui par défaut
 	if (!dateFrom || !dateTo) {
