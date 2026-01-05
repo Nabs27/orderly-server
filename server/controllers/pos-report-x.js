@@ -399,9 +399,6 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	// 🆕 Parcourir les commandes archivées ET actives
 	let filteredArchivedOrders = dataStore.archivedOrders || [];
 	let filteredActiveOrders = dataStore.orders || [];
-	
-	// 🆕 Logs de débogage
-	console.log(`[report-x] 📦 Avant filtrage - archivedOrders: ${filteredArchivedOrders.length}, activeOrders: ${filteredActiveOrders.length}`);
 
 	// Filtrer par serveur
 	if (server) {
@@ -411,12 +408,10 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		filteredActiveOrders = filteredActiveOrders.filter(order => {
 			return order.server && String(order.server).toUpperCase() === String(server).toUpperCase();
 		});
-		console.log(`[report-x] 🔍 Après filtre serveur "${server}" - archivedOrders: ${filteredArchivedOrders.length}, activeOrders: ${filteredActiveOrders.length}`);
 	}
 
 	// Filtrer par période (pour les commandes archivées, on utilise archivedAt)
 	filteredArchivedOrders = filterOrdersByPeriod(filteredArchivedOrders, period, dateFrom, dateTo);
-	console.log(`[report-x] 📅 Après filtre période "${period}" (${dateFrom} à ${dateTo}) - archivedOrders: ${filteredArchivedOrders.length}`);
 
 	// Pour les commandes actives, on filtre sur createdAt ou updatedAt (mais les paiements seront filtrés individuellement)
 	// On garde toutes les commandes actives, le filtrage se fera au niveau des paiements
