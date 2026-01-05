@@ -397,8 +397,11 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	period = period || 'ALL';
 
 	// 🆕 Parcourir les commandes archivées ET actives
-	let filteredArchivedOrders = dataStore.archivedOrders;
-	let filteredActiveOrders = dataStore.orders;
+	let filteredArchivedOrders = dataStore.archivedOrders || [];
+	let filteredActiveOrders = dataStore.orders || [];
+	
+	// 🆕 Logs de débogage
+	console.log(`[report-x] 📦 Avant filtrage - archivedOrders: ${filteredArchivedOrders.length}, activeOrders: ${filteredActiveOrders.length}`);
 
 	// Filtrer par serveur
 	if (server) {
@@ -408,10 +411,12 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		filteredActiveOrders = filteredActiveOrders.filter(order => {
 			return order.server && String(order.server).toUpperCase() === String(server).toUpperCase();
 		});
+		console.log(`[report-x] 🔍 Après filtre serveur "${server}" - archivedOrders: ${filteredArchivedOrders.length}, activeOrders: ${filteredActiveOrders.length}`);
 	}
 
 	// Filtrer par période (pour les commandes archivées, on utilise archivedAt)
 	filteredArchivedOrders = filterOrdersByPeriod(filteredArchivedOrders, period, dateFrom, dateTo);
+	console.log(`[report-x] 📅 Après filtre période "${period}" (${dateFrom} à ${dateTo}) - archivedOrders: ${filteredArchivedOrders.length}`);
 
 	// Pour les commandes actives, on filtre sur createdAt ou updatedAt (mais les paiements seront filtrés individuellement)
 	// On garde toutes les commandes actives, le filtrage se fera au niveau des paiements
@@ -509,9 +514,6 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	const discountDetails = [];
 	for (const act of Object.values(discountPaymentsByAct)) {
 		const payments = act.payments;
-		let totalSubtotal = 0;
-		let totalDiscountAmount = 0;
-		let totalAmount = 0;
 		const allActItems = [];
 		const noteNames = new Set();
 		const noteIds = new Set();
@@ -521,8 +523,9 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		// Car chaque transaction apparaît N fois (une par commande)
 		const processedTransactions = new Set();
 
+		// 🆕 ÉTAPE 1: Consolider tous les articles (comme dans history-processor.js et paidPayments)
 		for (const payment of payments) {
-			// 🆕 Dédupliquer les transactions de paiements divisés
+			// 🆕 Dédupliquer les transactions de paiements divisés pour éviter de compter les articles plusieurs fois
 			if (act.isSplitPayment && act.splitPaymentId) {
 				const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
 				const transactionKey = `${payment.paymentMode}_${enteredAmount.toFixed(3)}`;
@@ -530,18 +533,6 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 					continue; // Transaction déjà comptée
 				}
 				processedTransactions.add(transactionKey);
-				
-				// Pour les paiements divisés dédupliqués, utiliser allocatedAmount
-				const allocatedAmount = payment.allocatedAmount != null ? payment.allocatedAmount : (payment.amount || 0);
-				const discountAmount = payment.discountAmount || 0;
-				totalSubtotal += allocatedAmount + discountAmount; // 🆕 subtotal = allocatedAmount + remise
-				totalDiscountAmount += discountAmount;
-				totalAmount += allocatedAmount; // 🆕 montant APRÈS remise (correct)
-			} else {
-				totalSubtotal += payment.subtotal || 0;
-				totalDiscountAmount += payment.discountAmount || 0;
-				// 🆕 CORRECTION: Montant après remise = subtotal - discountAmount
-				totalAmount += (payment.subtotal || 0) - (payment.discountAmount || 0);
 			}
 
 			if (payment.noteName) noteNames.add(payment.noteName);
@@ -569,6 +560,26 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				}
 			}
 		}
+
+		// 🆕 ÉTAPE 2: Recalculer le subtotal depuis les articles consolidés (comme dans history-processor.js et paidPayments)
+		// Cela évite les erreurs pour les paiements divisés où chaque mode a son propre subtotal
+		const totalSubtotal = allActItems.reduce((sum, item) => {
+			const price = Number(item.price || 0);
+			const quantity = Number(item.quantity || 0);
+			return sum + (price * quantity);
+		}, 0);
+
+		// 🆕 ÉTAPE 3: Recalculer la remise depuis le taux du premier paiement (comme dans paidPayments ligne 836)
+		// car la remise est appliquée au ticket global, pas à chaque transaction
+		let totalDiscountAmount = 0;
+		if (act.isPercentDiscount && act.discount > 0) {
+			totalDiscountAmount = totalSubtotal * (act.discount / 100);
+		} else if (act.discount > 0) {
+			totalDiscountAmount = act.discount; // Remise fixe
+		}
+
+		// 🆕 ÉTAPE 4: Le total du ticket = subtotal - remise (comme dans history-processor.js ligne 649)
+		const totalAmount = totalSubtotal - totalDiscountAmount;
 
 		const primaryNoteName = Array.from(noteNames).find(name => name !== 'Note Principale') || 'Note Principale';
 		const primaryNoteId = Array.from(noteIds).find(id => id.startsWith('sub_')) || Array.from(noteIds).find(id => id === 'main') || 'main';
@@ -611,6 +622,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			discountClientName: discountClientName // 🆕 Nom du client pour justifier la remise
 		});
 	}
+
 	discountDetails.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
 	const cancellations = collectCancellations(allOrdersForTotals, period, dateFrom, dateTo); // 🆕 Filtrer par période
@@ -831,9 +843,16 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 					return sum + (price * qty);
 				}, 0);
 				
-				// 🆕 CORRECTION: Pour la remise, prendre celle du premier paiement (tous les paiements d'un split ont la même remise)
-				// car la remise est appliquée au ticket global, pas à chaque transaction
-				totalDiscountAmount = payments[0].discountAmount || 0;
+				// 🆕 CORRECTION: Recalculer la remise depuis le totalSubtotal et le taux (comme dans discountDetails)
+				// car payments[0].discountAmount est proportionnel (part de la remise pour une seule commande)
+				// La remise est appliquée au ticket global, donc on doit la recalculer depuis le totalSubtotal
+				if (act.isPercentDiscount && act.discount > 0) {
+					totalDiscountAmount = totalSubtotal * (act.discount / 100);
+				} else if (act.discount > 0) {
+					totalDiscountAmount = act.discount; // Remise fixe
+				} else {
+					totalDiscountAmount = 0;
+				}
 				
 				// 🆕 Le totalAmount doit être totalSubtotal - totalDiscountAmount (montant du ticket après remise)
 				totalAmount = totalSubtotal - totalDiscountAmount;
@@ -1002,6 +1021,65 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		return dateB - dateA;
 	});
 
+	// 🆕 Créer un map pour retrouver les tickets par actKey (après construction de paidPayments)
+	// Cela garantit que le ticket de remise = ticket exact de l'acte (comme dans paidPayments)
+	const ticketByActKey = {};
+	for (const payment of paidPayments) {
+		if (payment.ticket) {
+			let actKey;
+			if (payment.isSplitPayment && payment.splitPaymentId) {
+				actKey = `${payment.table || 'N/A'}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
+			} else {
+				const timestampKey = payment.timestamp ? new Date(payment.timestamp).toISOString().slice(0, 19) : '';
+				actKey = `${payment.table || 'N/A'}_${timestampKey}_${payment.paymentMode || 'N/A'}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
+			}
+			ticketByActKey[actKey] = payment.ticket;
+		}
+	}
+
+	// 🆕 Utiliser le ticket sauvegardé dans paidPayments pour chaque remise
+	// Cela garantit que le ticket de remise = ticket exact payé (cohérent avec historique et KPI)
+	for (const discount of discountDetails) {
+		let actKey;
+		if (discount.isSplitPayment && discount.splitPaymentId) {
+			actKey = `${discount.table || 'N/A'}_${discount.splitPaymentId}_${discount.discount || 0}_${discount.isPercentDiscount ? 'PCT' : 'FIX'}`;
+		} else {
+			const timestampKey = discount.timestamp ? new Date(discount.timestamp).toISOString().slice(0, 19) : '';
+			actKey = `${discount.table || 'N/A'}_${timestampKey}_${discount.paymentMode || 'N/A'}_${discount.discount || 0}_${discount.isPercentDiscount ? 'PCT' : 'FIX'}`;
+		}
+		
+		// Utiliser le ticket sauvegardé si disponible, sinon garder les items pour compatibilité
+		const savedTicket = ticketByActKey[actKey];
+		if (savedTicket) {
+			discount.ticket = savedTicket;
+			// 🆕 Mettre à jour les valeurs de discount avec celles du ticket (source de vérité unique)
+			// Cela garantit que le X Report et la liste KPI affichent les mêmes valeurs que le ticket
+			discount.subtotal = savedTicket.subtotal || discount.subtotal;
+			discount.discountAmount = savedTicket.discountAmount || discount.discountAmount;
+			discount.amount = savedTicket.total || discount.amount;
+		} else {
+			// Fallback : créer le ticket depuis les items (cas rare où le ticket n'existe pas)
+			discount.ticket = {
+				table: discount.table,
+				date: discount.timestamp || new Date().toISOString(),
+				items: discount.items.map(item => ({
+					name: item.name,
+					quantity: item.quantity || 0,
+					price: item.price || 0,
+					subtotal: (item.price || 0) * (item.quantity || 0)
+				})),
+				subtotal: discount.subtotal,
+				discount: discount.discount || 0,
+				discountAmount: discount.discountAmount,
+				total: discount.amount,
+				paymentMode: discount.paymentMode,
+				isSplitPayment: discount.isSplitPayment || false,
+				covers: discount.covers || 1,
+				server: discount.server
+			};
+		}
+	}
+
 	// 🆕 CORRECTION: Reconstruire allItems depuis paidPayments (qui a déjà la logique de fusion correcte)
 	// Cela évite de compter les articles plusieurs fois pour les paiements divisés
 	const allItems = [];
@@ -1042,12 +1120,17 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	// ⚠️ RÈGLE .cursorrules 2.1: allPayments contient les paiements bruts (N fois par commande pour split)
 	const processedData = paymentProcessor.deduplicateAndCalculate(allPayments);
 	
+	// 🆕 CORRECTION: Utiliser discountDetails (remises recalculées correctement) comme source de vérité pour totalRemises
+	// car paymentProcessor additionne les discountAmount proportionnels sans les recalculer depuis totalSubtotal
+	const totalRemisesFromDiscounts = discountDetails.reduce((sum, d) => sum + (d.discountAmount || 0), 0);
+	const nombreRemisesFromDiscounts = discountDetails.length;
+	
 	// Extraire les totaux du module commun
 	const totals = {
 		chiffreAffaire: processedData.totals.chiffreAffaire,
 		totalRecette: processedData.totals.totalRecette,
-		totalRemises: processedData.totals.totalRemises,
-		nombreRemises: processedData.totals.nombreRemises,
+		totalRemises: totalRemisesFromDiscounts, // 🆕 Utiliser les remises recalculées depuis discountDetails
+		nombreRemises: nombreRemisesFromDiscounts, // 🆕 Utiliser le nombre depuis discountDetails
 		// Calculer nombreCouverts et nombreArticles depuis paidPayments (déjà regroupés)
 		nombreCouverts: paidPayments.reduce((sum, p) => sum + (p.covers || 0), 0),
 		nombreArticles: paidPayments.reduce((sum, p) => {
