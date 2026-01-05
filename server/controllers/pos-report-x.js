@@ -399,19 +399,23 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		// Le filtrage des doublons est déjà fait dans loadFromMongoDB() au démarrage
 		// Ici, on veut juste recharger TOUTES les commandes actives pour avoir les données à jour
 		const orders = await dbManager.orders.find({}).toArray();
+		console.log(`[report-x] 🔍 DEBUG: ${orders.length} commandes trouvées dans MongoDB`);
 		
 		// 🆕 Filtrer uniquement les commandes avec status !== 'archived' (comme getAllOrders)
 		// Les commandes archivées sont dans archivedOrders, pas dans orders
 		const activeOrders = orders.filter(o => {
 			// Exclure les commandes archivées
 			if (o.status === 'archived') {
+				console.log(`[report-x] 🔍 DEBUG: Commande ${o.id || o.tempId || 'N/A'} exclue: status=archived`);
 				return false;
 			}
 			// Exclure les commandes client en attente (waitingForPos: true, pas encore confirmées)
 			// Ces commandes n'ont pas encore d'ID et ne sont pas encore actives
 			if (o.waitingForPos === true && (!o.id || o.id === null) && o.source === 'client') {
+				console.log(`[report-x] 🔍 DEBUG: Commande ${o.tempId || 'N/A'} exclue: waitingForPos=true, pas d'ID`);
 				return false;
 			}
+			console.log(`[report-x] 🔍 DEBUG: Commande ${o.id || o.tempId || 'N/A'} incluse: id=${o.id}, status=${o.status}, waitingForPos=${o.waitingForPos}, source=${o.source}`);
 			return true;
 		});
 		
