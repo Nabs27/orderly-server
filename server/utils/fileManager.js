@@ -113,6 +113,7 @@ async function loadFromMongoDB() {
 		const archived = await dbManager.archivedOrders.find({}).toArray();
 		dataStore.archivedOrders.length = 0;
 		dataStore.archivedOrders.push(...archived);
+		console.log(`[persistence] ☁️ ${dataStore.archivedOrders.length} commandes archivées chargées depuis MongoDB`);
 		
 		// Charger les factures
 		const bills = await dbManager.bills.find({}).toArray();
