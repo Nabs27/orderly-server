@@ -377,18 +377,40 @@ async function saveToMongoDB() {
 		// Le serveur cloud a besoin de voir les commandes actives pour calculer les tables non payées
 		if (dataStore.orders.length > 0) {
 			const activeOrders = dataStore.orders.filter(o => o.status !== 'archived');
+			console.log(`[sync] 🔍 DEBUG: ${dataStore.orders.length} commandes totales, ${activeOrders.length} actives (status !== 'archived')`);
+			
+			let syncedCount = 0;
+			let skippedCount = 0;
+			
 			for (const order of activeOrders) {
+				// 🆕 DEBUG: Log chaque commande avant synchronisation
+				console.log(`[sync] 🔍 DEBUG: Commande id=${order.id || 'NULL'}, table=${order.table}, status=${order.status}, source=${order.source || 'undefined'}`);
+				
+				// 🆕 CORRECTION : Vérifier que la commande a un ID valide
+				if (!order.id || order.id === null) {
+					console.warn(`[sync] ⚠️ Commande ignorée (pas d'ID): table=${order.table}, tempId=${order.tempId || 'N/A'}, source=${order.source || 'undefined'}, status=${order.status}`);
+					skippedCount++;
+					continue; // Ignorer les commandes sans ID (commandes client en attente)
+				}
+				
 				// 🆕 CORRECTION : Supprimer _id MongoDB avant replaceOne
 				const orderToSave = { ...order };
 				delete orderToSave._id;
 				
-				await dbManager.orders.replaceOne(
-					{ id: order.id },
-					orderToSave,
-					{ upsert: true }
-				);
+				try {
+					const result = await dbManager.orders.replaceOne(
+						{ id: order.id },
+						orderToSave,
+						{ upsert: true }
+					);
+					syncedCount++;
+					console.log(`[sync] ✅ Commande ${order.id} (table ${order.table}) synchronisée: ${result.upsertedCount > 0 ? 'créée' : 'mise à jour'}`);
+				} catch (e) {
+					console.error(`[sync] ❌ Erreur synchronisation commande ${order.id} (table ${order.table}):`, e.message);
+					console.error(`[sync] ❌ Stack:`, e.stack);
+				}
 			}
-			console.log(`[sync] ☁️ ${activeOrders.length} commandes actives synchronisées vers MongoDB`);
+			console.log(`[sync] ☁️ ${syncedCount} commandes actives synchronisées vers MongoDB, ${skippedCount} ignorées (pas d'ID)`);
 		} else {
 			// 🆕 Si le tableau est vide, supprimer toutes les commandes actives de MongoDB
 			// (mais garder les commandes client en attente avec waitingForPos=true)

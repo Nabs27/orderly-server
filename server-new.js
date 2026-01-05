@@ -100,15 +100,20 @@ dbManager.connect().then(() => {
 		setInterval(async () => {
 			try {
 				const activeOrders = dataStore.orders.filter(o => o.status !== 'archived');
+				console.log(`[sync] 🔄 DEBUG: Tentative synchronisation périodique - ${activeOrders.length} commande(s) active(s) locale(s)`);
+				
 				if (activeOrders.length > 0) {
 					// Synchroniser uniquement les commandes actives (via saveToMongoDB)
 					// On appelle directement saveToMongoDB pour éviter de sauvegarder le JSON
 					const fileManager = require('./server/utils/fileManager');
 					await fileManager.savePersistedData();
 					console.log(`[sync] 🔄 ${activeOrders.length} commande(s) active(s) synchronisée(s) vers MongoDB`);
+				} else {
+					console.log(`[sync] 🔄 Aucune commande active à synchroniser`);
 				}
 			} catch (e) {
 				console.error('[sync] ⚠️ Erreur synchronisation commandes actives:', e.message);
+				console.error('[sync] ⚠️ Stack:', e.stack);
 			}
 		}, SYNC_INTERVAL);
 		
@@ -119,12 +124,17 @@ dbManager.connect().then(() => {
 		setTimeout(async () => {
 			try {
 				const activeOrders = dataStore.orders.filter(o => o.status !== 'archived');
+				console.log(`[sync] 🚀 DEBUG: Synchronisation démarrage - ${activeOrders.length} commande(s) active(s) locale(s)`);
+				
 				if (activeOrders.length > 0) {
 					await fileManager.savePersistedData();
 					console.log(`[sync] 🚀 ${activeOrders.length} commande(s) active(s) synchronisée(s) au démarrage`);
+				} else {
+					console.log(`[sync] 🚀 Aucune commande active à synchroniser au démarrage`);
 				}
 			} catch (e) {
 				console.error('[sync] ⚠️ Erreur synchronisation démarrage:', e.message);
+				console.error('[sync] ⚠️ Stack:', e.stack);
 			}
 		}, 2000); // Attendre 2 secondes après le démarrage pour laisser MongoDB se connecter
 	} else if (dbManager.isCloud && dbManager.db && !isLocalServer) {

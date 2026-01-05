@@ -132,7 +132,11 @@ async function createOrder(req, res) {
 		console.log('[orders] Commande POS créée:', newOrder.id, 'pour table', table, 'serveur:', assignedServer, 'total:', total, 'note:', noteId || 'main');
 
 		// Sauvegarder automatiquement (JSON local + MongoDB)
-		fileManager.savePersistedData().catch(e => console.error('[orders] Erreur sauvegarde:', e));
+		console.log(`[orders] 💾 Sauvegarde déclenchée pour commande ${newOrder.id || newOrder.tempId} (table ${table}, status=${newOrder.status})`);
+		fileManager.savePersistedData().catch(e => {
+			console.error('[orders] ❌ Erreur sauvegarde:', e.message);
+			console.error('[orders] ❌ Stack:', e.stack);
+		});
 	}
 	
 	// 📊 Récupérer TOUTES les commandes actives de la table pour l'état complet
