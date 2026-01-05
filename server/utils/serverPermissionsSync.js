@@ -18,34 +18,62 @@ const CACHE_TTL = 10000; // 10 secondes de cache (réduit pour détecter les mod
 // Sauvegarder les profils serveurs (JSON local + MongoDB si configuré)
 async function saveServerProfiles(profiles) {
 	try {
-		// 1. Sauvegarder en JSON local
-		await fsp.mkdir(path.dirname(PERMISSIONS_FILE), { recursive: true });
-		await fsp.writeFile(PERMISSIONS_FILE, JSON.stringify(profiles, null, 2), 'utf8');
-		console.log(`[permissions-sync] 🏠 ${profiles.length} profils serveurs sauvegardés en JSON local`);
-		
-		// 2. Mettre à jour le cache avec le timestamp du fichier
-		permissionsCache = profiles;
-		permissionsCacheTimestamp = Date.now();
-		try {
-			const stats = await fsp.stat(PERMISSIONS_FILE);
-			permissionsFileMTime = stats.mtimeMs;
-		} catch (e) {
-			permissionsFileMTime = 0;
-		}
-		
-		// 3. Synchroniser vers MongoDB si configuré (asynchrone, non-bloquant)
+		// 🆕 CORRECTION : Pour serveur cloud, sauvegarder directement dans MongoDB (source de vérité)
+		// Le JSON local peut ne pas être persistant sur Railway
 		if (dbManager.isCloud && dbManager.db) {
-			dbManager.serverPermissions.deleteMany({}).then(() => {
-				if (profiles.length > 0) {
-					return dbManager.serverPermissions.insertMany(
-						profiles.map(p => ({ ...p, lastSynced: new Date().toISOString() }))
-					);
-				}
-			}).then(() => {
-				console.log(`[permissions-sync] ☁️ ${profiles.length} profils serveurs synchronisés vers MongoDB`);
-			}).catch(e => {
-				console.error(`[permissions-sync] ⚠️ Erreur sync vers MongoDB:`, e.message);
-			});
+			// Serveur cloud : MongoDB est la source de vérité
+			await dbManager.serverPermissions.deleteMany({});
+			if (profiles.length > 0) {
+				await dbManager.serverPermissions.insertMany(
+					profiles.map(p => ({ ...p, lastSynced: new Date().toISOString() }))
+				);
+			}
+			console.log(`[permissions-sync] ☁️ ${profiles.length} profils serveurs sauvegardés dans MongoDB`);
+			
+			// Mettre à jour le cache
+			permissionsCache = profiles;
+			permissionsCacheTimestamp = Date.now();
+			permissionsFileMTime = 0; // Pas de fichier sur serveur cloud
+			
+			// Essayer de sauvegarder en JSON local si possible (non-bloquant)
+			try {
+				await fsp.mkdir(path.dirname(PERMISSIONS_FILE), { recursive: true });
+				await fsp.writeFile(PERMISSIONS_FILE, JSON.stringify(profiles, null, 2), 'utf8');
+				console.log(`[permissions-sync] 🏠 ${profiles.length} profils serveurs aussi sauvegardés en JSON local`);
+			} catch (e) {
+				// Sur Railway, l'écriture peut échouer (pas de stockage persistant) - c'est normal
+				console.log(`[permissions-sync] ⚠️ Impossible de sauvegarder en JSON local (normal sur serveur cloud)`);
+			}
+		} else {
+			// Serveur local : JSON local est la source de vérité
+			await fsp.mkdir(path.dirname(PERMISSIONS_FILE), { recursive: true });
+			await fsp.writeFile(PERMISSIONS_FILE, JSON.stringify(profiles, null, 2), 'utf8');
+			console.log(`[permissions-sync] 🏠 ${profiles.length} profils serveurs sauvegardés en JSON local`);
+			
+			// Mettre à jour le cache avec le timestamp du fichier
+			permissionsCache = profiles;
+			permissionsCacheTimestamp = Date.now();
+			try {
+				const stats = await fsp.stat(PERMISSIONS_FILE);
+				permissionsFileMTime = stats.mtimeMs;
+			} catch (e) {
+				permissionsFileMTime = 0;
+			}
+			
+			// Synchroniser vers MongoDB si configuré (asynchrone, non-bloquant)
+			if (dbManager.db) {
+				dbManager.serverPermissions.deleteMany({}).then(() => {
+					if (profiles.length > 0) {
+						return dbManager.serverPermissions.insertMany(
+							profiles.map(p => ({ ...p, lastSynced: new Date().toISOString() }))
+						);
+					}
+				}).then(() => {
+					console.log(`[permissions-sync] ☁️ ${profiles.length} profils serveurs synchronisés vers MongoDB`);
+				}).catch(e => {
+					console.error(`[permissions-sync] ⚠️ Erreur sync vers MongoDB:`, e.message);
+				});
+			}
 		}
 	} catch (e) {
 		console.error('[permissions-sync] ❌ Erreur sauvegarde profils serveurs:', e);
