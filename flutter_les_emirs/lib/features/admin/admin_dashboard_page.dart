@@ -8,7 +8,6 @@ import 'admin_menu_editor_page.dart';
 import 'admin_servers_page.dart';
 import 'report_x_page.dart';
 import 'widgets/admin_dashboard_kpi_section.dart';
-import 'widgets/enriched_history_section.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -212,11 +211,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       appBar: AppBar(
         title: const Text('Dashboard Admin'),
         actions: [
-              IconButton(icon: const Icon(Icons.restaurant_menu), tooltip: 'Edition menu', onPressed: _openMenuSelector),
-              IconButton(icon: const Icon(Icons.inventory_2_outlined), tooltip: 'Stock (bientot)', onPressed: _openStockPreview),
-              IconButton(icon: const Icon(Icons.supervisor_account), tooltip: 'Profils serveurs', onPressed: _openServersPage),
-              IconButton(icon: const Icon(Icons.receipt_long), tooltip: 'Rapport X', onPressed: _openReportXPage),
-              IconButton(icon: const Icon(Icons.account_balance_wallet_outlined), tooltip: 'Crédit client', onPressed: _openCreditPage),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
@@ -227,13 +221,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ],
       ),
           body: _buildDashboardBody(isDesktop, isTablet, shortcuts),
-          floatingActionButton: isDesktop
-              ? null
-              : FloatingActionButton.extended(
-                  onPressed: () => _showQuickActionsSheet(shortcuts),
-                  icon: const Icon(Icons.flash_on),
-                  label: const Text('Actions'),
-                ),
         );
       },
     );
@@ -260,14 +247,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     } else {
       content = CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(child: _buildHeroHeader()),
           SliverToBoxAdapter(child: AdminDashboardKpiSection(key: _kpiKey)),
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: 400,
-              child: const EnrichedHistorySection(),
-            ),
-          ),
           SliverToBoxAdapter(child: _buildSectionTitle('Restaurants actifs')),
           if (restaurants.isEmpty)
             SliverToBoxAdapter(child: _buildEmptyState())
@@ -287,38 +267,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
-  Widget _buildHeroHeader() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFF0F172A), Color(0xFF1E293B)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 12))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Pilotage global', style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 8),
-          Text(
-            'Suivez vos encaissements, vos menus et les équipes en un coup d\'oeil.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70),
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              _HeroChip(icon: Icons.restaurant_menu, label: '${restaurants.length} restaurant(s) gérés'),
-              const _HeroChip(icon: Icons.bolt, label: 'Synchronisé en temps réel'),
-              const _HeroChip(icon: Icons.smartphone, label: 'Vue optimisée mobile & desktop'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSectionTitle(String title) {
     return Padding(
@@ -461,39 +409,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
-  Future<void> _showQuickActionsSheet(List<_AdminShortcut> shortcuts) async {
-    await showModalBottomSheet(
-      context: context,
-      showDragHandle: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: shortcuts
-                  .map(
-                    (shortcut) => ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.teal.withOpacity(0.1),
-                        child: Icon(shortcut.icon, color: Colors.teal),
-                      ),
-                      title: Text(shortcut.title),
-                      subtitle: Text(shortcut.subtitle),
-                      onTap: () async {
-                        Navigator.of(sheetContext).pop();
-                        await shortcut.action();
-                      },
-                    ),
-                  )
-                  .toList(),
-            ),
-          ),
-        );
-      },
-    );
-  }
 
   List<_AdminShortcut> _buildShortcuts() {
     return [
@@ -544,30 +459,71 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       return;
     }
 
-    await showModalBottomSheet(
+    // Si un seul menu, l'ouvrir directement
+    if (restaurants.length == 1) {
+      await _openMenuEditor(restaurants.first['id']);
+      return;
+    }
+
+    // Sinon, afficher le dialog de choix au centre
+    await showDialog(
       context: context,
-      showDragHandle: true,
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                child: Text('Choisir un menu à éditer', style: TextStyle(fontWeight: FontWeight.w700)),
-              ),
-              ...restaurants.map((r) {
-                return ListTile(
-                  leading: const Icon(Icons.restaurant),
-                  title: Text(r['name'] ?? ''),
-                  subtitle: Text('${r['id']} • ${r['categoriesCount']} cat. • ${r['itemsCount']} articles'),
-                  onTap: () async {
-                    Navigator.of(sheetContext).pop();
-                    await _openMenuEditor(r['id']);
-                  },
-                );
-              }).toList(),
-            ],
+      builder: (dialogContext) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final dialogWidth = screenWidth > 500 ? 500.0 : screenWidth * 0.9;
+
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          child: Container(
+            width: dialogWidth,
+            constraints: const BoxConstraints(maxWidth: 500),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Choisir un menu à éditer',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                    ),
+                  ],
+                ),
+                const Divider(height: 24),
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: restaurants.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (_, index) {
+                      final r = restaurants[index];
+                      return ListTile(
+                        leading: const Icon(Icons.restaurant, color: Colors.teal),
+                        title: Text(
+                          r['name'] ?? '',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text('${r['id']} • ${r['categoriesCount']} cat. • ${r['itemsCount']} articles'),
+                        onTap: () async {
+                          Navigator.of(dialogContext).pop();
+                          await _openMenuEditor(r['id']);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -606,33 +562,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   Future<void> _openReportXPage() async {
     await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ReportXPage()));
-  }
-}
-
-class _HeroChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _HeroChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white24),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: 18),
-          const SizedBox(width: 8),
-          Text(label, style: const TextStyle(color: Colors.white)),
-        ],
-      ),
-    );
   }
 }
 

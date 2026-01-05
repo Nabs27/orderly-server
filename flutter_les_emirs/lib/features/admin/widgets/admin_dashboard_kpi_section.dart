@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:socket_io_client/socket_io_client.dart' as io;
+import '../../core/api_client.dart';
 import '../models/kpi_model.dart';
 import '../services/kpi_service.dart';
-import 'ca_details_dialog.dart';
-import 'credit_details_dialog.dart';
-import 'discount_details_dialog.dart';
-import 'unpaid_tables_dialog.dart';
-import 'paid_history_dialog.dart';
+import '../pages/ca_details_page.dart';
+import '../pages/credit_details_page.dart';
+import '../pages/discount_details_page.dart';
+import '../pages/unpaid_tables_page.dart';
+import '../pages/paid_history_page.dart';
 
 class AdminDashboardKpiSection extends StatefulWidget {
   const AdminDashboardKpiSection({super.key});
@@ -18,11 +20,47 @@ class AdminDashboardKpiSectionState extends State<AdminDashboardKpiSection> {
   KpiModel? _kpis;
   bool _loading = true;
   String? _error;
+  io.Socket? socket;
 
   @override
   void initState() {
     super.initState();
     _loadKpis();
+    _connectSocket();
+  }
+
+  @override
+  void dispose() {
+    socket?.dispose();
+    super.dispose();
+  }
+
+  void _connectSocket() {
+    try {
+      final base = ApiClient.dio.options.baseUrl;
+      final uri = base.replaceAll(RegExp(r"/+\$"), '');
+      final s = io.io(uri, io.OptionBuilder().setTransports(['websocket']).setExtraHeaders({'Origin': uri}).build());
+      socket = s;
+      
+      // Écouter les mises à jour
+      s.on('connect', (_) => print('[KPI] Socket connecté'));
+      
+      // Rafraîchir sur toute activité pertinente
+      void refresh(_) {
+        print('[KPI] Activité détectée, rafraîchissement...');
+        _loadKpis();
+      }
+
+      s.on('order:updated', refresh);
+      s.on('order:new', refresh);
+      s.on('order:archived', refresh);
+      s.on('table:payment', refresh);
+      s.on('sync:stats', refresh); // Événement spécifique si implémenté
+
+      s.connect();
+    } catch (e) {
+      print('[KPI] Erreur connexion socket: $e');
+    }
   }
 
   Future<void> refresh() async {
@@ -152,43 +190,29 @@ class AdminDashboardKpiSectionState extends State<AdminDashboardKpiSection> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        // Optimisation pour mobile : 2 colonnes minimum pour éviter le scroll vertical excessif
         final width = constraints.maxWidth;
         final columns = width >= 1200
-            ? 4
-            : width >= 900
-                ? 3
-                : width >= 600
-                    ? 2
-                    : 1;
-        final cardWidth = (width - (columns - 1) * 12) / columns;
+            ? 5 // Desktop large : tout sur une ligne
+            : width >= 800
+                ? 3 // Tablette : 3 par ligne
+                : 2; // Mobile : 2 par ligne (plus compact)
+        
+        final cardWidth = (width - (columns - 1) * 8) / columns; // Marge réduite (8 au lieu de 12)
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // Marges réduites
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  const Text(
-                    'Pilotage express',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                  ),
-                  const Spacer(),
-                  TextButton.icon(
-                    onPressed: _loadKpis,
-                    icon: const Icon(Icons.refresh, size: 18),
-                    label: const Text('Actualiser'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
+              // Suppression du titre "Pilotage express" et bouton "Actualiser" (demande user)
               Wrap(
-                spacing: 12,
-                runSpacing: 12,
+                spacing: 8, // Espacement réduit
+                runSpacing: 8, // Espacement réduit
                 children: cards
                     .map(
                       (card) => SizedBox(
-                        width: columns == 1 ? double.infinity : cardWidth,
+                        width: cardWidth,
                         child: _KpiCard(
                           title: card['title'] as String,
                           value: card['value'] as String,
@@ -217,12 +241,13 @@ class AdminDashboardKpiSectionState extends State<AdminDashboardKpiSection> {
   }
 
   void _showCaDetails(BuildContext context, KpiModel kpis) {
-    showDialog(
-      context: context,
-      builder: (_) => CaDetailsDialog(
-        ca: kpis.chiffreAffaire,
-        nombreTickets: kpis.nombreTickets,
-        panierMoyen: kpis.panierMoyen,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CaDetailsPage(
+          ca: kpis.chiffreAffaire,
+          nombreTickets: kpis.nombreTickets,
+          panierMoyen: kpis.panierMoyen,
+        ),
       ),
     );
   }
@@ -235,14 +260,15 @@ class AdminDashboardKpiSectionState extends State<AdminDashboardKpiSection> {
       return;
     }
 
-    showDialog(
-      context: context,
-      builder: (_) => CreditDetailsDialog(
-        totalDebit: kpis.totalDettes,
-        totalCredit: kpis.totalPaiements,
-        totalBalance: kpis.soldeCredit,
-        clients: kpis.creditClients,
-        recentTransactions: kpis.recentCreditTransactions,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CreditDetailsPage(
+          totalDebit: kpis.totalDettes,
+          totalCredit: kpis.totalPaiements,
+          totalBalance: kpis.soldeCredit,
+          clients: kpis.creditClients,
+          recentTransactions: kpis.recentCreditTransactions,
+        ),
       ),
     );
   }
@@ -255,10 +281,11 @@ class AdminDashboardKpiSectionState extends State<AdminDashboardKpiSection> {
       return;
     }
 
-    showDialog(
-      context: context,
-      builder: (_) => DiscountDetailsDialog(
-        discountDetails: kpis.discountDetails,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DiscountDetailsPage(
+          discountDetails: kpis.discountDetails,
+        ),
       ),
     );
   }
@@ -271,10 +298,11 @@ class AdminDashboardKpiSectionState extends State<AdminDashboardKpiSection> {
       return;
     }
 
-    showDialog(
-      context: context,
-      builder: (_) => UnpaidTablesDialog(
-        unpaidTables: kpis.unpaidTablesDetails,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => UnpaidTablesPage(
+          unpaidTables: kpis.unpaidTablesDetails,
+        ),
       ),
     );
   }
@@ -287,10 +315,11 @@ class AdminDashboardKpiSectionState extends State<AdminDashboardKpiSection> {
       return;
     }
 
-    showDialog(
-      context: context,
-      builder: (_) => PaidHistoryDialog(
-        paidPayments: kpis.paidPayments,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PaidHistoryPage(
+          paidPayments: kpis.paidPayments,
+        ),
       ),
     );
   }
@@ -338,11 +367,11 @@ class _KpiCard extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6), // Réduit
         Text(
           title,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 13, // Réduit
             fontWeight: FontWeight.w600,
             color: Colors.grey.shade800,
           ),
@@ -351,7 +380,7 @@ class _KpiCard extends StatelessWidget {
         Text(
           subtitle,
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 10, // Réduit
             color: Colors.grey.shade600,
           ),
           maxLines: 2,
@@ -364,16 +393,16 @@ class _KpiCard extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(12), // Padding réduit (était 18)
         decoration: BoxDecoration(
           gradient: gradient,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16), // Rayon réduit
           border: Border.all(color: iconColor.withOpacity(0.15)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+              blurRadius: 10, // Ombre réduite
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -384,7 +413,7 @@ class _KpiCard extends StatelessWidget {
               Positioned(
                 top: 0,
                 right: 0,
-                child: Icon(Icons.touch_app, size: 16, color: iconColor.withOpacity(0.5)),
+                child: Icon(Icons.touch_app, size: 14, color: iconColor.withOpacity(0.5)),
               ),
           ],
         ),
