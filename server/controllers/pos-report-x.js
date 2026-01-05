@@ -2453,6 +2453,59 @@ async function generateReportXTicket(req, res) {
 		ticket += 'TOTAL RECETTE ENCAISSEE'.padEnd(labelWidth) + totalRecetteEncaissée.toFixed(3).replace('.', ',').padStart(valueWidth) + '\n';
 		ticket += '\n';
 
+		// 🆕 TABLES NON PAYÉES (Recette non encaissée)
+		if (unpaidTables && unpaidTables.total > 0) {
+			ticket += separator('=') + '\n';
+			ticket += center('RECETTE NON ENCAISSEE') + '\n';
+			ticket += separator('=') + '\n';
+			ticket += '\n';
+			
+			const unpaidTotal = unpaidTables.total || 0;
+			const unpaidCount = unpaidTables.count || 0;
+			ticket += `Total non encaisse: ${unpaidTotal.toFixed(3).replace('.', ',')} TND\n`;
+			ticket += `Nombre de tables: ${unpaidCount}\n`;
+			ticket += '\n';
+			
+			// Détails par table
+			if (unpaidTables.details && unpaidTables.details.length > 0) {
+				ticket += 'DETAIL PAR TABLE:\n';
+				ticket += separator('-') + '\n';
+				
+				for (const table of unpaidTables.details) {
+					const tableNumber = table.table || 'N/A';
+					const server = table.server || 'unknown';
+					const total = (table.total || 0).toFixed(3).replace('.', ',');
+					const covers = table.covers || 1;
+					
+					ticket += `Table ${tableNumber} - Serveur: ${server.toUpperCase()}\n`;
+					ticket += `Couverts: ${covers} | Total: ${total} TND\n`;
+					
+					// Articles
+					if (table.items && table.items.length > 0) {
+						const itemsToShow = table.items.slice(0, 5); // Limiter à 5 articles pour ne pas surcharger
+						for (const item of itemsToShow) {
+							const itemName = (item.name || 'N/A').toUpperCase();
+							const qty = item.quantity || 0;
+							const price = (item.price || 0).toFixed(3).replace('.', ',');
+							const subtotal = ((item.price || 0) * (item.quantity || 0)).toFixed(3).replace('.', ',');
+							
+							if (itemName.length > 25) {
+								ticket += `  ${itemName.substring(0, 22)}... x${qty} - ${price} TND = ${subtotal} TND\n`;
+							} else {
+								ticket += `  ${itemName} x${qty} - ${price} TND = ${subtotal} TND\n`;
+							}
+						}
+						if (table.items.length > 5) {
+							ticket += `  ... ${table.items.length - 5} article(s) supplémentaire(s)\n`;
+						}
+					}
+					
+					ticket += separator('-') + '\n';
+				}
+				ticket += '\n';
+			}
+		}
+
 		// Pied de page
 		ticket += separator('=') + '\n';
 		ticket += center('Merci !') + '\n';
