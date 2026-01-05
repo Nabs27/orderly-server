@@ -425,6 +425,7 @@ async function saveToMongoDB() {
 		
 		// Synchroniser les commandes archivées
 		if (dataStore.archivedOrders.length > 0) {
+			const archivedIds = [];
 			for (const order of dataStore.archivedOrders) {
 				// 🆕 CORRECTION : Supprimer _id MongoDB avant replaceOne
 				const orderToSave = { ...order };
@@ -435,24 +436,28 @@ async function saveToMongoDB() {
 					orderToSave,
 					{ upsert: true }
 				);
+				archivedIds.push(order.id);
 			}
 			console.log(`[sync] ☁️ ${dataStore.archivedOrders.length} commandes archivées synchronisées`);
+			
+			// 🆕 CORRECTION : SUPPRIMER les commandes archivées de la collection orders principale
+			// pour éviter qu'elles apparaissent comme actives dans le cloud
+			// Cela doit être fait APRÈS la synchronisation des archives
+			if (archivedIds.length > 0) {
+				const deleteResult = await dbManager.orders.deleteMany({
+					id: { $in: archivedIds },
+					status: 'archived' // 🆕 Double vérification : seulement celles avec status='archived'
+				});
+				if (deleteResult.deletedCount > 0) {
+					console.log(`[sync] 🗑️ ${deleteResult.deletedCount} commande(s) archivée(s) supprimée(s) de orders (maintenant dans archivedOrders)`);
+				}
+			}
 		} else {
 			// 🆕 Si le tableau est vide (après reset), supprimer toutes les archives de MongoDB
 			// pour garantir que l'état vide est bien synchronisé
 			const deleteResult = await dbManager.archivedOrders.deleteMany({});
 			if (deleteResult.deletedCount > 0) {
 				console.log(`[sync] 🗑️ ${deleteResult.deletedCount} commande(s) archivée(s) supprimée(s) de MongoDB (état vide synchronisé)`);
-			}
-
-			// 🆕 SUPPRIMER les commandes archivées de la collection orders principale
-			// pour éviter qu'elles réapparaissent au redémarrage
-			if (dataStore.archivedOrders.length > 0) {
-				const archivedIds = dataStore.archivedOrders.map(o => o.id);
-				const deleteResult = await dbManager.orders.deleteMany({
-					id: { $in: archivedIds }
-				});
-				console.log(`[sync] 🗑️ ${deleteResult.deletedCount} commande(s) supprimée(s) de orders (maintenant archivées)`);
 			}
 		}
 
