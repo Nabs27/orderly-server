@@ -371,9 +371,35 @@ async function saveToMongoDB() {
 		// MongoDB ne contient QUE :
 		// 1. Commandes client EN ATTENTE (déposées par le serveur cloud, waitingForPos=true)
 		// 2. Backups archivées (pour dashboard)
+		// 3. 🆕 Commandes actives (pour que le dashboard admin en ligne puisse voir les tables non payées)
 		
-		// 🆕 On ne sauvegarde PAS les commandes actives dans MongoDB
-		// Le serveur local est la source de vérité, MongoDB est juste la boîte aux lettres
+		// 🆕 CORRECTION : Synchroniser aussi les commandes actives pour le dashboard admin en ligne
+		// Le serveur cloud a besoin de voir les commandes actives pour calculer les tables non payées
+		if (dataStore.orders.length > 0) {
+			const activeOrders = dataStore.orders.filter(o => o.status !== 'archived');
+			for (const order of activeOrders) {
+				// 🆕 CORRECTION : Supprimer _id MongoDB avant replaceOne
+				const orderToSave = { ...order };
+				delete orderToSave._id;
+				
+				await dbManager.orders.replaceOne(
+					{ id: order.id },
+					orderToSave,
+					{ upsert: true }
+				);
+			}
+			console.log(`[sync] ☁️ ${activeOrders.length} commandes actives synchronisées vers MongoDB`);
+		} else {
+			// 🆕 Si le tableau est vide, supprimer toutes les commandes actives de MongoDB
+			// (mais garder les commandes client en attente avec waitingForPos=true)
+			const deleteResult = await dbManager.orders.deleteMany({
+				status: { $ne: 'archived' },
+				waitingForPos: { $ne: true } // Ne pas supprimer les commandes client en attente
+			});
+			if (deleteResult.deletedCount > 0) {
+				console.log(`[sync] 🗑️ ${deleteResult.deletedCount} commande(s) active(s) supprimée(s) de MongoDB (état vide synchronisé)`);
+			}
+		}
 		
 		// Synchroniser les commandes archivées
 		if (dataStore.archivedOrders.length > 0) {
