@@ -114,6 +114,19 @@ dbManager.connect().then(() => {
 		
 		console.log(`[server] 📬 Polling boîte aux lettres activé (toutes les ${POLLING_INTERVAL/1000}s)`);
 		console.log(`[server] 🔄 Synchronisation commandes actives activée (toutes les ${SYNC_INTERVAL/1000}s)`);
+		
+		// 🆕 Synchronisation immédiate au démarrage pour les commandes existantes
+		setTimeout(async () => {
+			try {
+				const activeOrders = dataStore.orders.filter(o => o.status !== 'archived');
+				if (activeOrders.length > 0) {
+					await fileManager.savePersistedData();
+					console.log(`[sync] 🚀 ${activeOrders.length} commande(s) active(s) synchronisée(s) au démarrage`);
+				}
+			} catch (e) {
+				console.error('[sync] ⚠️ Erreur synchronisation démarrage:', e.message);
+			}
+		}, 2000); // Attendre 2 secondes après le démarrage pour laisser MongoDB se connecter
 	} else if (dbManager.isCloud && dbManager.db && !isLocalServer) {
 		// 🆕 DÉTECTION RESET pour serveur cloud : vérifier périodiquement si reset détecté
 		const CLOUD_RESET_CHECK_INTERVAL = 5000; // Vérifier toutes les 5 secondes
