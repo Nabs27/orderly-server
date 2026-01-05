@@ -15,6 +15,7 @@ class OrderSocketService {
     required VoidCallback onOrderNew,
     required VoidCallback onTableCleared,
     VoidCallback? onOrderServerConfirmed, // 🆕 Callback pour confirmation serveur
+    VoidCallback? onMenuUpdated, // 🆕 Callback pour mise à jour du menu
   }) {
     // Créer une connexion Socket.IO
     final base = ApiClient.dio.options.baseUrl;
@@ -60,6 +61,12 @@ class OrderSocketService {
         onTableCleared();
       }
     });
+
+    // 🆕 Écouter les événements de mise à jour du menu
+    s.on('menu:updated', (payload) {
+      print('[POS] Événement menu:updated reçu');
+      if (onMenuUpdated != null) onMenuUpdated();
+    });
   }
 
   // Fermer la connexion socket
@@ -72,6 +79,7 @@ class OrderSocketService {
         _socket!.off('order:new');
         _socket!.off('order:server-confirmed'); // 🆕
         _socket!.off('table:cleared');
+        _socket!.off('menu:updated'); // 🆕
       } catch (e) {
         print('[POS] Erreur lors du retrait des listeners socket: $e');
       }

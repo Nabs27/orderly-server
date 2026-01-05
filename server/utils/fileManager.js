@@ -79,7 +79,7 @@ async function savePersistedData() {
 async function loadFromMongoDB() {
 	try {
 		console.log('[persistence] ☁️ Chargement des données depuis MongoDB...');
-		
+
 		// Charger les commandes
 		const orders = await dbManager.orders.find({}).toArray();
 
@@ -108,27 +108,27 @@ async function loadFromMongoDB() {
 
 		dataStore.orders.length = 0;
 		dataStore.orders.push(...filteredOrders);
-		
+
 		// Charger les archives
 		const archived = await dbManager.archivedOrders.find({}).toArray();
 		dataStore.archivedOrders.length = 0;
 		dataStore.archivedOrders.push(...archived);
 		console.log(`[persistence] ☁️ ${dataStore.archivedOrders.length} commandes archivées chargées depuis MongoDB`);
-		
+
 		// Charger les factures
 		const bills = await dbManager.bills.find({}).toArray();
 		dataStore.bills.length = 0;
 		dataStore.bills.push(...bills);
-		
+
 		const archivedBills = await dbManager.archivedBills.find({}).toArray();
 		dataStore.archivedBills.length = 0;
 		dataStore.archivedBills.push(...archivedBills);
-		
+
 		// Charger les services
 		const services = await dbManager.services.find({}).toArray();
 		dataStore.serviceRequests.length = 0;
 		dataStore.serviceRequests.push(...services);
-		
+
 		// Charger les compteurs (un seul doc)
 		const countersDoc = await dbManager.counters.findOne({ type: 'global' });
 		if (countersDoc) {
@@ -137,12 +137,12 @@ async function loadFromMongoDB() {
 			dataStore.nextServiceId = countersDoc.nextServiceId || 1;
 			dataStore.nextClientId = countersDoc.nextClientId || 1;
 		}
-		
+
 		// Charger les clients crédit
 		const clients = await dbManager.clientCredits.find({}).toArray();
 		dataStore.clientCredits.length = 0;
 		dataStore.clientCredits.push(...clients);
-		
+
 		console.log(`[persistence] ☁️ ✅ ${dataStore.orders.length} commandes et ${dataStore.clientCredits.length} clients chargés depuis MongoDB`);
 	} catch (e) {
 		console.error('[persistence] ❌ Erreur chargement MongoDB:', e);
@@ -190,8 +190,8 @@ async function pullFromMailbox() {
 					try {
 						await dbManager.orders.updateOne(
 							{ tempId: mongoOrder.tempId },
-							{ 
-								$set: { 
+							{
+								$set: {
 									id: existingLocal.id,
 									processedByPos: true,
 									waitingForPos: false
@@ -215,15 +215,15 @@ async function pullFromMailbox() {
 			// Ajouter au datastore local
 			dataStore.orders.push(mongoOrder);
 			processedCount++;
-			
+
 			console.log(`[sync] ✍️ Attribution ID #${localId} à ${mongoOrder.tempId}. Enregistré localement.`);
-			
+
 			// 🆕 DOUBLE VALIDATION MONGODB : Marquer comme traitée avec les 3 champs requis
 			try {
 				const updateResult = await dbManager.orders.updateOne(
 					{ tempId: mongoOrder.tempId },
-					{ 
-						$set: { 
+					{
+						$set: {
 							id: localId, // ID définitif du POS
 							processedByPos: true, // Traitée par le POS
 							waitingForPos: false // Plus en attente
@@ -313,7 +313,7 @@ async function saveToMongoDB() {
 			console.log('[sync] ⚠️ MongoDB non connecté, synchronisation ignorée');
 			return;
 		}
-		
+
 		// 🆕 SYNCHRONISATION INTELLIGENTE : Gérer les resets de compteur intelligemment
 		const countersDoc = await dbManager.counters.findOne({ type: 'global' });
 		if (countersDoc && countersDoc.nextOrderId === 1) {
@@ -362,9 +362,9 @@ async function saveToMongoDB() {
 				return; // Pas de sync normale, on vient de synchroniser intelligemment
 			}
 		}
-		
+
 		console.log('[sync] ☁️ Synchronisation vers MongoDB (backup)...');
-		
+
 		// 🆕 ARCHITECTURE "BOÎTE AUX LETTRES" : Le serveur local NE sauvegarde PAS les commandes client dans MongoDB
 		// Les commandes client arrivent via le serveur cloud et sont aspirées par smartSyncWithMongoDB()
 		// Une fois traitées (ID attribué), elles restent UNIQUEMENT dans le JSON local (source de vérité)
@@ -372,31 +372,31 @@ async function saveToMongoDB() {
 		// 1. Commandes client EN ATTENTE (déposées par le serveur cloud, waitingForPos=true)
 		// 2. Backups archivées (pour dashboard)
 		// 3. 🆕 Commandes actives (pour que le dashboard admin en ligne puisse voir les tables non payées)
-		
+
 		// 🆕 CORRECTION : Synchroniser aussi les commandes actives pour le dashboard admin en ligne
 		// Le serveur cloud a besoin de voir les commandes actives pour calculer les tables non payées
 		if (dataStore.orders.length > 0) {
 			const activeOrders = dataStore.orders.filter(o => o.status !== 'archived');
 			console.log(`[sync] 🔍 DEBUG: ${dataStore.orders.length} commandes totales, ${activeOrders.length} actives (status !== 'archived')`);
-			
+
 			let syncedCount = 0;
 			let skippedCount = 0;
-			
+
 			for (const order of activeOrders) {
 				// 🆕 DEBUG: Log chaque commande avant synchronisation
 				console.log(`[sync] 🔍 DEBUG: Commande id=${order.id || 'NULL'}, table=${order.table}, status=${order.status}, source=${order.source || 'undefined'}`);
-				
+
 				// 🆕 CORRECTION : Vérifier que la commande a un ID valide
 				if (!order.id || order.id === null) {
 					console.warn(`[sync] ⚠️ Commande ignorée (pas d'ID): table=${order.table}, tempId=${order.tempId || 'N/A'}, source=${order.source || 'undefined'}, status=${order.status}`);
 					skippedCount++;
 					continue; // Ignorer les commandes sans ID (commandes client en attente)
 				}
-				
+
 				// 🆕 CORRECTION : Supprimer _id MongoDB avant replaceOne
 				const orderToSave = { ...order };
 				delete orderToSave._id;
-				
+
 				try {
 					const result = await dbManager.orders.replaceOne(
 						{ id: order.id },
@@ -422,7 +422,7 @@ async function saveToMongoDB() {
 				console.log(`[sync] 🗑️ ${deleteResult.deletedCount} commande(s) active(s) supprimée(s) de MongoDB (état vide synchronisé)`);
 			}
 		}
-		
+
 		// Synchroniser les commandes archivées
 		if (dataStore.archivedOrders.length > 0) {
 			const archivedIds = [];
@@ -430,7 +430,7 @@ async function saveToMongoDB() {
 				// 🆕 CORRECTION : Supprimer _id MongoDB avant replaceOne
 				const orderToSave = { ...order };
 				delete orderToSave._id;
-				
+
 				await dbManager.archivedOrders.replaceOne(
 					{ id: order.id },
 					orderToSave,
@@ -439,17 +439,20 @@ async function saveToMongoDB() {
 				archivedIds.push(order.id);
 			}
 			console.log(`[sync] ☁️ ${dataStore.archivedOrders.length} commandes archivées synchronisées`);
-			
+
 			// 🆕 CORRECTION : SUPPRIMER les commandes archivées de la collection orders principale
 			// pour éviter qu'elles apparaissent comme actives dans le cloud
 			// Cela doit être fait APRÈS la synchronisation des archives
 			if (archivedIds.length > 0) {
+				// 🆕 CORRECTION CRITIQUE : Supprimer PAR ID sans vérifier le status
+				// Dans MongoDB, la commande est peut-être encore 'open' ou 'pending'
+				// Si elle est dans nos archives locales, elle DOIT partir de la collection orders active
 				const deleteResult = await dbManager.orders.deleteMany({
-					id: { $in: archivedIds },
-					status: 'archived' // 🆕 Double vérification : seulement celles avec status='archived'
+					id: { $in: archivedIds }
+					// On retire status: 'archived' car l'état dans MongoDB peut être obsolète
 				});
 				if (deleteResult.deletedCount > 0) {
-					console.log(`[sync] 🗑️ ${deleteResult.deletedCount} commande(s) archivée(s) supprimée(s) de orders (maintenant dans archivedOrders)`);
+					console.log(`[sync] 🗑️ ${deleteResult.deletedCount} commande(s) archivée(s) supprimée(s) de orders (nettoyage réussi)`);
 				}
 			}
 		} else {
@@ -467,7 +470,7 @@ async function saveToMongoDB() {
 				// 🆕 CORRECTION : Supprimer _id MongoDB avant replaceOne
 				const billToSave = { ...bill };
 				delete billToSave._id;
-				
+
 				await dbManager.bills.replaceOne(
 					{ id: bill.id },
 					billToSave,
@@ -476,14 +479,14 @@ async function saveToMongoDB() {
 			}
 			console.log(`[sync] ☁️ ${dataStore.bills.length} factures synchronisées`);
 		}
-		
+
 		// Synchroniser les factures archivées
 		if (dataStore.archivedBills.length > 0) {
 			for (const bill of dataStore.archivedBills) {
 				// 🆕 CORRECTION : Supprimer _id MongoDB avant replaceOne
 				const billToSave = { ...bill };
 				delete billToSave._id;
-				
+
 				await dbManager.archivedBills.replaceOne(
 					{ id: bill.id },
 					billToSave,
@@ -492,14 +495,14 @@ async function saveToMongoDB() {
 			}
 			console.log(`[sync] ☁️ ${dataStore.archivedBills.length} factures archivées synchronisées`);
 		}
-		
+
 		// Synchroniser les demandes de service
 		if (dataStore.serviceRequests.length > 0) {
 			for (const service of dataStore.serviceRequests) {
 				// 🆕 CORRECTION : Supprimer _id MongoDB avant replaceOne
 				const serviceToSave = { ...service };
 				delete serviceToSave._id;
-				
+
 				await dbManager.services.replaceOne(
 					{ id: service.id },
 					serviceToSave,
@@ -508,14 +511,14 @@ async function saveToMongoDB() {
 			}
 			console.log(`[sync] ☁️ ${dataStore.serviceRequests.length} services synchronisés`);
 		}
-		
+
 		// Synchroniser les clients crédit
 		if (dataStore.clientCredits.length > 0) {
 			for (const client of dataStore.clientCredits) {
 				// 🆕 CORRECTION : Supprimer _id MongoDB avant replaceOne
 				const clientToSave = { ...client };
 				delete clientToSave._id;
-				
+
 				await dbManager.clientCredits.replaceOne(
 					{ id: client.id },
 					clientToSave,
@@ -531,18 +534,18 @@ async function saveToMongoDB() {
 				console.log(`[sync] 🗑️ ${deleteResult.deletedCount} crédit(s) client(s) supprimé(s) de MongoDB (état vide synchronisé)`);
 			}
 		}
-		
+
 		// Mise à jour des compteurs
 		await dbManager.counters.updateOne(
 			{ type: 'global' },
-			{ 
-				$set: { 
+			{
+				$set: {
 					nextOrderId: dataStore.nextOrderId,
 					nextBillId: dataStore.nextBillId,
 					nextServiceId: dataStore.nextServiceId,
 					nextClientId: dataStore.nextClientId,
 					lastSynced: new Date().toISOString()
-				} 
+				}
 			},
 			{ upsert: true }
 		);
@@ -560,7 +563,7 @@ async function saveToMongoDB() {
 async function loadFromJSON() {
 	try {
 		await ensureDir(dataStore.DATA_DIR);
-		
+
 		// Charger les commandes
 		if (fs.existsSync(dataStore.ORDERS_FILE)) {
 			const data = await fsp.readFile(dataStore.ORDERS_FILE, 'utf8');
@@ -569,7 +572,7 @@ async function loadFromJSON() {
 			dataStore.orders.push(...loadedOrders);
 			console.log(`[persistence] 🏠 ${dataStore.orders.length} commandes chargées`);
 		}
-		
+
 		// Charger les commandes archivées
 		if (fs.existsSync(dataStore.ARCHIVED_ORDERS_FILE)) {
 			const data = await fsp.readFile(dataStore.ARCHIVED_ORDERS_FILE, 'utf8');
@@ -578,7 +581,7 @@ async function loadFromJSON() {
 			dataStore.archivedOrders.push(...loadedArchived);
 			console.log(`[persistence] 🏠 ${dataStore.archivedOrders.length} commandes archivées chargées`);
 		}
-		
+
 		// Charger les factures
 		if (fs.existsSync(dataStore.BILLS_FILE)) {
 			const data = await fsp.readFile(dataStore.BILLS_FILE, 'utf8');
@@ -587,7 +590,7 @@ async function loadFromJSON() {
 			dataStore.bills.push(...loadedBills);
 			console.log(`[persistence] 🏠 ${dataStore.bills.length} factures chargées`);
 		}
-		
+
 		// Charger les factures archivées
 		if (fs.existsSync(dataStore.ARCHIVED_BILLS_FILE)) {
 			const data = await fsp.readFile(dataStore.ARCHIVED_BILLS_FILE, 'utf8');
@@ -596,7 +599,7 @@ async function loadFromJSON() {
 			dataStore.archivedBills.push(...loadedArchivedBills);
 			console.log(`[persistence] 🏠 ${dataStore.archivedBills.length} factures archivées chargées`);
 		}
-		
+
 		// Charger les demandes de service
 		if (fs.existsSync(dataStore.SERVICES_FILE)) {
 			const data = await fsp.readFile(dataStore.SERVICES_FILE, 'utf8');
@@ -605,7 +608,7 @@ async function loadFromJSON() {
 			dataStore.serviceRequests.push(...loadedServices);
 			console.log(`[persistence] 🏠 ${dataStore.serviceRequests.length} demandes de service chargées`);
 		}
-		
+
 		// Charger les compteurs
 		if (fs.existsSync(dataStore.COUNTERS_FILE)) {
 			const data = await fsp.readFile(dataStore.COUNTERS_FILE, 'utf8');
@@ -616,7 +619,7 @@ async function loadFromJSON() {
 			dataStore.nextClientId = counters.nextClientId || 1;
 			console.log(`[persistence] 🏠 Compteurs chargés: orderId=${dataStore.nextOrderId}, billId=${dataStore.nextBillId}, serviceId=${dataStore.nextServiceId}, clientId=${dataStore.nextClientId}`);
 		}
-		
+
 		// Charger les clients crédit
 		if (fs.existsSync(dataStore.CLIENT_CREDITS_FILE)) {
 			const data = await fsp.readFile(dataStore.CLIENT_CREDITS_FILE, 'utf8');
@@ -637,22 +640,22 @@ async function loadFromJSON() {
 async function saveToJSON() {
 	try {
 		await ensureDir(dataStore.DATA_DIR);
-		
+
 		// Sauvegarder les commandes
 		await fsp.writeFile(dataStore.ORDERS_FILE, JSON.stringify(dataStore.orders, null, 2), 'utf8');
-		
+
 		// Sauvegarder les commandes archivées
 		await fsp.writeFile(dataStore.ARCHIVED_ORDERS_FILE, JSON.stringify(dataStore.archivedOrders, null, 2), 'utf8');
-		
+
 		// Sauvegarder les factures
 		await fsp.writeFile(dataStore.BILLS_FILE, JSON.stringify(dataStore.bills, null, 2), 'utf8');
-		
+
 		// Sauvegarder les factures archivées
 		await fsp.writeFile(dataStore.ARCHIVED_BILLS_FILE, JSON.stringify(dataStore.archivedBills, null, 2), 'utf8');
-		
+
 		// Sauvegarder les demandes de service
 		await fsp.writeFile(dataStore.SERVICES_FILE, JSON.stringify(dataStore.serviceRequests, null, 2), 'utf8');
-		
+
 		// Sauvegarder les compteurs
 		const counters = {
 			nextOrderId: dataStore.nextOrderId,
@@ -662,10 +665,10 @@ async function saveToJSON() {
 			lastSaved: new Date().toISOString()
 		};
 		await fsp.writeFile(dataStore.COUNTERS_FILE, JSON.stringify(counters, null, 2), 'utf8');
-		
+
 		// Sauvegarder les clients crédit
 		await fsp.writeFile(dataStore.CLIENT_CREDITS_FILE, JSON.stringify(dataStore.clientCredits, null, 2), 'utf8');
-		
+
 		console.log(`[persistence] 🏠 Données sauvegardées: ${dataStore.orders.length} commandes, ${dataStore.bills.length} factures, ${dataStore.clientCredits.length} clients crédit`);
 	} catch (e) {
 		console.error('[persistence] 🏠 Erreur sauvegarde données JSON:', e);

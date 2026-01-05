@@ -41,6 +41,7 @@ class HomeSocketService {
       s.off('server:transferred');
       s.off('table:transferred');
       s.off('system:reset');
+      s.off('menu:updated'); // 🆕
     } catch (e) {
       print('[POS HOME] Erreur lors du nettoyage des listeners avant bind: $e');
     }
@@ -96,6 +97,7 @@ class HomeSocketService {
     s.on('server:transferred', _resync);
     s.on('table:transferred', _resync);
     s.on('system:reset', _resync);
+    s.on('menu:updated', _resync); // 🆕
     
     print('[POS HOME] 📡 Tous les listeners Socket.IO attachés');
     
@@ -133,6 +135,7 @@ class HomeSocketService {
         _socket!.off('server:transferred');
         _socket!.off('table:transferred');
         _socket!.off('system:reset');
+        _socket!.off('menu:updated'); // 🆕
       } catch (e) {
         print('[POS HOME] Erreur lors du retrait des listeners socket: $e');
       }
