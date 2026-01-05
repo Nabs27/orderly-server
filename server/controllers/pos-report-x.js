@@ -967,8 +967,26 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				covers: covers,
 				orderIds: orderIds.length > 0 ? orderIds : undefined, // 🆕 IDs des commandes regroupées (si plusieurs)
 				// 🆕 Informations sur le paiement divisé (pour traçabilité)
+				// Dédupliquer par mode + enteredAmount pour éviter les doublons (chaque transaction apparaît N fois par commande)
 				splitPaymentModes: act.isSplitPayment ? [...new Set(payments.map(p => p.paymentMode))] : undefined,
-				splitPaymentAmounts: act.isSplitPayment ? payments.map(p => ({ mode: p.paymentMode, amount: p.amount || 0 })) : undefined,
+				splitPaymentAmounts: act.isSplitPayment ? (() => {
+					const processedTxs = new Set();
+					const uniqueAmounts = [];
+					for (const p of payments) {
+						const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
+						const txKey = `${p.paymentMode}_${enteredAmount.toFixed(3)}`;
+						if (!processedTxs.has(txKey)) {
+							processedTxs.add(txKey);
+							const detail = { mode: p.paymentMode, amount: enteredAmount };
+							// 🆕 Ajouter le nom du client pour les paiements CREDIT (comme dans l'historique)
+							if (p.paymentMode === 'CREDIT' && p.creditClientName) {
+								detail.clientName = p.creditClientName;
+							}
+							uniqueAmounts.push(detail);
+						}
+					}
+					return uniqueAmounts;
+				})() : undefined,
 				// 🆕 Ticket encaissé (format ticket de caisse)
 				ticket: {
 					table: table,
