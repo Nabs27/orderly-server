@@ -382,18 +382,42 @@ function extractPaymentsFromOrder(order, server, period, dateFrom, dateTo) {
 async function buildReportData({ server, period, dateFrom, dateTo, restaurantId }) {
 	const itemIdToCategory = await loadMenuAndCreateMapping(restaurantId || 'les-emirs');
 
-	// 🆕 CORRECTION : Recharger les archives depuis MongoDB si serveur cloud
+	// 🆕 CORRECTION : Recharger les archives ET les commandes actives depuis MongoDB si serveur cloud
 	// Le serveur cloud charge les données uniquement au démarrage, donc il faut recharger
-	// les archives à chaque génération de rapport pour avoir les données à jour
+	// les données à chaque génération de rapport pour avoir les données à jour (notamment pour les tables non payées)
 	const dbManager = require('../utils/dbManager');
 	if (dbManager.isCloud && dbManager.db) {
 		try {
+			// Recharger les commandes archivées
 			const archived = await dbManager.archivedOrders.find({}).toArray();
 			dataStore.archivedOrders.length = 0;
 			dataStore.archivedOrders.push(...archived);
 			console.log(`[report-x] ☁️ ${dataStore.archivedOrders.length} commandes archivées rechargées depuis MongoDB`);
+			
+			// 🆕 Recharger aussi les commandes actives (pour les tables non payées)
+			const orders = await dbManager.orders.find({}).toArray();
+			
+			// Filtrer les commandes client déjà confirmées (comme dans loadFromMongoDB)
+			const confirmedTempIds = new Set(
+				orders
+					.filter(o => o.id && o.originalTempId && o.source === 'pos')
+					.map(o => o.originalTempId)
+			);
+			
+			const filteredOrders = orders.filter(o => {
+				if (o.tempId && (!o.id || o.id === null) && o.source === 'client') {
+					if (confirmedTempIds.has(o.tempId)) {
+						return false;
+					}
+				}
+				return true;
+			});
+			
+			dataStore.orders.length = 0;
+			dataStore.orders.push(...filteredOrders);
+			console.log(`[report-x] ☁️ ${dataStore.orders.length} commandes actives rechargées depuis MongoDB`);
 		} catch (e) {
-			console.error('[report-x] ⚠️ Erreur rechargement archives:', e.message);
+			console.error('[report-x] ⚠️ Erreur rechargement données:', e.message);
 		}
 	}
 
