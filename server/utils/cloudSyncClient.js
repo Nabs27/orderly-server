@@ -37,12 +37,12 @@ class CloudSyncClient {
         console.log(`[cloud-sync] 🔌 Connexion au serveur Cloud: ${cloudUrl}`);
 
         this.socket = io(cloudUrl, {
-            transports: ['websocket', 'polling'],
+            transports: ['websocket'], // Forcer websocket pour plus de stabilité
             reconnection: true,
-            reconnectionDelay: 5000,
-            reconnectionDelayMax: 30000,
-            reconnectionAttempts: this.maxReconnectAttempts,
-            timeout: 20000,
+            reconnectionDelay: 2000, // Reconnecter plus vite
+            reconnectionDelayMax: 10000,
+            reconnectionAttempts: Infinity, // Ne jamais abandonner
+            timeout: 10000,
             extraHeaders: {
                 'x-client-type': 'pos-local-server'
             }
@@ -51,7 +51,7 @@ class CloudSyncClient {
         this.socket.on('connect', () => {
             this.isConnected = true;
             this.reconnectAttempts = 0;
-            console.log('[cloud-sync] ✅ Connecté au serveur Cloud');
+            console.log(`[cloud-sync] ✅ Connecté au serveur Cloud (${cloudUrl})`);
 
             // S'identifier comme serveur local
             this.socket.emit('client:identify', {
@@ -66,10 +66,13 @@ class CloudSyncClient {
         });
 
         this.socket.on('connect_error', (error) => {
-            this.reconnectAttempts++;
-            console.log(`[cloud-sync] ⚠️ Erreur connexion Cloud (tentative ${this.reconnectAttempts}/${this.maxReconnectAttempts}): ${error.message}`);
+            console.log(`[cloud-sync] ⚠️ Erreur connexion Cloud: ${error.message}`);
+            // Si websocket échoue, essayer polling
+            if (this.socket.io.opts.transports.includes('websocket')) {
+                console.log('[cloud-sync] 🔄 Basculement sur polling...');
+                this.socket.io.opts.transports = ['polling', 'websocket'];
+            }
         });
-
         // 🍽️ Écouter les notifications de synchronisation du menu
         this.socket.on('sync:menu', async (data) => {
             console.log('[cloud-sync] 📥 Notification sync:menu reçue', data);
@@ -123,7 +126,7 @@ class CloudSyncClient {
 
             // Invalider le cache en mémoire
             const menuSync = require('./menuSync');
-            // Le cache sera rechargé automatiquement au prochain appel
+            menuSync.clearMenuCache(restaurantId || 'les-emirs');
 
             // Émettre un événement pour que l'interface se rafraîchisse
             const socketManager = require('./socket');
