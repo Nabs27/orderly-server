@@ -1651,6 +1651,8 @@ function collectCancellations(orders, period, dateFrom, dateTo) {
 
 // Calculer les tables non payées avec détails complets
 function calculateUnpaidTables(server) {
+	// 🆕 Utiliser la même logique que le POS : vérifier mainNote.paid et subNote.paid
+	// Le POS n'affiche que les tables avec des notes non payées, pas celles avec order.total > 0
 	const unpaidOrders = dataStore.orders.filter(order => {
 		// Filtrer par serveur si fourni
 		if (server && order.server) {
@@ -1659,28 +1661,78 @@ function calculateUnpaidTables(server) {
 			}
 		}
 
-		// Seulement les commandes non archivées
-		return order.total > 0;
-	});
-
-	const totalUnpaid = unpaidOrders.reduce((sum, order) => sum + (order.total || 0), 0);
-
-	// 🆕 Regrouper par mode de paiement prévu (si disponible) ou "NON PAYÉ"
-	const unpaidByMode = {};
-	for (const order of unpaidOrders) {
-		// Pour l'instant, on regroupe tout sous "NON PAYÉ"
-		// Si on a un mode de paiement prévu dans l'ordre, on peut l'utiliser
-		const mode = 'NON PAYÉ';
-
-		if (!unpaidByMode[mode]) {
-			unpaidByMode[mode] = {
-				total: 0,
-				count: 0
-			};
+		// 🆕 Vérifier s'il y a des notes non payées (comme le fait le POS)
+		// Le POS vérifie mainNote.paid et subNote.paid, pas order.total
+		if (order.mainNote) {
+			const mainPaid = order.mainNote.paid || false;
+			const mainTotal = order.mainNote.total || 0;
+			
+			// Si la note principale n'est pas payée et a un total > 0, inclure la commande
+			if (!mainPaid && mainTotal > 0) {
+				return true;
+			}
+			
+			// Vérifier les sous-notes non payées
+			const subNotes = order.subNotes || [];
+			for (const subNote of subNotes) {
+				const isPaid = subNote.paid || false;
+				const subTotal = subNote.total || 0;
+				if (!isPaid && subTotal > 0) {
+					return true;
+				}
+			}
+		} else {
+			// Ancienne structure sans mainNote : utiliser order.total
+			if (order.total && order.total > 0) {
+				return true;
+			}
 		}
 
-		unpaidByMode[mode].total += order.total || 0;
-		unpaidByMode[mode].count += 1;
+		return false;
+	});
+
+	// 🆕 Regrouper par mode de paiement prévu (si disponible) ou "NON PAYÉ"
+	// Calculer le total réel à partir des notes non payées (comme le fait le POS)
+	const unpaidByMode = {};
+	let totalUnpaid = 0;
+	
+	for (const order of unpaidOrders) {
+		// 🆕 Calculer le total réel des notes non payées (comme le fait le POS)
+		let orderUnpaidTotal = 0;
+		
+		if (order.mainNote) {
+			const mainPaid = order.mainNote.paid || false;
+			const mainTotal = order.mainNote.total || 0;
+			if (!mainPaid && mainTotal > 0) {
+				orderUnpaidTotal += mainTotal;
+			}
+			
+			const subNotes = order.subNotes || [];
+			for (const subNote of subNotes) {
+				const isPaid = subNote.paid || false;
+				const subTotal = subNote.total || 0;
+				if (!isPaid && subTotal > 0) {
+					orderUnpaidTotal += subTotal;
+				}
+			}
+		} else {
+			// Ancienne structure sans mainNote
+			orderUnpaidTotal = order.total || 0;
+		}
+		
+		if (orderUnpaidTotal > 0) {
+			totalUnpaid += orderUnpaidTotal;
+			
+			const mode = 'NON PAYÉ';
+			if (!unpaidByMode[mode]) {
+				unpaidByMode[mode] = {
+					total: 0,
+					count: 0
+				};
+			}
+			unpaidByMode[mode].total += orderUnpaidTotal;
+			unpaidByMode[mode].count += 1;
+		}
 	}
 
 	// 🆕 Regrouper les commandes par table et créer un seul ticket provisoire par table
@@ -1704,7 +1756,30 @@ function calculateUnpaidTables(server) {
 
 		const tableData = tablesMap[tableNumber];
 		tableData.orders.push(order);
-		tableData.total += order.total || 0;
+		
+		// 🆕 Calculer le total réel des notes non payées (comme le fait le POS)
+		let orderUnpaidTotal = 0;
+		if (order.mainNote) {
+			const mainPaid = order.mainNote.paid || false;
+			const mainTotal = order.mainNote.total || 0;
+			if (!mainPaid && mainTotal > 0) {
+				orderUnpaidTotal += mainTotal;
+			}
+			
+			const subNotes = order.subNotes || [];
+			for (const subNote of subNotes) {
+				const isPaid = subNote.paid || false;
+				const subTotal = subNote.total || 0;
+				if (!isPaid && subTotal > 0) {
+					orderUnpaidTotal += subTotal;
+				}
+			}
+		} else {
+			// Ancienne structure sans mainNote
+			orderUnpaidTotal = order.total || 0;
+		}
+		
+		tableData.total += orderUnpaidTotal;
 
 		// Mettre à jour la date d'ouverture (la plus ancienne)
 		if (order.createdAt && (!tableData.openedAt || new Date(order.createdAt) < new Date(tableData.openedAt))) {
@@ -1716,12 +1791,18 @@ function calculateUnpaidTables(server) {
 			tableData.lastOrderAt = order.updatedAt;
 		}
 
-		// Collecter tous les articles de cette commande
+		// 🆕 Collecter tous les articles non payés de cette commande
+		// Ne collecter que si la note principale n'est pas payée (comme le fait le POS)
 		if (order.mainNote && order.mainNote.items) {
-			for (const item of order.mainNote.items) {
-				const paidQty = item.paidQuantity || 0;
-				const unpaidQty = Math.max(0, (item.quantity || 0) - paidQty);
-				if (unpaidQty > 0) {
+			const mainPaid = order.mainNote.paid || false;
+			const mainTotal = order.mainNote.total || 0;
+			
+			// 🆕 Inclure la note principale seulement si elle n'est pas payée (comme le fait le POS)
+			if (!mainPaid && mainTotal > 0) {
+				for (const item of order.mainNote.items) {
+					const paidQty = item.paidQuantity || 0;
+					const unpaidQty = Math.max(0, (item.quantity || 0) - paidQty);
+					if (unpaidQty > 0) {
 					// Chercher si l'article existe déjà (même ID et nom)
 					const existingIndex = tableData.allItems.findIndex(i => i.id === item.id && i.name === item.name);
 					if (existingIndex !== -1) {
@@ -1742,9 +1823,14 @@ function calculateUnpaidTables(server) {
 			}
 		}
 
+		// 🆕 Collecter les articles des sous-notes non payées (comme le fait le POS)
 		if (order.subNotes) {
 			for (const subNote of order.subNotes) {
-				if (!subNote.paid && subNote.items) {
+				const isPaid = subNote.paid || false;
+				const subTotal = subNote.total || 0;
+				
+				// 🆕 Inclure la sous-note seulement si elle n'est pas payée (comme le fait le POS)
+				if (!isPaid && subTotal > 0 && subNote.items) {
 					for (const item of subNote.items) {
 						const paidQty = item.paidQuantity || 0;
 						const unpaidQty = Math.max(0, (item.quantity || 0) - paidQty);
