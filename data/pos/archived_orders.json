@@ -2,7 +2,7 @@
   {
     "id": 1,
     "tempId": null,
-    "table": "5",
+    "table": "1",
     "server": "ALI",
     "covers": 4,
     "notes": "",
@@ -10,1213 +10,17 @@
     "source": "pos",
     "serverConfirmed": true,
     "consumptionConfirmed": false,
-    "createdAt": "2026-01-06T20:38:21.662Z",
+    "createdAt": "2026-01-06T22:04:34.671Z",
     "paymentHistory": [
       {
-        "id": "pay_1767732018910_88hz4axtb",
-        "timestamp": "2026-01-06T20:40:18.891Z",
-        "amount": 6.440677966101695,
-        "enteredAmount": 100,
-        "allocatedAmount": 6.440677966101695,
+        "id": "pay_1767737111134_53oevp7w6",
+        "timestamp": "2026-01-06T22:05:11.115Z",
+        "amount": 111.05714285714285,
+        "enteredAmount": 115,
+        "allocatedAmount": 111.05714285714285,
         "excessAmount": 0,
-        "hasCashInPayment": true,
-        "paymentMode": "CHEQUE",
-        "items": [
-          {
-            "id": 10000,
-            "name": "Coca",
-            "price": 5,
-            "quantity": 1,
-            "total": 5,
-            "orderId": 1,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 9001,
-            "name": "Eau Minérale (0,5L)",
-            "price": 4,
-            "quantity": 1,
-            "total": 4,
-            "orderId": 1,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 10003,
-            "name": "Sprite",
-            "price": 5,
-            "quantity": 1,
-            "total": 5,
-            "orderId": 1,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 10002,
-            "name": "Boga",
-            "price": 5,
-            "quantity": 1,
-            "total": 5,
-            "orderId": 1,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          }
-        ],
-        "subtotal": 6.440677966101695,
-        "discount": 0,
-        "isPercentDiscount": false,
-        "discountAmount": 0,
-        "discountClientName": null,
-        "isSplitPayment": true,
-        "splitPaymentId": "split_2026-01-06T20:40:18.891Z",
-        "server": "ALI",
-        "table": "5",
-        "noteId": "main",
-        "noteName": "Note Principale",
-        "creditClientName": null,
-        "isCompletePayment": true
-      },
-      {
-        "id": "pay_1767732018911_vizaby5of",
-        "timestamp": "2026-01-06T20:40:18.891Z",
-        "amount": 6.440677966101695,
-        "enteredAmount": 100,
-        "allocatedAmount": 6.440677966101695,
-        "excessAmount": 0,
-        "hasCashInPayment": true,
-        "paymentMode": "CHEQUE",
-        "items": [
-          {
-            "id": 10000,
-            "name": "Coca",
-            "price": 5,
-            "quantity": 1,
-            "total": 5,
-            "orderId": 1,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 9001,
-            "name": "Eau Minérale (0,5L)",
-            "price": 4,
-            "quantity": 1,
-            "total": 4,
-            "orderId": 1,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 10003,
-            "name": "Sprite",
-            "price": 5,
-            "quantity": 1,
-            "total": 5,
-            "orderId": 1,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 10002,
-            "name": "Boga",
-            "price": 5,
-            "quantity": 1,
-            "total": 5,
-            "orderId": 1,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          }
-        ],
-        "subtotal": 6.440677966101695,
-        "discount": 0,
-        "isPercentDiscount": false,
-        "discountAmount": 0,
-        "discountClientName": null,
-        "isSplitPayment": true,
-        "splitPaymentId": "split_2026-01-06T20:40:18.891Z",
-        "server": "ALI",
-        "table": "5",
-        "noteId": "main",
-        "noteName": "Note Principale",
-        "creditClientName": null,
-        "isCompletePayment": true
-      },
-      {
-        "id": "pay_1767732018911_og3gr6ir6",
-        "timestamp": "2026-01-06T20:40:18.891Z",
-        "amount": 6.11864406779661,
-        "enteredAmount": 95,
-        "allocatedAmount": 6.11864406779661,
-        "excessAmount": 0,
-        "hasCashInPayment": true,
-        "paymentMode": "ESPECE",
-        "items": [
-          {
-            "id": 10000,
-            "name": "Coca",
-            "price": 5,
-            "quantity": 1,
-            "total": 5,
-            "orderId": 1,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 9001,
-            "name": "Eau Minérale (0,5L)",
-            "price": 4,
-            "quantity": 1,
-            "total": 4,
-            "orderId": 1,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 10003,
-            "name": "Sprite",
-            "price": 5,
-            "quantity": 1,
-            "total": 5,
-            "orderId": 1,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 10002,
-            "name": "Boga",
-            "price": 5,
-            "quantity": 1,
-            "total": 5,
-            "orderId": 1,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          }
-        ],
-        "subtotal": 6.11864406779661,
-        "discount": 0,
-        "isPercentDiscount": false,
-        "discountAmount": 0,
-        "discountClientName": null,
-        "isSplitPayment": true,
-        "splitPaymentId": "split_2026-01-06T20:40:18.891Z",
-        "server": "ALI",
-        "table": "5",
-        "noteId": "main",
-        "noteName": "Note Principale",
-        "creditClientName": null,
-        "isCompletePayment": true
-      }
-    ],
-    "orderHistory": [
-      {
-        "timestamp": "2026-01-06T20:38:21.662Z",
-        "action": "order_created",
-        "noteId": "main",
-        "noteName": "Note Principale",
-        "items": [
-          {
-            "id": 10000,
-            "name": "Coca",
-            "price": 5,
-            "quantity": 1
-          },
-          {
-            "id": 10003,
-            "name": "Sprite",
-            "price": 5,
-            "quantity": 1
-          },
-          {
-            "id": 10002,
-            "name": "Boga",
-            "price": 5,
-            "quantity": 1
-          },
-          {
-            "id": 9001,
-            "name": "Eau Minérale (0,5L)",
-            "price": 4,
-            "quantity": 1
-          }
-        ],
-        "details": "Création commande initiale"
-      }
-    ],
-    "mainNote": {
-      "id": "main",
-      "name": "Note Principale",
-      "covers": 4,
-      "items": [
-        {
-          "id": 10000,
-          "name": "Coca",
-          "price": 5,
-          "quantity": 1,
-          "paidQuantity": 1
-        },
-        {
-          "id": 10003,
-          "name": "Sprite",
-          "price": 5,
-          "quantity": 1,
-          "paidQuantity": 1
-        },
-        {
-          "id": 10002,
-          "name": "Boga",
-          "price": 5,
-          "quantity": 1,
-          "paidQuantity": 1
-        },
-        {
-          "id": 9001,
-          "name": "Eau Minérale (0,5L)",
-          "price": 4,
-          "quantity": 1,
-          "paidQuantity": 1
-        }
-      ],
-      "total": 0,
-      "paid": false
-    },
-    "subNotes": [],
-    "total": 0,
-    "paidAmount": 19,
-    "updatedAt": "2026-01-06T20:40:18.911Z",
-    "archivedAt": "2026-01-06T20:40:18.911Z",
-    "paid": true
-  },
-  {
-    "id": 2,
-    "tempId": null,
-    "table": "5",
-    "server": "ALI",
-    "covers": 4,
-    "notes": "",
-    "status": "archived",
-    "source": "pos",
-    "serverConfirmed": true,
-    "consumptionConfirmed": false,
-    "createdAt": "2026-01-06T20:38:30.838Z",
-    "paymentHistory": [
-      {
-        "id": "pay_1767732018911_2667bh23c",
-        "timestamp": "2026-01-06T20:40:18.891Z",
-        "amount": 93.5593220338983,
-        "enteredAmount": 100,
-        "allocatedAmount": 93.5593220338983,
-        "excessAmount": 0,
-        "hasCashInPayment": true,
-        "paymentMode": "CHEQUE",
-        "items": [
-          {
-            "id": 9502,
-            "name": "Beck's",
-            "price": 7.4,
-            "quantity": 5,
-            "total": 37,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1004,
-            "name": "Carpaccio de Bœuf à l’Huile de Truffe",
-            "price": 35,
-            "quantity": 1,
-            "total": 35,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1005,
-            "name": "Carpaccio de Poulpe aux Baies Roses",
-            "price": 40,
-            "quantity": 1,
-            "total": 40,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1002,
-            "name": "Salade César",
-            "price": 26,
-            "quantity": 1,
-            "total": 26,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1205,
-            "name": "Couscous au Calamar Farci",
-            "price": 50,
-            "quantity": 1,
-            "total": 50,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1202,
-            "name": "Ojja aux Crevettes",
-            "price": 38,
-            "quantity": 1,
-            "total": 38,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1204,
-            "name": "Calamar Farci à la Sfaxienne",
-            "price": 50,
-            "quantity": 1,
-            "total": 50,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          }
-        ],
-        "subtotal": 93.5593220338983,
-        "discount": 0,
-        "isPercentDiscount": false,
-        "discountAmount": 0,
-        "discountClientName": null,
-        "isSplitPayment": true,
-        "splitPaymentId": "split_2026-01-06T20:40:18.891Z",
-        "server": "ALI",
-        "table": "5",
-        "noteId": "main",
-        "noteName": "Note Principale",
-        "creditClientName": null,
-        "isCompletePayment": true
-      },
-      {
-        "id": "pay_1767732018911_it24b1ibz",
-        "timestamp": "2026-01-06T20:40:18.891Z",
-        "amount": 93.5593220338983,
-        "enteredAmount": 100,
-        "allocatedAmount": 93.5593220338983,
-        "excessAmount": 0,
-        "hasCashInPayment": true,
-        "paymentMode": "CHEQUE",
-        "items": [
-          {
-            "id": 9502,
-            "name": "Beck's",
-            "price": 7.4,
-            "quantity": 5,
-            "total": 37,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1004,
-            "name": "Carpaccio de Bœuf à l’Huile de Truffe",
-            "price": 35,
-            "quantity": 1,
-            "total": 35,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1005,
-            "name": "Carpaccio de Poulpe aux Baies Roses",
-            "price": 40,
-            "quantity": 1,
-            "total": 40,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1002,
-            "name": "Salade César",
-            "price": 26,
-            "quantity": 1,
-            "total": 26,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1205,
-            "name": "Couscous au Calamar Farci",
-            "price": 50,
-            "quantity": 1,
-            "total": 50,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1202,
-            "name": "Ojja aux Crevettes",
-            "price": 38,
-            "quantity": 1,
-            "total": 38,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1204,
-            "name": "Calamar Farci à la Sfaxienne",
-            "price": 50,
-            "quantity": 1,
-            "total": 50,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          }
-        ],
-        "subtotal": 93.5593220338983,
-        "discount": 0,
-        "isPercentDiscount": false,
-        "discountAmount": 0,
-        "discountClientName": null,
-        "isSplitPayment": true,
-        "splitPaymentId": "split_2026-01-06T20:40:18.891Z",
-        "server": "ALI",
-        "table": "5",
-        "noteId": "main",
-        "noteName": "Note Principale",
-        "creditClientName": null,
-        "isCompletePayment": true
-      },
-      {
-        "id": "pay_1767732018911_gvuxwy57u",
-        "timestamp": "2026-01-06T20:40:18.891Z",
-        "amount": 88.88135593220338,
-        "enteredAmount": 95,
-        "allocatedAmount": 88.88135593220338,
-        "excessAmount": 0,
-        "hasCashInPayment": true,
-        "paymentMode": "ESPECE",
-        "items": [
-          {
-            "id": 9502,
-            "name": "Beck's",
-            "price": 7.4,
-            "quantity": 5,
-            "total": 37,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1004,
-            "name": "Carpaccio de Bœuf à l’Huile de Truffe",
-            "price": 35,
-            "quantity": 1,
-            "total": 35,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1005,
-            "name": "Carpaccio de Poulpe aux Baies Roses",
-            "price": 40,
-            "quantity": 1,
-            "total": 40,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1002,
-            "name": "Salade César",
-            "price": 26,
-            "quantity": 1,
-            "total": 26,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1205,
-            "name": "Couscous au Calamar Farci",
-            "price": 50,
-            "quantity": 1,
-            "total": 50,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1202,
-            "name": "Ojja aux Crevettes",
-            "price": 38,
-            "quantity": 1,
-            "total": 38,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1204,
-            "name": "Calamar Farci à la Sfaxienne",
-            "price": 50,
-            "quantity": 1,
-            "total": 50,
-            "orderId": 2,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          }
-        ],
-        "subtotal": 88.88135593220338,
-        "discount": 0,
-        "isPercentDiscount": false,
-        "discountAmount": 0,
-        "discountClientName": null,
-        "isSplitPayment": true,
-        "splitPaymentId": "split_2026-01-06T20:40:18.891Z",
-        "server": "ALI",
-        "table": "5",
-        "noteId": "main",
-        "noteName": "Note Principale",
-        "creditClientName": null,
-        "isCompletePayment": true
-      }
-    ],
-    "orderHistory": [
-      {
-        "timestamp": "2026-01-06T20:38:30.838Z",
-        "action": "order_created",
-        "noteId": "main",
-        "noteName": "Note Principale",
-        "items": [
-          {
-            "id": 9502,
-            "name": "Beck's",
-            "price": 7.4,
-            "quantity": 5
-          },
-          {
-            "id": 1002,
-            "name": "Salade César",
-            "price": 26,
-            "quantity": 1
-          },
-          {
-            "id": 1005,
-            "name": "Carpaccio de Poulpe aux Baies Roses",
-            "price": 40,
-            "quantity": 1
-          },
-          {
-            "id": 1004,
-            "name": "Carpaccio de Bœuf à l’Huile de Truffe",
-            "price": 35,
-            "quantity": 1
-          },
-          {
-            "id": 1202,
-            "name": "Ojja aux Crevettes",
-            "price": 38,
-            "quantity": 1
-          },
-          {
-            "id": 1205,
-            "name": "Couscous au Calamar Farci",
-            "price": 50,
-            "quantity": 1
-          },
-          {
-            "id": 1204,
-            "name": "Calamar Farci à la Sfaxienne",
-            "price": 50,
-            "quantity": 1
-          }
-        ],
-        "details": "Création commande initiale"
-      }
-    ],
-    "mainNote": {
-      "id": "main",
-      "name": "Note Principale",
-      "covers": 4,
-      "items": [
-        {
-          "id": 9502,
-          "name": "Beck's",
-          "price": 7.4,
-          "quantity": 5,
-          "paidQuantity": 5
-        },
-        {
-          "id": 1002,
-          "name": "Salade César",
-          "price": 26,
-          "quantity": 1,
-          "paidQuantity": 1
-        },
-        {
-          "id": 1005,
-          "name": "Carpaccio de Poulpe aux Baies Roses",
-          "price": 40,
-          "quantity": 1,
-          "paidQuantity": 1
-        },
-        {
-          "id": 1004,
-          "name": "Carpaccio de Bœuf à l’Huile de Truffe",
-          "price": 35,
-          "quantity": 1,
-          "paidQuantity": 1
-        },
-        {
-          "id": 1202,
-          "name": "Ojja aux Crevettes",
-          "price": 38,
-          "quantity": 1,
-          "paidQuantity": 1
-        },
-        {
-          "id": 1205,
-          "name": "Couscous au Calamar Farci",
-          "price": 50,
-          "quantity": 1,
-          "paidQuantity": 1
-        },
-        {
-          "id": 1204,
-          "name": "Calamar Farci à la Sfaxienne",
-          "price": 50,
-          "quantity": 1,
-          "paidQuantity": 1
-        }
-      ],
-      "total": 0,
-      "paid": false
-    },
-    "subNotes": [],
-    "total": 0,
-    "paidAmount": 276,
-    "updatedAt": "2026-01-06T20:40:18.911Z",
-    "archivedAt": "2026-01-06T20:40:18.911Z",
-    "paid": true
-  },
-  {
-    "id": 3,
-    "tempId": null,
-    "table": "11",
-    "server": "MOHAMED",
-    "covers": 3,
-    "notes": "",
-    "status": "archived",
-    "source": "pos",
-    "serverConfirmed": true,
-    "consumptionConfirmed": false,
-    "createdAt": "2026-01-06T20:55:59.001Z",
-    "paymentHistory": [
-      {
-        "id": "pay_1767732999323_deqsd91at",
-        "timestamp": "2026-01-06T20:56:39.316Z",
-        "amount": 9,
-        "enteredAmount": 9,
-        "allocatedAmount": 9,
-        "excessAmount": 0,
-        "hasCashInPayment": true,
-        "paymentMode": "ESPECE",
-        "items": [
-          {
-            "id": 10000,
-            "name": "Coca",
-            "price": 5,
-            "quantity": 1,
-            "total": 5,
-            "orderId": 3,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 9001,
-            "name": "Eau Minérale (0,5L)",
-            "price": 4,
-            "quantity": 1,
-            "total": 4,
-            "orderId": 3,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          }
-        ],
-        "subtotal": 9,
-        "discount": 0,
-        "isPercentDiscount": false,
-        "discountAmount": 0,
-        "discountClientName": null,
-        "server": "MOHAMED",
-        "table": "11",
-        "noteId": "main",
-        "noteName": "Note Principale",
-        "creditClientName": null,
-        "isCompletePayment": false
-      },
-      {
-        "id": "pay_1767733016307_t9loid2uq",
-        "timestamp": "2026-01-06T20:56:56.301Z",
-        "amount": 10,
-        "enteredAmount": 10.365853658536585,
-        "allocatedAmount": 10,
-        "excessAmount": 0.366,
         "hasCashInPayment": false,
-        "paymentMode": "CARTE",
-        "items": [
-          {
-            "id": 10003,
-            "name": "Sprite",
-            "price": 5,
-            "quantity": 1,
-            "total": 5,
-            "orderId": 3,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 10002,
-            "name": "Boga",
-            "price": 5,
-            "quantity": 1,
-            "total": 5,
-            "orderId": 3,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          }
-        ],
-        "subtotal": 10,
-        "discount": 0,
-        "isPercentDiscount": false,
-        "discountAmount": 0,
-        "discountClientName": null,
-        "server": "MOHAMED",
-        "table": "11",
-        "noteId": "main",
-        "noteName": "Note Principale",
-        "creditClientName": null,
-        "isCompletePayment": true
-      }
-    ],
-    "orderHistory": [
-      {
-        "timestamp": "2026-01-06T20:55:59.001Z",
-        "action": "order_created",
-        "noteId": "main",
-        "noteName": "Note Principale",
-        "items": [
-          {
-            "id": 10000,
-            "name": "Coca",
-            "price": 5,
-            "quantity": 1
-          },
-          {
-            "id": 10003,
-            "name": "Sprite",
-            "price": 5,
-            "quantity": 1
-          },
-          {
-            "id": 10002,
-            "name": "Boga",
-            "price": 5,
-            "quantity": 1
-          },
-          {
-            "id": 9001,
-            "name": "Eau Minérale (0,5L)",
-            "price": 4,
-            "quantity": 1
-          }
-        ],
-        "details": "Création commande initiale"
-      }
-    ],
-    "mainNote": {
-      "id": "main",
-      "name": "Note Principale",
-      "covers": 3,
-      "items": [
-        {
-          "id": 10000,
-          "name": "Coca",
-          "price": 5,
-          "quantity": 1,
-          "paidQuantity": 1
-        },
-        {
-          "id": 10003,
-          "name": "Sprite",
-          "price": 5,
-          "quantity": 1,
-          "paidQuantity": 1
-        },
-        {
-          "id": 10002,
-          "name": "Boga",
-          "price": 5,
-          "quantity": 1,
-          "paidQuantity": 1
-        },
-        {
-          "id": 9001,
-          "name": "Eau Minérale (0,5L)",
-          "price": 4,
-          "quantity": 1,
-          "paidQuantity": 1
-        }
-      ],
-      "total": 0,
-      "paid": false
-    },
-    "subNotes": [],
-    "total": 0,
-    "paidAmount": 19.365853658536587,
-    "updatedAt": "2026-01-06T20:56:56.307Z",
-    "archivedAt": "2026-01-06T20:56:56.307Z",
-    "paid": true
-  },
-  {
-    "id": 4,
-    "tempId": null,
-    "table": "11",
-    "server": "MOHAMED",
-    "covers": 3,
-    "notes": "",
-    "status": "archived",
-    "source": "pos",
-    "serverConfirmed": true,
-    "consumptionConfirmed": false,
-    "createdAt": "2026-01-06T20:56:02.482Z",
-    "paymentHistory": [
-      {
-        "id": "pay_1767732999325_cv860c3un",
-        "timestamp": "2026-01-06T20:56:39.316Z",
-        "amount": 35,
-        "enteredAmount": 35,
-        "allocatedAmount": 35,
-        "excessAmount": 0,
-        "hasCashInPayment": true,
-        "paymentMode": "ESPECE",
-        "items": [
-          {
-            "id": 1004,
-            "name": "Carpaccio de Bœuf à l’Huile de Truffe",
-            "price": 35,
-            "quantity": 1,
-            "total": 35,
-            "orderId": 4,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          }
-        ],
-        "subtotal": 35,
-        "discount": 0,
-        "isPercentDiscount": false,
-        "discountAmount": 0,
-        "discountClientName": null,
-        "server": "MOHAMED",
-        "table": "11",
-        "noteId": "main",
-        "noteName": "Note Principale",
-        "creditClientName": null,
-        "isCompletePayment": false
-      },
-      {
-        "id": "pay_1767733016307_082955hbn",
-        "timestamp": "2026-01-06T20:56:56.301Z",
-        "amount": 66,
-        "enteredAmount": 68.41463414634147,
-        "allocatedAmount": 66,
-        "excessAmount": 2.415,
-        "hasCashInPayment": false,
-        "paymentMode": "CARTE",
-        "items": [
-          {
-            "id": 1005,
-            "name": "Carpaccio de Poulpe aux Baies Roses",
-            "price": 40,
-            "quantity": 1,
-            "total": 40,
-            "orderId": 4,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1002,
-            "name": "Salade César",
-            "price": 26,
-            "quantity": 1,
-            "total": 26,
-            "orderId": 4,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          }
-        ],
-        "subtotal": 66,
-        "discount": 0,
-        "isPercentDiscount": false,
-        "discountAmount": 0,
-        "discountClientName": null,
-        "server": "MOHAMED",
-        "table": "11",
-        "noteId": "main",
-        "noteName": "Note Principale",
-        "creditClientName": null,
-        "isCompletePayment": true
-      }
-    ],
-    "orderHistory": [
-      {
-        "timestamp": "2026-01-06T20:56:02.482Z",
-        "action": "order_created",
-        "noteId": "main",
-        "noteName": "Note Principale",
-        "items": [
-          {
-            "id": 1002,
-            "name": "Salade César",
-            "price": 26,
-            "quantity": 1
-          },
-          {
-            "id": 1005,
-            "name": "Carpaccio de Poulpe aux Baies Roses",
-            "price": 40,
-            "quantity": 1
-          },
-          {
-            "id": 1004,
-            "name": "Carpaccio de Bœuf à l’Huile de Truffe",
-            "price": 35,
-            "quantity": 1
-          }
-        ],
-        "details": "Création commande initiale"
-      }
-    ],
-    "mainNote": {
-      "id": "main",
-      "name": "Note Principale",
-      "covers": 3,
-      "items": [
-        {
-          "id": 1002,
-          "name": "Salade César",
-          "price": 26,
-          "quantity": 1,
-          "paidQuantity": 1
-        },
-        {
-          "id": 1005,
-          "name": "Carpaccio de Poulpe aux Baies Roses",
-          "price": 40,
-          "quantity": 1,
-          "paidQuantity": 1
-        },
-        {
-          "id": 1004,
-          "name": "Carpaccio de Bœuf à l’Huile de Truffe",
-          "price": 35,
-          "quantity": 1,
-          "paidQuantity": 1
-        }
-      ],
-      "total": 0,
-      "paid": false
-    },
-    "subNotes": [],
-    "total": 0,
-    "paidAmount": 103.41463414634147,
-    "updatedAt": "2026-01-06T20:56:56.307Z",
-    "archivedAt": "2026-01-06T20:56:56.308Z",
-    "paid": true
-  },
-  {
-    "id": 5,
-    "tempId": null,
-    "table": "11",
-    "server": "MOHAMED",
-    "covers": 3,
-    "notes": "",
-    "status": "archived",
-    "source": "pos",
-    "serverConfirmed": true,
-    "consumptionConfirmed": false,
-    "createdAt": "2026-01-06T20:56:06.211Z",
-    "paymentHistory": [
-      {
-        "id": "pay_1767732999325_3fxqqzn7r",
-        "timestamp": "2026-01-06T20:56:39.316Z",
-        "amount": 50,
-        "enteredAmount": 50,
-        "allocatedAmount": 50,
-        "excessAmount": 0,
-        "hasCashInPayment": true,
-        "paymentMode": "ESPECE",
-        "items": [
-          {
-            "id": 1205,
-            "name": "Couscous au Calamar Farci",
-            "price": 50,
-            "quantity": 1,
-            "total": 50,
-            "orderId": 5,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          }
-        ],
-        "subtotal": 50,
-        "discount": 0,
-        "isPercentDiscount": false,
-        "discountAmount": 0,
-        "discountClientName": null,
-        "server": "MOHAMED",
-        "table": "11",
-        "noteId": "main",
-        "noteName": "Note Principale",
-        "creditClientName": null,
-        "isCompletePayment": false
-      },
-      {
-        "id": "pay_1767733016307_fwq2aizvh",
-        "timestamp": "2026-01-06T20:56:56.301Z",
-        "amount": 88,
-        "enteredAmount": 91.21951219512195,
-        "allocatedAmount": 88,
-        "excessAmount": 3.22,
-        "hasCashInPayment": false,
-        "paymentMode": "CARTE",
-        "items": [
-          {
-            "id": 1202,
-            "name": "Ojja aux Crevettes",
-            "price": 38,
-            "quantity": 1,
-            "total": 38,
-            "orderId": 5,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          },
-          {
-            "id": 1204,
-            "name": "Calamar Farci à la Sfaxienne",
-            "price": 50,
-            "quantity": 1,
-            "total": 50,
-            "orderId": 5,
-            "noteId": "main",
-            "noteName": "Note Principale"
-          }
-        ],
-        "subtotal": 88,
-        "discount": 0,
-        "isPercentDiscount": false,
-        "discountAmount": 0,
-        "discountClientName": null,
-        "server": "MOHAMED",
-        "table": "11",
-        "noteId": "main",
-        "noteName": "Note Principale",
-        "creditClientName": null,
-        "isCompletePayment": true
-      }
-    ],
-    "orderHistory": [
-      {
-        "timestamp": "2026-01-06T20:56:06.211Z",
-        "action": "order_created",
-        "noteId": "main",
-        "noteName": "Note Principale",
-        "items": [
-          {
-            "id": 1202,
-            "name": "Ojja aux Crevettes",
-            "price": 38,
-            "quantity": 1
-          },
-          {
-            "id": 1205,
-            "name": "Couscous au Calamar Farci",
-            "price": 50,
-            "quantity": 1
-          },
-          {
-            "id": 1204,
-            "name": "Calamar Farci à la Sfaxienne",
-            "price": 50,
-            "quantity": 1
-          }
-        ],
-        "details": "Création commande initiale"
-      }
-    ],
-    "mainNote": {
-      "id": "main",
-      "name": "Note Principale",
-      "covers": 3,
-      "items": [
-        {
-          "id": 1202,
-          "name": "Ojja aux Crevettes",
-          "price": 38,
-          "quantity": 1,
-          "paidQuantity": 1
-        },
-        {
-          "id": 1205,
-          "name": "Couscous au Calamar Farci",
-          "price": 50,
-          "quantity": 1,
-          "paidQuantity": 1
-        },
-        {
-          "id": 1204,
-          "name": "Calamar Farci à la Sfaxienne",
-          "price": 50,
-          "quantity": 1,
-          "paidQuantity": 1
-        }
-      ],
-      "total": 0,
-      "paid": false
-    },
-    "subNotes": [],
-    "total": 0,
-    "paidAmount": 141.21951219512195,
-    "updatedAt": "2026-01-06T20:56:56.307Z",
-    "archivedAt": "2026-01-06T20:56:56.308Z",
-    "paid": true
-  },
-  {
-    "id": 6,
-    "tempId": null,
-    "table": "21",
-    "server": "FATIMA",
-    "covers": 3,
-    "notes": "",
-    "status": "archived",
-    "source": "pos",
-    "serverConfirmed": true,
-    "consumptionConfirmed": false,
-    "createdAt": "2026-01-06T20:59:10.609Z",
-    "paymentHistory": [
-      {
-        "id": "pay_1767733191353_kcvbtz1ra",
-        "timestamp": "2026-01-06T20:59:51.350Z",
-        "amount": 148.75,
-        "enteredAmount": 160,
-        "allocatedAmount": 148.75,
-        "excessAmount": 11.25,
-        "hasCashInPayment": false,
-        "paymentMode": "CARTE",
+        "paymentMode": "CHEQUE",
         "items": [
           {
             "id": 9502,
@@ -1224,7 +28,17 @@
             "price": 7.4,
             "quantity": 10,
             "total": 74,
-            "orderId": 6,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 9001,
+            "name": "Eau Minérale (0,5L)",
+            "price": 4,
+            "quantity": 1,
+            "total": 4,
+            "orderId": 1,
             "noteId": "main",
             "noteName": "Note Principale"
           },
@@ -1234,7 +48,7 @@
             "price": 35,
             "quantity": 1,
             "total": 35,
-            "orderId": 6,
+            "orderId": 1,
             "noteId": "main",
             "noteName": "Note Principale"
           },
@@ -1244,7 +58,7 @@
             "price": 40,
             "quantity": 1,
             "total": 40,
-            "orderId": 6,
+            "orderId": 1,
             "noteId": "main",
             "noteName": "Note Principale"
           },
@@ -1254,18 +68,323 @@
             "price": 26,
             "quantity": 1,
             "total": 26,
-            "orderId": 6,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1001,
+            "name": "Salade Méchouia",
+            "price": 16,
+            "quantity": 1,
+            "total": 16,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1205,
+            "name": "Couscous au Calamar Farci",
+            "price": 50,
+            "quantity": 1,
+            "total": 50,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1202,
+            "name": "Ojja aux Crevettes",
+            "price": 38,
+            "quantity": 1,
+            "total": 38,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 10002,
+            "name": "Boga",
+            "price": 5,
+            "quantity": 1,
+            "total": 5,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1204,
+            "name": "Calamar Farci à la Sfaxienne",
+            "price": 50,
+            "quantity": 1,
+            "total": 50,
+            "orderId": 1,
             "noteId": "main",
             "noteName": "Note Principale"
           }
         ],
-        "subtotal": 175,
-        "discount": 15,
-        "isPercentDiscount": true,
-        "discountAmount": 26.25,
-        "discountClientName": "Nabil Gafsi",
-        "server": "FATIMA",
-        "table": "21",
+        "subtotal": 111.05714285714285,
+        "discount": 0,
+        "isPercentDiscount": false,
+        "discountAmount": 0,
+        "discountClientName": null,
+        "isSplitPayment": true,
+        "splitPaymentId": "split_2026-01-06T22:05:11.115Z",
+        "transactionId": "CHEQUE_1767737081504_1000",
+        "server": "ALI",
+        "table": "1",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "isCompletePayment": true
+      },
+      {
+        "id": "pay_1767737111134_9t83h88y9",
+        "timestamp": "2026-01-06T22:05:11.115Z",
+        "amount": 111.05714285714285,
+        "enteredAmount": 115,
+        "allocatedAmount": 111.05714285714285,
+        "excessAmount": 0,
+        "hasCashInPayment": false,
+        "paymentMode": "CHEQUE",
+        "items": [
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 10,
+            "total": 74,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 9001,
+            "name": "Eau Minérale (0,5L)",
+            "price": 4,
+            "quantity": 1,
+            "total": 4,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1004,
+            "name": "Carpaccio de Bœuf à l’Huile de Truffe",
+            "price": 35,
+            "quantity": 1,
+            "total": 35,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1005,
+            "name": "Carpaccio de Poulpe aux Baies Roses",
+            "price": 40,
+            "quantity": 1,
+            "total": 40,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1002,
+            "name": "Salade César",
+            "price": 26,
+            "quantity": 1,
+            "total": 26,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1001,
+            "name": "Salade Méchouia",
+            "price": 16,
+            "quantity": 1,
+            "total": 16,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1205,
+            "name": "Couscous au Calamar Farci",
+            "price": 50,
+            "quantity": 1,
+            "total": 50,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1202,
+            "name": "Ojja aux Crevettes",
+            "price": 38,
+            "quantity": 1,
+            "total": 38,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 10002,
+            "name": "Boga",
+            "price": 5,
+            "quantity": 1,
+            "total": 5,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1204,
+            "name": "Calamar Farci à la Sfaxienne",
+            "price": 50,
+            "quantity": 1,
+            "total": 50,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 111.05714285714285,
+        "discount": 0,
+        "isPercentDiscount": false,
+        "discountAmount": 0,
+        "discountClientName": null,
+        "isSplitPayment": true,
+        "splitPaymentId": "split_2026-01-06T22:05:11.115Z",
+        "transactionId": "CHEQUE_1767737088105_1000",
+        "server": "ALI",
+        "table": "1",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "isCompletePayment": true
+      },
+      {
+        "id": "pay_1767737111134_h6vm94ntq",
+        "timestamp": "2026-01-06T22:05:11.115Z",
+        "amount": 115.88571428571429,
+        "enteredAmount": 120,
+        "allocatedAmount": 115.88571428571429,
+        "excessAmount": 0,
+        "hasCashInPayment": false,
+        "paymentMode": "TPE",
+        "items": [
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 10,
+            "total": 74,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 9001,
+            "name": "Eau Minérale (0,5L)",
+            "price": 4,
+            "quantity": 1,
+            "total": 4,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1004,
+            "name": "Carpaccio de Bœuf à l’Huile de Truffe",
+            "price": 35,
+            "quantity": 1,
+            "total": 35,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1005,
+            "name": "Carpaccio de Poulpe aux Baies Roses",
+            "price": 40,
+            "quantity": 1,
+            "total": 40,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1002,
+            "name": "Salade César",
+            "price": 26,
+            "quantity": 1,
+            "total": 26,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1001,
+            "name": "Salade Méchouia",
+            "price": 16,
+            "quantity": 1,
+            "total": 16,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1205,
+            "name": "Couscous au Calamar Farci",
+            "price": 50,
+            "quantity": 1,
+            "total": 50,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1202,
+            "name": "Ojja aux Crevettes",
+            "price": 38,
+            "quantity": 1,
+            "total": 38,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 10002,
+            "name": "Boga",
+            "price": 5,
+            "quantity": 1,
+            "total": 5,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1204,
+            "name": "Calamar Farci à la Sfaxienne",
+            "price": 50,
+            "quantity": 1,
+            "total": 50,
+            "orderId": 1,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 115.88571428571429,
+        "discount": 0,
+        "isPercentDiscount": false,
+        "discountAmount": 0,
+        "discountClientName": null,
+        "isSplitPayment": true,
+        "splitPaymentId": "split_2026-01-06T22:05:11.115Z",
+        "transactionId": "TPE_1767737097149_1000",
+        "server": "ALI",
+        "table": "1",
         "noteId": "main",
         "noteName": "Note Principale",
         "creditClientName": null,
@@ -1274,7 +393,7 @@
     ],
     "orderHistory": [
       {
-        "timestamp": "2026-01-06T20:59:10.609Z",
+        "timestamp": "2026-01-06T22:04:34.671Z",
         "action": "order_created",
         "noteId": "main",
         "noteName": "Note Principale",
@@ -1302,6 +421,42 @@
             "name": "Carpaccio de Bœuf à l’Huile de Truffe",
             "price": 35,
             "quantity": 1
+          },
+          {
+            "id": 1001,
+            "name": "Salade Méchouia",
+            "price": 16,
+            "quantity": 1
+          },
+          {
+            "id": 1202,
+            "name": "Ojja aux Crevettes",
+            "price": 38,
+            "quantity": 1
+          },
+          {
+            "id": 1205,
+            "name": "Couscous au Calamar Farci",
+            "price": 50,
+            "quantity": 1
+          },
+          {
+            "id": 1204,
+            "name": "Calamar Farci à la Sfaxienne",
+            "price": 50,
+            "quantity": 1
+          },
+          {
+            "id": 9001,
+            "name": "Eau Minérale (0,5L)",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 10002,
+            "name": "Boga",
+            "price": 5,
+            "quantity": 1
           }
         ],
         "details": "Création commande initiale"
@@ -1310,7 +465,7 @@
     "mainNote": {
       "id": "main",
       "name": "Note Principale",
-      "covers": 3,
+      "covers": 4,
       "items": [
         {
           "id": 9502,
@@ -1339,6 +494,48 @@
           "price": 35,
           "quantity": 1,
           "paidQuantity": 1
+        },
+        {
+          "id": 1001,
+          "name": "Salade Méchouia",
+          "price": 16,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 1202,
+          "name": "Ojja aux Crevettes",
+          "price": 38,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 1205,
+          "name": "Couscous au Calamar Farci",
+          "price": 50,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 1204,
+          "name": "Calamar Farci à la Sfaxienne",
+          "price": 50,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 9001,
+          "name": "Eau Minérale (0,5L)",
+          "price": 4,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 10002,
+          "name": "Boga",
+          "price": 5,
+          "quantity": 1,
+          "paidQuantity": 1
         }
       ],
       "total": 0,
@@ -1346,9 +543,9 @@
     },
     "subNotes": [],
     "total": 0,
-    "paidAmount": 160,
-    "updatedAt": "2026-01-06T20:59:51.353Z",
-    "archivedAt": "2026-01-06T20:59:51.353Z",
+    "paidAmount": 338,
+    "updatedAt": "2026-01-06T22:05:11.135Z",
+    "archivedAt": "2026-01-06T22:05:11.135Z",
     "paid": true
   }
 ]

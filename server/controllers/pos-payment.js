@@ -483,7 +483,7 @@ async function payMultiOrders(req, res) {
 					discountClientName: discountClientName, // 🆕 Nom du client pour justifier la remise
 					isSplitPayment: true,
 					splitPaymentId: splitPaymentBaseId,
-					transactionId: split.transactionId, // 🆕 Stocker l'ID unique de la transaction
+					transactionId: split.transactionId || `srv_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, // 🆕 Toujours avoir un ID unique
 					server: serverName,
 					table: table,
 					noteId: orderInfo.paidItems[0]?.noteId || 'main',
