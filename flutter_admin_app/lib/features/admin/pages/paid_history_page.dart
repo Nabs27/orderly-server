@@ -423,7 +423,13 @@ class _ServiceDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final totalAmount = payments.fold<double>(
+    // 🆕 Calculer le nombre de commandes distinctes dans ce service
+    final distinctOrderIds = payments.map((p) => p['orderId'] ?? p['sessionId']).toSet().where((id) => id != null).toSet();
+    final nbOrders = distinctOrderIds.length > 0 ? distinctOrderIds.length : 1;
+
+    // 🆕 Utiliser enteredAmount (montant encaissé) si disponible
+    // ⚠️ IMPORTANT: Diviser par nbOrders car chaque transaction est répétée pour chaque commande du service
+    final totalAmountRaw = payments.fold<double>(
       0.0,
       (sum, p) {
         final enteredAmount = (p['enteredAmount'] as num?)?.toDouble();
@@ -431,6 +437,7 @@ class _ServiceDetailPage extends StatelessWidget {
         return sum + (enteredAmount ?? amount);
       },
     );
+    final totalAmount = totalAmountRaw / nbOrders;
 
     final allItems = <Map<String, dynamic>>[];
     double totalSubtotal = 0.0;
@@ -522,36 +529,43 @@ class _ServiceDetailPage extends StatelessWidget {
       totalExcessAmount = totalAmount - ticketTotal;
     }
     
+    // 🆕 Collecter les détails des paiements (modes et montants encaissés)
     final paymentDetails = <Map<String, dynamic>>[];
-    if (isSplitPayment) {
-      final processedTxs = <String>{};
-      for (final payment in payments) {
-        final enteredAmount = (payment['enteredAmount'] as num?)?.toDouble() ?? 
-            ((payment['amount'] as num?)?.toDouble() ?? 0.0);
-        final paymentMode = payment['paymentMode']?.toString() ?? '';
-        final hasId = payment['_id'] != null;
-        // Utiliser l'ID unique si dispo, sinon une clé composite plus précise incluant le timestamp
-        final txKey = hasId 
-            ? payment['_id'].toString() 
-            : '${paymentMode}_${enteredAmount}_${payment['timestamp']}';
-            
-        if (!processedTxs.contains(txKey)) {
-          processedTxs.add(txKey);
-          paymentDetails.add({
-            'mode': paymentMode,
-            'amount': enteredAmount,
-          });
-        }
-      }
-    } else {
-      for (final payment in payments) {
-        final enteredAmount = (payment['enteredAmount'] as num?)?.toDouble() ?? 
-            ((payment['amount'] as num?)?.toDouble() ?? 0.0);
-        final paymentMode = payment['paymentMode']?.toString() ?? '';
-        paymentDetails.add({
+    
+    // 🆕 Faire un comptage précis de chaque transaction
+    final Map<String, int> txCounts = {};
+    final Map<String, Map<String, dynamic>> txData = {};
+    
+    for (final payment in payments) {
+      final enteredAmount = (payment['enteredAmount'] as num?)?.toDouble() ?? 
+          ((payment['amount'] as num?)?.toDouble() ?? 0.0);
+      final paymentMode = payment['paymentMode']?.toString() ?? '';
+      
+      // 🆕 PRIORITÉ: transactionId pour les nouveaux paiements
+      // Fallback sur mode + montant + timestamp pour les anciens
+      final transactionId = payment['transactionId']?.toString();
+      final txKey = transactionId != null 
+          ? 'tx_$transactionId' 
+          : '${paymentMode}_${enteredAmount.toStringAsFixed(3)}_${payment['timestamp']}';
+          
+      if (!txCounts.containsKey(txKey)) {
+        txCounts[txKey] = 0;
+        txData[txKey] = {
           'mode': paymentMode,
           'amount': enteredAmount,
-        });
+        };
+      }
+      txCounts[txKey] = txCounts[txKey]! + 1;
+    }
+    
+    // 🆕 Ajouter chaque transaction (count / nbOrders) fois
+    for (final entry in txCounts.entries) {
+      final key = entry.key;
+      final count = entry.value;
+      final numAppearances = (count / nbOrders).round();
+      
+      for (int i = 0; i < numAppearances; i++) {
+        paymentDetails.add(txData[key]!);
       }
     }
     

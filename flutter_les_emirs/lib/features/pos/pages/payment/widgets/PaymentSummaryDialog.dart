@@ -16,6 +16,9 @@ class PaymentSummaryDialog extends StatelessWidget {
   final bool isSplitPayment;
   final Map<String, double>? splitPayments;
   final Map<String, int>? splitCreditClients;
+  final List<Map<String, dynamic>>? splitPaymentTransactions; // 🆕 Liste de transactions pour calculer le pourboire
+  final String? serverName; // 🆕 Nom du serveur pour afficher le pourboire
+  final double? enteredAmount; // 🆕 Montant réellement saisi pour paiement scriptural simple (pour calculer le pourboire)
   final VoidCallback onConfirm;
   final VoidCallback onCancel;
 
@@ -35,6 +38,9 @@ class PaymentSummaryDialog extends StatelessWidget {
     this.isSplitPayment = false,
     this.splitPayments,
     this.splitCreditClients,
+    this.splitPaymentTransactions, // 🆕 Liste de transactions
+    this.serverName, // 🆕 Nom du serveur
+    this.enteredAmount, // 🆕 Montant réellement saisi pour paiement scriptural simple
     required this.onConfirm,
     required this.onCancel,
   });
@@ -84,7 +90,38 @@ class PaymentSummaryDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 🆕 Calculer le total des paiements divisés et le pourboire
+    double? totalSplitAmount;
+    double? tipAmount;
+    bool hasCashInPayment = false;
+    
+    if (isSplitPayment) {
+      if (splitPaymentTransactions != null && splitPaymentTransactions!.isNotEmpty) {
+        totalSplitAmount = splitPaymentTransactions!.fold<double>(0.0, (sum, t) => sum + (t['amount'] as num).toDouble());
+        hasCashInPayment = splitPaymentTransactions!.any((t) => (t['mode'] as String) == 'ESPECE');
+        // Pourboire = totalSplit - finalTotal (seulement si pas de liquide)
+        if (!hasCashInPayment && totalSplitAmount! > finalTotal) {
+          tipAmount = totalSplitAmount! - finalTotal;
+        }
+      } else if (splitPayments != null && splitPayments!.isNotEmpty) {
+        totalSplitAmount = splitPayments!.values.fold<double>(0, (sum, amount) => sum + amount);
+        hasCashInPayment = splitPayments!.keys.contains('ESPECE');
+        if (!hasCashInPayment && totalSplitAmount! > finalTotal) {
+          tipAmount = totalSplitAmount! - finalTotal;
+        }
+      }
+    } else {
+      // 🐛 BUG FIX : Calculer le pourboire pour paiement simple/partiel aussi
+      // Si enteredAmount est fourni et supérieur à finalTotal, et que ce n'est pas un paiement en espèces
+      if (enteredAmount != null && enteredAmount! > finalTotal && selectedPaymentMode != 'ESPECE') {
+        tipAmount = enteredAmount! - finalTotal;
+      }
+    }
+    
     return AlertDialog(
+      // 🆕 Agrandir le dialog
+      contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+      titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
       title: Row(
         children: [
           Icon(Icons.receipt_long, color: Colors.green.shade700),
@@ -147,47 +184,90 @@ class PaymentSummaryDialog extends StatelessWidget {
             if (selectedNoteName.isNotEmpty) const SizedBox(height: 12),
             
             // Mode de paiement
-            if (isSplitPayment && splitPayments != null && splitPayments!.isNotEmpty) ...[
+            if (isSplitPayment && ((splitPaymentTransactions != null && splitPaymentTransactions!.isNotEmpty) || (splitPayments != null && splitPayments!.isNotEmpty))) ...[
               _buildInfoRow(
                 Icons.account_balance_wallet,
-                'Paiement divisé',
-                '${splitPayments!.length} mode(s)',
+                'Mode de paiement',
+                'SPLIT',
                 Colors.blue,
               ),
-              const SizedBox(height: 8),
-              ...splitPayments!.entries.map((entry) {
-                final mode = entry.key;
-                final amount = entry.value;
-                final clientId = splitCreditClients?[mode];
-                return Padding(
-                  padding: const EdgeInsets.only(left: 40, top: 4),
-                  child: Row(
-                    children: [
-                      Icon(_getPaymentModeIcon(mode), size: 16, color: Colors.grey.shade600),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '${_getPaymentModeLabel(mode)}: ${_formatCurrency(amount)}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey.shade700,
-                            fontWeight: FontWeight.w500,
+              const SizedBox(height: 12),
+              // 🆕 Afficher les transactions avec leurs montants
+              if (splitPaymentTransactions != null && splitPaymentTransactions!.isNotEmpty) ...[
+                ...splitPaymentTransactions!.map((transaction) {
+                  final mode = transaction['mode'] as String;
+                  final amount = (transaction['amount'] as num).toDouble();
+                  final clientName = transaction['creditClientName'] as String?;
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 40, bottom: 8),
+                    child: Row(
+                      children: [
+                        Icon(_getPaymentModeIcon(mode), size: 18, color: Colors.grey.shade700),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            '${_getPaymentModeLabel(mode)}: ${_formatCurrency(amount)}',
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
-                      if (mode == 'CREDIT' && clientId != null)
-                        Text(
-                          '(Client #$clientId)',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade500,
-                            fontStyle: FontStyle.italic,
+                        if (mode == 'CREDIT' && clientName != null)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: Text(
+                              '($clientName)',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ] else if (splitPayments != null && splitPayments!.isNotEmpty) ...[
+                ...splitPayments!.entries.map((entry) {
+                  final mode = entry.key;
+                  final amount = entry.value;
+                  final clientId = splitCreditClients?[mode];
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 40, bottom: 8),
+                    child: Row(
+                      children: [
+                        Icon(_getPaymentModeIcon(mode), size: 18, color: Colors.grey.shade700),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            '${_getPaymentModeLabel(mode)}: ${_formatCurrency(amount)}',
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                    ],
-                  ),
-                );
-              }).toList(),
+                        if (mode == 'CREDIT' && clientId != null)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: Text(
+                              '(Client #$clientId)',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ],
             ] else ...[
               _buildInfoRow(
                 _getPaymentModeIcon(selectedPaymentMode),
@@ -246,18 +326,17 @@ class PaymentSummaryDialog extends StatelessWidget {
               finalTotal,
               isTotal: true,
             ),
-            const SizedBox(height: 8),
-            if (covers > 1)
-              Padding(
-                padding: const EdgeInsets.only(left: 16),
-                child: Text(
-                  'Par personne: ${_formatCurrency(finalTotal / covers)}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
+            // 🆕 Afficher le pourboire si présent (et pas de liquide)
+            if (tipAmount != null && tipAmount! > 0.01 && serverName != null && serverName!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              const Divider(),
+              const SizedBox(height: 8),
+              _buildAmountRow(
+                'POURBOIRE ${serverName!.toUpperCase()}',
+                tipAmount!,
+                isTotal: false,
               ),
+            ],
           ],
         ),
       ),

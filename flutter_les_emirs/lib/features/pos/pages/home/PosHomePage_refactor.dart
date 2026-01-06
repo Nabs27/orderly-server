@@ -742,6 +742,12 @@ class _PosHomePageState extends State<PosHomePage> {
 
   // Charger les tables depuis SharedPreferences
   Future<void> _loadTables() async {
+    // 🐛 BUG FIX #2 : Vider les tables du serveur sélectionné pour éviter les tables fantômes
+    if (widget.selectedServer != null && widget.selectedServer!.isNotEmpty) {
+      serverTables[widget.selectedServer!] = [];
+      await TablesRepository.saveAll(serverTables);
+    }
+    
     final loaded = await TablesRepository.loadAll(serverTables);
     setState(() {
       // préserver les clés serveurs existantes, écraser valeurs
@@ -787,6 +793,12 @@ class _PosHomePageState extends State<PosHomePage> {
       });
       await _loadTables();
       await _syncOrdersWithTables();
+      // 🐛 BUG FIX #1 : Rafraîchir l'historique si affiché
+      if (_showHistory) {
+        final targetServer = _getActiveServerName();
+        await _historyController.loadHistory(targetServer);
+        if (mounted) setState(() {});
+      }
     });
   }
 

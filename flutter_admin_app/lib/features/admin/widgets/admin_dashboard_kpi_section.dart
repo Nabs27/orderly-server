@@ -43,7 +43,13 @@ class AdminDashboardKpiSectionState extends State<AdminDashboardKpiSection> {
       socket = s;
       
       // Écouter les mises à jour
-      s.on('connect', (_) => print('[KPI] Socket connecté'));
+      s.on('connect', (_) {
+        print('[KPI] Socket connecté');
+        s.emit('client:identify', {
+          'type': 'admin-dashboard',
+          'timestamp': DateTime.now().toIso8601String(),
+        });
+      });
       
       // Rafraîchir sur toute activité pertinente
       void refresh(_) {
@@ -69,10 +75,15 @@ class AdminDashboardKpiSectionState extends State<AdminDashboardKpiSection> {
 
   Future<void> _loadKpis() async {
     if (!mounted) return;
+    
+    // N'afficher le squelette de chargement que si on n'a pas encore de données
+    final isInitialLoad = _kpis == null;
+    
     setState(() {
-      _loading = true;
+      if (isInitialLoad) _loading = true;
       _error = null;
     });
+
     try {
       final kpis = await KpiService.loadTodayKpis();
       if (!mounted) return;
@@ -190,25 +201,25 @@ class AdminDashboardKpiSectionState extends State<AdminDashboardKpiSection> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Optimisation pour mobile : 2 colonnes minimum pour éviter le scroll vertical excessif
         final width = constraints.maxWidth;
+        // Retour au style "large" (1 colonne sur mobile) pour maximiser la lisibilité
+        // mais avec une hauteur réduite grâce au layout horizontal des cartes
         final columns = width >= 1200
-            ? 5 // Desktop large : tout sur une ligne
-            : width >= 800
-                ? 3 // Tablette : 3 par ligne
-                : 2; // Mobile : 2 par ligne (plus compact)
+            ? 3 // Desktop : 3 colonnes
+            : width >= 700
+                ? 2 // Tablette : 2 colonnes
+                : 1; // Mobile : 1 colonne (Pleine largeur)
         
-        final cardWidth = (width - (columns - 1) * 8) / columns; // Marge réduite (8 au lieu de 12)
+        final cardWidth = (width - (columns - 1) * 8) / columns;
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // Marges réduites
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), // Marges ajustées
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Suppression du titre "Pilotage express" et bouton "Actualiser" (demande user)
               Wrap(
-                spacing: 8, // Espacement réduit
-                runSpacing: 8, // Espacement réduit
+                spacing: 12, // Espacement horizontal
+                runSpacing: 16, // Espacement vertical augmenté pour aérer
                 children: cards
                     .map(
                       (card) => SizedBox(
@@ -325,7 +336,7 @@ class AdminDashboardKpiSectionState extends State<AdminDashboardKpiSection> {
   }
 }
 
-class _KpiCard extends StatelessWidget {
+class _KpiCard extends StatefulWidget {
   final String title;
   final String value;
   final String subtitle;
@@ -345,79 +356,157 @@ class _KpiCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final cardContent = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          children: [
-            Icon(icon, color: iconColor, size: 20),
-            const Spacer(),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade900,
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 6), // Réduit
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 13, // Réduit
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          subtitle,
-          style: TextStyle(
-            fontSize: 10, // Réduit
-            color: Colors.grey.shade600,
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
+  State<_KpiCard> createState() => _KpiCardState();
+}
 
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.all(12), // Padding réduit (était 18)
-        decoration: BoxDecoration(
-          gradient: gradient,
-          borderRadius: BorderRadius.circular(16), // Rayon réduit
-          border: Border.all(color: iconColor.withOpacity(0.15)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10, // Ombre réduite
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            cardContent,
-            if (onTap != null)
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Icon(Icons.touch_app, size: 14, color: iconColor.withOpacity(0.5)),
+class _KpiCardState extends State<_KpiCard> with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _KpiCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Déclencher le pulse si la valeur change
+    if (oldWidget.value != widget.value) {
+      _pulseController.forward(from: 0.0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, child) {
+        // Overlay de flash qui s'estompe
+        final flashOpacity = (1.0 - _pulseAnimation.value) * 0.4 * (_pulseController.isAnimating ? 1.0 : 0.0);
+        
+        return GestureDetector(
+          onTap: widget.onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            decoration: BoxDecoration(
+              gradient: widget.gradient,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: widget.iconColor.withOpacity(
+                  0.15 + (flashOpacity * 0.5), // Le bord s'illumine aussi
+                ),
+                width: 1.0 + (flashOpacity * 2),
               ),
-          ],
-        ),
-      ),
+              boxShadow: [
+                BoxShadow(
+                  color: widget.iconColor.withOpacity(0.06 + (flashOpacity * 0.2)),
+                  blurRadius: 10 + (flashOpacity * 10),
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                // Fond de flash blanc discret
+                if (flashOpacity > 0)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(flashOpacity),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
+                
+                Row(
+                  children: [
+                    // Zone Icône
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(widget.icon, color: widget.iconColor, size: 24),
+                    ),
+                    const SizedBox(width: 16),
+                    // Zone Texte
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            widget.value,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade900,
+                              height: 1.0,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                widget.title,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade800,
+                                ),
+                              ),
+                              Flexible(
+                                child: Text(
+                                  widget.subtitle,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (widget.onTap != null)
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Icon(
+                      Icons.chevron_right,
+                      size: 18,
+                      color: widget.iconColor.withOpacity(0.4),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

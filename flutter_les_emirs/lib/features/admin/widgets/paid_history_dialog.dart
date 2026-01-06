@@ -534,8 +534,40 @@ class _ServiceDetailDialog extends StatelessWidget {
             allItems.add(Map<String, dynamic>.from(item));
           }
         }
-        totalSubtotal += (payment['subtotal'] as num?)?.toDouble() ?? 0.0;
-        totalDiscountAmount += (payment['discountAmount'] as num?)?.toDouble() ?? 0.0;
+      }
+      // 🐛 BUG FIX : Recalculer le subtotal depuis les articles agrégés (au lieu d'additionner les subtotals)
+      // car si plusieurs paiements concernent la même table avec remises, on additionne les remises plusieurs fois
+      totalSubtotal = allItems.fold<double>(0.0, (sum, item) {
+        final price = (item['price'] as num?)?.toDouble() ?? 0.0;
+        final quantity = (item['quantity'] as num?)?.toInt() ?? 0;
+        return sum + (price * quantity);
+      });
+      // 🐛 BUG FIX : Additionner les remises RÉELLES de tous les paiements
+      // Ne PAS appliquer un pourcentage au total si seulement une partie des paiements a une remise
+      if (payments.isNotEmpty) {
+        // 🆕 Additionner les discountAmount réels de tous les paiements qui ont une remise
+        double sumDiscountAmounts = 0.0;
+        Map<String, dynamic>? firstPaymentWithDiscount;
+        Set<String> discountRates = {}; // Pour vérifier si tous les paiements ont la même remise
+        
+        for (final payment in payments) {
+          final paymentDiscountAmount = (payment['discountAmount'] as num?)?.toDouble() ?? 0.0;
+          if (paymentDiscountAmount > 0.01) {
+            sumDiscountAmounts += paymentDiscountAmount;
+            if (firstPaymentWithDiscount == null) {
+              firstPaymentWithDiscount = payment;
+            }
+            // 🆕 Enregistrer le taux de remise pour vérifier l'uniformité
+            final paymentDiscount = (payment['discount'] as num?)?.toDouble() ?? 0.0;
+            final isPercent = payment['isPercentDiscount'] == true;
+            if (paymentDiscount > 0.01) {
+              discountRates.add('${isPercent ? 'PCT' : 'FIX'}_${paymentDiscount.toStringAsFixed(2)}');
+            }
+          }
+        }
+        
+        // 🆕 Utiliser la somme des remises réelles (pas un recalcul trompeur)
+        totalDiscountAmount = sumDiscountAmounts;
       }
     }
 
@@ -553,18 +585,95 @@ class _ServiceDetailDialog extends StatelessWidget {
     // 🆕 CORRECTION: Le total du ticket = subtotal - remise (pas le montant encaissé)
     final ticketTotal = totalSubtotal - totalDiscountAmount;
     
+    // 🆕 Calculer le taux RÉEL de remise basé sur le totalSubtotal et totalDiscountAmount
+    // (au lieu d'afficher le taux d'un paiement qui pourrait être trompeur)
+    // Exemple : si remise de 23.28 TND sur 291 TND = 8% réel, pas 15%
+    double discountRate = 0.0;
+    bool isPercentDiscount = false;
+    if (totalDiscountAmount > 0.01 && totalSubtotal > 0.01) {
+      // 🆕 Calculer le taux réel : (remise / sous-total) * 100
+      discountRate = (totalDiscountAmount / totalSubtotal) * 100;
+      isPercentDiscount = true; // Toujours en pourcentage pour le taux réel
+    }
+    
+    // 🆕 Calculer le pourboire total : montant encaissé - montant du ticket
+    // C'est la méthode la plus simple et fiable (comme dans history-processor.js)
+    // totalAmount = somme des enteredAmount (montant réellement encaissé)
+    // ticketTotal = subtotal - remise (montant du ticket)
+    double totalExcessAmount = 0.0;
+    
+    // 🆕 Vérifier si du liquide est présent dans les paiements
+    bool hasCashInPayment = false;
+    for (final payment in payments) {
+      if (payment['hasCashInPayment'] == true) {
+        hasCashInPayment = true;
+        break;
+      }
+    }
+    
+    // 🆕 Pourboire = montant encaissé - montant du ticket (seulement si pas de cash)
+    // Si du cash est présent, le pourboire est pris directement du cash (pas comptabilisé)
+    if (!hasCashInPayment && totalAmount > ticketTotal) {
+      totalExcessAmount = totalAmount - ticketTotal;
+    }
+    
+    // 🆕 Collecter les détails des paiements (modes et montants encaissés)
+    final paymentDetails = <Map<String, dynamic>>[];
+    if (isSplitPayment) {
+      // Pour paiement divisé : dédupliquer par mode + enteredAmount
+      final processedTxs = <String>{};
+      for (final payment in payments) {
+        final enteredAmount = (payment['enteredAmount'] as num?)?.toDouble() ?? 
+            ((payment['amount'] as num?)?.toDouble() ?? 0.0);
+        final paymentMode = payment['paymentMode']?.toString() ?? '';
+        final txKey = '${paymentMode}_${enteredAmount.toStringAsFixed(3)}';
+        if (!processedTxs.contains(txKey)) {
+          processedTxs.add(txKey);
+          final detail = {
+            'mode': paymentMode,
+            'amount': enteredAmount,
+          };
+          // 🆕 Ajouter le nom du client pour les paiements CREDIT
+          if (paymentMode == 'CREDIT' && payment['creditClientName'] != null) {
+            detail['clientName'] = payment['creditClientName'].toString();
+          }
+          paymentDetails.add(detail);
+        }
+      }
+    } else {
+      // Pour paiement normal : un paiement par entrée
+      for (final payment in payments) {
+        final enteredAmount = (payment['enteredAmount'] as num?)?.toDouble() ?? 
+            ((payment['amount'] as num?)?.toDouble() ?? 0.0);
+        final paymentMode = payment['paymentMode']?.toString() ?? '';
+        final detail = {
+          'mode': paymentMode,
+          'amount': enteredAmount,
+        };
+        // 🆕 Ajouter le nom du client pour les paiements CREDIT
+        if (paymentMode == 'CREDIT' && payment['creditClientName'] != null) {
+          detail['clientName'] = payment['creditClientName'].toString();
+        }
+        paymentDetails.add(detail);
+      }
+    }
+    
     final mainTicket = {
       'table': tableNumber,
       'date': payments.first['timestamp']?.toString() ?? DateTime.now().toIso8601String(),
       'items': allItems,
       'subtotal': totalSubtotal,
-      'discount': 0.0,
+      'discount': discountRate, // 🆕 Taux RÉEL calculé (remise / sous-total * 100)
+      'isPercentDiscount': isPercentDiscount, // 🆕 Toujours true pour le taux réel
       'discountAmount': totalDiscountAmount,
       'total': ticketTotal, // 🆕 Total du ticket (subtotal - remise), pas le montant encaissé
+      'excessAmount': totalExcessAmount > 0.01 ? totalExcessAmount : null, // 🆕 Pourboire total
       'covers': payments.first['covers'] ?? 1,
       'server': payments.first['server'] ?? 'unknown',
       'paymentMode': paymentModeDisplay,
       'isSplitPayment': isSplitPayment, // 🆕 Indicateur de paiement divisé
+      'paymentDetails': paymentDetails, // 🆕 Détails des paiements (modes et montants)
+      'totalAmount': totalAmount, // 🆕 Montant total encaissé
     };
 
     return Dialog(
@@ -624,13 +733,34 @@ class _ServiceDetailDialog extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Total: ${_formatCurrency(totalAmount)}',
+                              'Total: ${_formatCurrency(ticketTotal)}',
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.green.shade700,
                               ),
                             ),
+                            // 🆕 Afficher le pourboire si présent
+                            if (totalExcessAmount > 0.01) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                'Pourboire ${(payments.first['server']?.toString() ?? 'unknown').toUpperCase()}: ${_formatCurrency(totalExcessAmount)}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.green.shade600,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Montant encaissé: ${_formatCurrency(totalAmount)}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green.shade800,
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: 12),
                             ElevatedButton.icon(
                               onPressed: () {

@@ -148,3 +148,12 @@ La documentation est organisée de manière modulaire pour éviter que `STRUCTUR
 - Modifier les données sans passer par les services de synchronisation
 - Calculer des totaux sans vérifier toutes les commandes de la table
 
+## 📦 Gestion GitHub
+
+**⚠️ IMPORTANT : GitHub contient uniquement le code serveur (dossier `server/`).**
+
+- **Ne faire des commits/push GitHub QUE pour les modifications concernant le serveur** (backend Node.js)
+- Les modifications Flutter (frontend POS, admin, client, cuisine) ne doivent PAS être commitées sur GitHub
+- Avant de faire un commit, vérifier que seules les modifications dans `server/` sont incluses
+- Si des modifications Flutter sont accidentellement incluses, les retirer du commit avant de push
+

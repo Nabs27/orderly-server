@@ -1192,6 +1192,12 @@ class _PosPaymentPageState extends State<PosPaymentPage> {
         discountClientName: discountClientName,
         covers: covers,
         isPartialPayment: selectedNoteForPayment == 'partial',
+        isSplitPayment: isSplitPayment,
+        splitPayments: isSplitPayment ? splitPayments : null,
+        splitCreditClients: isSplitPayment ? splitCreditClients : null,
+        splitPaymentTransactions: isSplitPayment ? _splitPaymentTransactions : null, // 🆕 Passer les transactions
+        serverName: widget.currentServer, // 🆕 Passer le nom du serveur
+        enteredAmount: !isSplitPayment ? _scripturalEnteredAmount : null, // 🐛 BUG FIX : Passer le montant saisi pour calculer le pourboire
         onConfirm: () {
           Navigator.of(context).pop();
           _validatePayment();

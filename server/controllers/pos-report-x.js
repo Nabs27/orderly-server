@@ -393,31 +393,31 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			dataStore.archivedOrders.length = 0;
 			dataStore.archivedOrders.push(...archived);
 			console.log(`[report-x] ☁️ ${dataStore.archivedOrders.length} commandes archivées rechargées depuis MongoDB`);
-			
-		// 🆕 Recharger aussi les commandes actives (pour les tables non payées)
-		// ⚠️ IMPORTANT : Ne pas filtrer les commandes client confirmées ici
-		// Le filtrage des doublons est déjà fait dans loadFromMongoDB() au démarrage
-		// Ici, on veut juste recharger TOUTES les commandes actives pour avoir les données à jour
-		const orders = await dbManager.orders.find({}).toArray();
-		
-		// 🆕 Filtrer uniquement les commandes avec status !== 'archived' (comme getAllOrders)
-		// Les commandes archivées sont dans archivedOrders, pas dans orders
-		const activeOrders = orders.filter(o => {
-			// Exclure les commandes archivées
-			if (o.status === 'archived') {
-				return false;
-			}
-			// Exclure les commandes client en attente (waitingForPos: true, pas encore confirmées)
-			// Ces commandes n'ont pas encore d'ID et ne sont pas encore actives
-			if (o.waitingForPos === true && (!o.id || o.id === null) && o.source === 'client') {
-				return false;
-			}
-			return true;
-		});
-		
-		dataStore.orders.length = 0;
-		dataStore.orders.push(...activeOrders);
-		console.log(`[report-x] ☁️ ${dataStore.orders.length} commandes actives rechargées depuis MongoDB (sur ${orders.length} total)`);
+
+			// 🆕 Recharger aussi les commandes actives (pour les tables non payées)
+			// ⚠️ IMPORTANT : Ne pas filtrer les commandes client confirmées ici
+			// Le filtrage des doublons est déjà fait dans loadFromMongoDB() au démarrage
+			// Ici, on veut juste recharger TOUTES les commandes actives pour avoir les données à jour
+			const orders = await dbManager.orders.find({}).toArray();
+
+			// 🆕 Filtrer uniquement les commandes avec status !== 'archived' (comme getAllOrders)
+			// Les commandes archivées sont dans archivedOrders, pas dans orders
+			const activeOrders = orders.filter(o => {
+				// Exclure les commandes archivées
+				if (o.status === 'archived') {
+					return false;
+				}
+				// Exclure les commandes client en attente (waitingForPos: true, pas encore confirmées)
+				// Ces commandes n'ont pas encore d'ID et ne sont pas encore actives
+				if (o.waitingForPos === true && (!o.id || o.id === null) && o.source === 'client') {
+					return false;
+				}
+				return true;
+			});
+
+			dataStore.orders.length = 0;
+			dataStore.orders.push(...activeOrders);
+			console.log(`[report-x] ☁️ ${dataStore.orders.length} commandes actives rechargées depuis MongoDB (sur ${orders.length} total)`);
 		} catch (e) {
 			console.error('[report-x] ⚠️ Erreur rechargement données:', e.message);
 		}
@@ -554,7 +554,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		const noteNames = new Set();
 		const noteIds = new Set();
 		let discountClientName = null; // 🆕 Nom du client pour justifier la remise
-		
+
 		// 🆕 Pour les paiements divisés, dédupliquer par mode + enteredAmount
 		// Car chaque transaction apparaît N fois (une par commande)
 		const processedTransactions = new Set();
@@ -864,7 +864,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			let totalAmount = 0;
 			let totalSubtotal = 0;
 			let totalDiscountAmount = 0;
-			
+
 			if (act.isSplitPayment) {
 				// 🆕 CORRECTION: Calculer le subtotal depuis les articles dédupliqués (comme dans history-processor.js)
 				// au lieu de sommer les allocatedAmount (qui sont proportionnels)
@@ -873,7 +873,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 					const qty = Number(item.quantity || 0);
 					return sum + (price * qty);
 				}, 0);
-				
+
 				// 🆕 CORRECTION: Recalculer la remise depuis le totalSubtotal et le taux (comme dans discountDetails)
 				// car payments[0].discountAmount est proportionnel (part de la remise pour une seule commande)
 				// La remise est appliquée au ticket global, donc on doit la recalculer depuis le totalSubtotal
@@ -884,7 +884,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				} else {
 					totalDiscountAmount = 0;
 				}
-				
+
 				// 🆕 Le totalAmount doit être totalSubtotal - totalDiscountAmount (montant du ticket après remise)
 				totalAmount = totalSubtotal - totalDiscountAmount;
 			} else {
@@ -921,7 +921,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			let totalEnteredAmount = 0;
 			let totalAllocatedAmount = 0;
 			const hasCashInPayment = payments.some(p => p.hasCashInPayment === true);
-			
+
 			if (act.isSplitPayment) {
 				// Dédupliquer par mode + enteredAmount
 				const processedTxs = new Set();
@@ -938,10 +938,10 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				totalEnteredAmount = payments.reduce((sum, p) => sum + (p.enteredAmount != null ? p.enteredAmount : (p.amount || 0)), 0);
 				totalAllocatedAmount = payments.reduce((sum, p) => sum + (p.allocatedAmount != null ? p.allocatedAmount : (p.amount || 0)), 0);
 			}
-			
+
 			// Pourboire = enteredAmount - allocatedAmount (si pas de cash)
-			const totalExcessAmount = (!hasCashInPayment && totalEnteredAmount > totalAllocatedAmount) 
-				? (totalEnteredAmount - totalAllocatedAmount) 
+			const totalExcessAmount = (!hasCashInPayment && totalEnteredAmount > totalAllocatedAmount)
+				? (totalEnteredAmount - totalAllocatedAmount)
 				: 0;
 
 			paidPayments.push({
@@ -1007,49 +1007,49 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 						}
 						return total;
 					})() : (payments[0].paymentMode === 'CREDIT' ? 0 : totalEnteredAmount);
-					
+
 					return {
-					table: table,
-					date: act.timestamp || new Date().toISOString(),
-					items: allItems.map(item => ({
-						name: item.name,
-						quantity: item.quantity || 0,
-						price: item.price || 0,
-						subtotal: (item.price || 0) * (item.quantity || 0)
-					})),
-					subtotal: totalSubtotal,
-					discount: act.discount || 0,
-					discountAmount: totalDiscountAmount,
-					total: totalAmount,
-					paymentMode: paymentModeDisplay, // 🆕 Utiliser le mode calculé
-					isSplitPayment: act.isSplitPayment || false, // 🆕 Ajouter le flag
-					covers: covers,
-					server: server,
-					// 🆕 Ajouter les détails des paiements et le montant total encaissé
-					paymentDetails: act.isSplitPayment ? (() => {
-						const processedTxs = new Set();
-						const uniqueDetails = [];
-						for (const p of payments) {
-							const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
-							const txKey = `${p.paymentMode}_${enteredAmount.toFixed(3)}`;
-							if (!processedTxs.has(txKey)) {
-								processedTxs.add(txKey);
-								const detail = { mode: p.paymentMode, amount: enteredAmount };
-								// 🆕 Ajouter le nom du client pour les paiements CREDIT
-								if (p.paymentMode === 'CREDIT' && p.creditClientName) {
-									detail.clientName = p.creditClientName;
+						table: table,
+						date: act.timestamp || new Date().toISOString(),
+						items: allItems.map(item => ({
+							name: item.name,
+							quantity: item.quantity || 0,
+							price: item.price || 0,
+							subtotal: (item.price || 0) * (item.quantity || 0)
+						})),
+						subtotal: totalSubtotal,
+						discount: act.discount || 0,
+						discountAmount: totalDiscountAmount,
+						total: totalAmount,
+						paymentMode: paymentModeDisplay, // 🆕 Utiliser le mode calculé
+						isSplitPayment: act.isSplitPayment || false, // 🆕 Ajouter le flag
+						covers: covers,
+						server: server,
+						// 🆕 Ajouter les détails des paiements et le montant total encaissé
+						paymentDetails: act.isSplitPayment ? (() => {
+							const processedTxs = new Set();
+							const uniqueDetails = [];
+							for (const p of payments) {
+								const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
+								const txKey = `${p.paymentMode}_${enteredAmount.toFixed(3)}`;
+								if (!processedTxs.has(txKey)) {
+									processedTxs.add(txKey);
+									const detail = { mode: p.paymentMode, amount: enteredAmount };
+									// 🆕 Ajouter le nom du client pour les paiements CREDIT
+									if (p.paymentMode === 'CREDIT' && p.creditClientName) {
+										detail.clientName = p.creditClientName;
+									}
+									uniqueDetails.push(detail);
 								}
-								uniqueDetails.push(detail);
 							}
-						}
-						return uniqueDetails;
-					})() : [{
-						mode: payments[0].paymentMode,
-						amount: payments[0].enteredAmount != null ? payments[0].enteredAmount : (payments[0].amount || 0),
-						...(payments[0].paymentMode === 'CREDIT' && payments[0].creditClientName ? { clientName: payments[0].creditClientName } : {})
-					}],
-					totalAmount: totalAmountEncaisse > 0.01 ? totalAmountEncaisse : undefined, // 🆕 Montant total encaissé (exclut CREDIT)
-					excessAmount: totalExcessAmount > 0.01 ? totalExcessAmount : undefined // 🆕 Pourboire
+							return uniqueDetails;
+						})() : [{
+							mode: payments[0].paymentMode,
+							amount: payments[0].enteredAmount != null ? payments[0].enteredAmount : (payments[0].amount || 0),
+							...(payments[0].paymentMode === 'CREDIT' && payments[0].creditClientName ? { clientName: payments[0].creditClientName } : {})
+						}],
+						totalAmount: totalAmountEncaisse > 0.01 ? totalAmountEncaisse : undefined, // 🆕 Montant total encaissé (exclut CREDIT)
+						excessAmount: totalExcessAmount > 0.01 ? totalExcessAmount : undefined // 🆕 Pourboire
 					};
 				})()
 			});
@@ -1087,34 +1087,34 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				// 🆕 Ticket encaissé (format ticket de caisse)
 				ticket: (() => {
 					// 🆕 Calculer le montant total encaissé (exclut CREDIT car c'est une dette différée)
-					const totalAmountEncaisse = payment.paymentMode === 'CREDIT' ? 0 : 
+					const totalAmountEncaisse = payment.paymentMode === 'CREDIT' ? 0 :
 						(payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0));
-					
+
 					return {
-					table: payment.table,
-					date: payment.timestamp || new Date().toISOString(),
-					items: (payment.items || []).map(item => ({
-						name: item.name,
-						quantity: item.quantity || 0,
-						price: item.price || 0,
-						subtotal: (item.price || 0) * (item.quantity || 0)
-					})),
-					subtotal: payment.subtotal || 0,
-					discount: payment.discount || 0,
-					discountAmount: payment.discountAmount || 0,
-					total: payment.amount || 0,
-					paymentMode: payment.paymentMode,
-					isSplitPayment: payment.isSplitPayment || false, // 🆕 Ajouter le flag
-					covers: payment.covers || 1,
-					server: payment.server,
-					// 🆕 Ajouter les détails des paiements et le montant total encaissé
-					paymentDetails: [{
-						mode: payment.paymentMode,
-						amount: payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0),
-						...(payment.paymentMode === 'CREDIT' && payment.creditClientName ? { clientName: payment.creditClientName } : {})
-					}],
-					totalAmount: totalAmountEncaisse > 0.01 ? totalAmountEncaisse : undefined, // 🆕 Montant total encaissé (exclut CREDIT)
-					excessAmount: payment.excessAmount != null && payment.excessAmount > 0.01 ? payment.excessAmount : undefined // 🆕 Pourboire
+						table: payment.table,
+						date: payment.timestamp || new Date().toISOString(),
+						items: (payment.items || []).map(item => ({
+							name: item.name,
+							quantity: item.quantity || 0,
+							price: item.price || 0,
+							subtotal: (item.price || 0) * (item.quantity || 0)
+						})),
+						subtotal: payment.subtotal || 0,
+						discount: payment.discount || 0,
+						discountAmount: payment.discountAmount || 0,
+						total: payment.amount || 0,
+						paymentMode: payment.paymentMode,
+						isSplitPayment: payment.isSplitPayment || false, // 🆕 Ajouter le flag
+						covers: payment.covers || 1,
+						server: payment.server,
+						// 🆕 Ajouter les détails des paiements et le montant total encaissé
+						paymentDetails: [{
+							mode: payment.paymentMode,
+							amount: payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0),
+							...(payment.paymentMode === 'CREDIT' && payment.creditClientName ? { clientName: payment.creditClientName } : {})
+						}],
+						totalAmount: totalAmountEncaisse > 0.01 ? totalAmountEncaisse : undefined, // 🆕 Montant total encaissé (exclut CREDIT)
+						excessAmount: payment.excessAmount != null && payment.excessAmount > 0.01 ? payment.excessAmount : undefined // 🆕 Pourboire
 					};
 				})()
 			});
@@ -1154,7 +1154,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			const timestampKey = discount.timestamp ? new Date(discount.timestamp).toISOString().slice(0, 19) : '';
 			actKey = `${discount.table || 'N/A'}_${timestampKey}_${discount.paymentMode || 'N/A'}_${discount.discount || 0}_${discount.isPercentDiscount ? 'PCT' : 'FIX'}`;
 		}
-		
+
 		// Utiliser le ticket sauvegardé si disponible, sinon garder les items pour compatibilité
 		const savedTicket = ticketByActKey[actKey];
 		if (savedTicket) {
@@ -1226,12 +1226,12 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	// Cela garantit que History, KPI et X Report utilisent la même logique de déduplication
 	// ⚠️ RÈGLE .cursorrules 2.1: allPayments contient les paiements bruts (N fois par commande pour split)
 	const processedData = paymentProcessor.deduplicateAndCalculate(allPayments);
-	
+
 	// 🆕 CORRECTION: Utiliser discountDetails (remises recalculées correctement) comme source de vérité pour totalRemises
 	// car paymentProcessor additionne les discountAmount proportionnels sans les recalculer depuis totalSubtotal
 	const totalRemisesFromDiscounts = discountDetails.reduce((sum, d) => sum + (d.discountAmount || 0), 0);
 	const nombreRemisesFromDiscounts = discountDetails.length;
-	
+
 	// Extraire les totaux du module commun
 	const totals = {
 		chiffreAffaire: processedData.totals.chiffreAffaire,
@@ -1299,12 +1299,12 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 function groupPaymentsByMode(payments) {
 	const grouped = {};
 	const tipsByServer = {}; // 🆕 Regrouper les pourboires par serveur
-	
+
 	// 🆕 ÉTAPE 1: Regrouper les paiements divisés par splitPaymentId pour calculer le pourboire global
 	// Car les excessAmount individuels sont proportionnels et peuvent être incorrects
 	const splitPaymentGroups = {};
 	const processedSplitPayments = new Set(); // Pour éviter de traiter plusieurs fois le même split
-	
+
 	for (const payment of payments) {
 		if (payment.isSplitPayment && payment.splitPaymentId) {
 			if (!splitPaymentGroups[payment.splitPaymentId]) {
@@ -1317,7 +1317,7 @@ function groupPaymentsByMode(payments) {
 	// 🆕 Set pour éviter de compter plusieurs fois les transactions de paiements divisés
 	// Clé = splitPaymentId + mode + enteredAmount
 	const processedSplitTransactions = new Set();
-	
+
 	for (const payment of payments) {
 		// 🆕 Ignorer les remboursements (type: 'refund')
 		if (payment.type === 'refund') {
@@ -1345,7 +1345,7 @@ function groupPaymentsByMode(payments) {
 		// 🆕 Pour les paiements divisés, dédupliquer par splitPaymentId + mode + enteredAmount
 		// Car chaque transaction apparaît N fois (une par commande) avec le même enteredAmount
 		const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
-		
+
 		if (payment.isSplitPayment && payment.splitPaymentId) {
 			const transactionKey = `${payment.splitPaymentId}_${mode}_${enteredAmount.toFixed(3)}`;
 			if (processedSplitTransactions.has(transactionKey)) {
@@ -1354,7 +1354,7 @@ function groupPaymentsByMode(payments) {
 			}
 			processedSplitTransactions.add(transactionKey);
 		}
-		
+
 		// 🆕 Utiliser enteredAmount si disponible (montant réel), sinon amount (rétrocompatibilité)
 		// ⚠️ IMPORTANT: Pour CARTE/TPE/CHEQUE, enteredAmount contient le montant réellement encaissé (avec pourboire)
 		grouped[mode].total += enteredAmount;
@@ -1365,16 +1365,16 @@ function groupPaymentsByMode(payments) {
 		// ⚠️ IMPORTANT: Pour les paiements divisés, calculer le pourboire global (pas par paiement individuel)
 		if ((mode === 'TPE' || mode === 'CHEQUE' || mode === 'CARTE')) {
 			const serverName = payment.server || 'unknown';
-			
+
 			// 🆕 Pour les paiements divisés, calculer le pourboire au niveau du groupe
 			if (payment.isSplitPayment && payment.splitPaymentId) {
 				// Ne traiter qu'une seule fois par splitPaymentId
 				if (!processedSplitPayments.has(payment.splitPaymentId)) {
 					processedSplitPayments.add(payment.splitPaymentId);
-					
+
 					const groupPayments = splitPaymentGroups[payment.splitPaymentId] || [];
 					const hasCash = groupPayments.some(p => p.hasCashInPayment === true);
-					
+
 					if (!hasCash && serverName && serverName !== 'unknown') {
 						// 🆕 Recalculer le pourboire global pour ce split payment
 						// Total encaissé (pour les modes scripturaux) - Total ticket (allocatedAmount)
@@ -1393,7 +1393,7 @@ function groupPaymentsByMode(payments) {
 								transactionsByKey[key].allocatedAmounts.push(p.allocatedAmount || p.amount || 0);
 							}
 						}
-						
+
 						// Calculer le total encaissé et le total ticket
 						let totalEntered = 0;
 						let totalAllocated = 0;
@@ -1405,7 +1405,7 @@ function groupPaymentsByMode(payments) {
 							const sumAllocated = transaction.allocatedAmounts.reduce((sum, a) => sum + a, 0);
 							totalAllocated += nbOrders > 0 ? sumAllocated / nbOrders : sumAllocated;
 						}
-						
+
 						const tipAmount = Math.max(0, totalEntered - totalAllocated);
 						if (tipAmount > 0.01) {
 							if (!tipsByServer[serverName]) {
@@ -1418,9 +1418,9 @@ function groupPaymentsByMode(payments) {
 				}
 			} else {
 				// Paiement simple (non divisé)
-				if (payment.excessAmount != null && 
-				    payment.excessAmount > 0.001 && 
-				    payment.hasCashInPayment === false) {
+				if (payment.excessAmount != null &&
+					payment.excessAmount > 0.001 &&
+					payment.hasCashInPayment === false) {
 					if (serverName && serverName !== 'unknown') {
 						if (!tipsByServer[serverName]) {
 							tipsByServer[serverName] = 0;
@@ -1485,7 +1485,7 @@ function calculateTotals(payments, orders) {
 
 	// Parcourir tous les paiements
 	const discountActs = new Set(); // Pour compter les actes de remise uniques (par ticket, pas par commande)
-	
+
 	// 🆕 Set pour dédupliquer les transactions de paiements divisés (multi-commandes)
 	// ⚠️ RÈGLE 2.1 .cursorrules: Une table peut avoir plusieurs commandes, chaque transaction apparaît N fois
 	const processedSplitTransactions = new Set();
@@ -1503,7 +1503,7 @@ function calculateTotals(payments, orders) {
 		const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
 		const subtotal = payment.subtotal || payment.amount || 0;
 		const amount = payment.amount || 0;
-		
+
 		if (payment.isSplitPayment && payment.splitPaymentId) {
 			const transactionKey = `${payment.splitPaymentId}_${payment.paymentMode}_${enteredAmount.toFixed(3)}`;
 			if (processedSplitTransactions.has(transactionKey)) {
@@ -1778,7 +1778,7 @@ function calculateUnpaidTables(server) {
 		if (order.status === 'archived') {
 			return false;
 		}
-		
+
 		// Filtrer par serveur si fourni
 		if (server && order.server) {
 			if (String(order.server).toUpperCase() !== String(server).toUpperCase()) {
@@ -1791,12 +1791,12 @@ function calculateUnpaidTables(server) {
 		if (order.mainNote) {
 			const mainPaid = order.mainNote.paid || false;
 			const mainTotal = order.mainNote.total || 0;
-			
+
 			// Si la note principale n'est pas payée et a un total > 0, inclure la commande
 			if (!mainPaid && mainTotal > 0) {
 				return true;
 			}
-			
+
 			// Vérifier les sous-notes non payées
 			const subNotes = order.subNotes || [];
 			for (const subNote of subNotes) {
@@ -1820,18 +1820,18 @@ function calculateUnpaidTables(server) {
 	// Calculer le total réel à partir des notes non payées (comme le fait le POS)
 	const unpaidByMode = {};
 	let totalUnpaid = 0;
-	
+
 	for (const order of unpaidOrders) {
 		// 🆕 Calculer le total réel des notes non payées (comme le fait le POS)
 		let orderUnpaidTotal = 0;
-		
+
 		if (order.mainNote) {
 			const mainPaid = order.mainNote.paid || false;
 			const mainTotal = order.mainNote.total || 0;
 			if (!mainPaid && mainTotal > 0) {
 				orderUnpaidTotal += mainTotal;
 			}
-			
+
 			const subNotes = order.subNotes || [];
 			for (const subNote of subNotes) {
 				const isPaid = subNote.paid || false;
@@ -1844,10 +1844,10 @@ function calculateUnpaidTables(server) {
 			// Ancienne structure sans mainNote
 			orderUnpaidTotal = order.total || 0;
 		}
-		
+
 		if (orderUnpaidTotal > 0) {
 			totalUnpaid += orderUnpaidTotal;
-			
+
 			const mode = 'NON PAYÉ';
 			if (!unpaidByMode[mode]) {
 				unpaidByMode[mode] = {
@@ -1881,7 +1881,7 @@ function calculateUnpaidTables(server) {
 
 		const tableData = tablesMap[tableNumber];
 		tableData.orders.push(order);
-		
+
 		// 🆕 Calculer le total réel des notes non payées (comme le fait le POS)
 		let orderUnpaidTotal = 0;
 		if (order.mainNote) {
@@ -1890,7 +1890,7 @@ function calculateUnpaidTables(server) {
 			if (!mainPaid && mainTotal > 0) {
 				orderUnpaidTotal += mainTotal;
 			}
-			
+
 			const subNotes = order.subNotes || [];
 			for (const subNote of subNotes) {
 				const isPaid = subNote.paid || false;
@@ -1903,7 +1903,7 @@ function calculateUnpaidTables(server) {
 			// Ancienne structure sans mainNote
 			orderUnpaidTotal = order.total || 0;
 		}
-		
+
 		tableData.total += orderUnpaidTotal;
 
 		// Mettre à jour la date d'ouverture (la plus ancienne)
@@ -1921,7 +1921,7 @@ function calculateUnpaidTables(server) {
 		if (order.mainNote && order.mainNote.items) {
 			const mainPaid = order.mainNote.paid || false;
 			const mainTotal = order.mainNote.total || 0;
-			
+
 			// 🆕 Inclure la note principale seulement si elle n'est pas payée (comme le fait le POS)
 			if (!mainPaid && mainTotal > 0) {
 				for (const item of order.mainNote.items) {
@@ -1954,7 +1954,7 @@ function calculateUnpaidTables(server) {
 			for (const subNote of order.subNotes) {
 				const isPaid = subNote.paid || false;
 				const subTotal = subNote.total || 0;
-				
+
 				// 🆕 Inclure la sous-note seulement si elle n'est pas payée (comme le fait le POS)
 				if (!isPaid && subTotal > 0 && subNote.items) {
 					for (const item of subNote.items) {
@@ -2115,14 +2115,14 @@ async function generateReportXTicket(req, res) {
 				if (!data || typeof data !== 'object') continue;
 				// 🆕 Ignorer les clés spéciales pour les pourboires (seront affichées séparément)
 				if (mode === '_tipsToRecover' || mode === '_tipsByServer') continue;
-				
+
 				const modeLabel = mode === 'ESPECE' ? 'ESPECE' :
 					mode === 'CHEQUE' ? `CHEQUE(${data.count || 0})` :
 						mode === 'TPE' ? `TPE(${data.count || 0})` :
 							mode === 'CARTE' ? `CARTE(${data.count || 0})` : // 🆕 Ajout de CARTE
 								mode === 'OFFRE' ? 'OFFRE' :
 									mode.toUpperCase();
-				
+
 				// 🆕 Utiliser totalEntered si disponible (montant réellement encaissé), sinon total
 				const amountToDisplay = data.totalEntered != null ? data.totalEntered : (data.total || 0);
 				const valueStr = amountToDisplay.toFixed(3).replace('.', ',');
@@ -2489,7 +2489,7 @@ async function generateReportXTicket(req, res) {
 
 		// CA du jour = chiffre d'affaire de toutes les ventes (y compris les dettes différées)
 		const caDuJour = ca;
-		
+
 		// 🆕 Calculer le total des pourboires (pour les soustraire de la recette)
 		let totalPourboires = 0;
 		if (paymentsByMode && paymentsByMode['_tipsByServer'] && typeof paymentsByMode['_tipsByServer'] === 'object') {
@@ -2500,7 +2500,7 @@ async function generateReportXTicket(req, res) {
 				}
 			}
 		}
-		
+
 		// Recette encaissée du jour = paiements réels reçus aujourd'hui (sans les dettes différées, SANS les pourboires)
 		// 🆕 BONNE PRATIQUE: Afficher la recette opérationnelle (sans pourboire) pour plus de clarté
 		const recetteDuJourSansPourboire = recette - totalPourboires;
@@ -2511,7 +2511,7 @@ async function generateReportXTicket(req, res) {
 
 		ticket += 'Chiffre d\'affaire du jour'.padEnd(labelWidth) + caDuJour.toFixed(3).replace('.', ',').padStart(valueWidth) + '\n';
 		ticket += 'Recette encaissee du jour'.padEnd(labelWidth) + recetteDuJourSansPourboire.toFixed(3).replace('.', ',').padStart(valueWidth) + '\n';
-		
+
 		// 🆕 Afficher les pourboires par serveur en bas du récapitulatif (bonne pratique)
 		if (totalPourboires > 0.01 && paymentsByMode && paymentsByMode['_tipsByServer'] && typeof paymentsByMode['_tipsByServer'] === 'object') {
 			const tipsByServer = paymentsByMode['_tipsByServer'];
@@ -2523,7 +2523,7 @@ async function generateReportXTicket(req, res) {
 				}
 			}
 		}
-		
+
 		if (reglementsDettes > 0) {
 			ticket += 'Reglements de dettes'.padEnd(labelWidth) + reglementsDettes.toFixed(3).replace('.', ',').padStart(valueWidth) + '\n';
 		}
@@ -2537,27 +2537,27 @@ async function generateReportXTicket(req, res) {
 			ticket += center('RECETTE NON ENCAISSEE') + '\n';
 			ticket += separator('=') + '\n';
 			ticket += '\n';
-			
+
 			const unpaidTotal = unpaidTables.total || 0;
 			const unpaidCount = unpaidTables.count || 0;
 			ticket += `Total non encaisse: ${unpaidTotal.toFixed(3).replace('.', ',')} TND\n`;
 			ticket += `Nombre de tables: ${unpaidCount}\n`;
 			ticket += '\n';
-			
+
 			// Détails par table
 			if (unpaidTables.details && unpaidTables.details.length > 0) {
 				ticket += 'DETAIL PAR TABLE:\n';
 				ticket += separator('-') + '\n';
-				
+
 				for (const table of unpaidTables.details) {
 					const tableNumber = table.table || 'N/A';
 					const server = table.server || 'unknown';
 					const total = (table.total || 0).toFixed(3).replace('.', ',');
 					const covers = table.covers || 1;
-					
+
 					ticket += `Table ${tableNumber} - Serveur: ${server.toUpperCase()}\n`;
 					ticket += `Couverts: ${covers} | Total: ${total} TND\n`;
-					
+
 					// Articles
 					if (table.items && table.items.length > 0) {
 						const itemsToShow = table.items.slice(0, 5); // Limiter à 5 articles pour ne pas surcharger
@@ -2566,7 +2566,7 @@ async function generateReportXTicket(req, res) {
 							const qty = item.quantity || 0;
 							const price = (item.price || 0).toFixed(3).replace('.', ',');
 							const subtotal = ((item.price || 0) * (item.quantity || 0)).toFixed(3).replace('.', ',');
-							
+
 							if (itemName.length > 25) {
 								ticket += `  ${itemName.substring(0, 22)}... x${qty} - ${price} TND = ${subtotal} TND\n`;
 							} else {
@@ -2577,7 +2577,7 @@ async function generateReportXTicket(req, res) {
 							ticket += `  ... ${table.items.length - 5} article(s) supplémentaire(s)\n`;
 						}
 					}
-					
+
 					ticket += separator('-') + '\n';
 				}
 				ticket += '\n';

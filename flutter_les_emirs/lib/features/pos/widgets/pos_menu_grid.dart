@@ -167,6 +167,11 @@ class _PosMenuGridState extends State<PosMenuGrid> {
           } else {
         activeType = typesList.isNotEmpty ? typesList.first : null;
       }
+      
+      // Si le type par défaut est VIN, sélectionner Vin blanc par défaut
+      if (activeType == '__VIN__') {
+        activeWineSubType = 'Vin blanc';
+      }
     });
   }
 
@@ -222,6 +227,29 @@ class _PosMenuGridState extends State<PosMenuGrid> {
       result.add(t);
     }
     
+    // Tri spécifique pour les Spiritueux (Bière, Vin, le reste)
+    if (activeGroup == 'spirits') {
+      result.sort((a, b) {
+        final aLower = a.toLowerCase();
+        final bLower = b.toLowerCase();
+        
+        // 1. Bière en premier
+        final aIsBeer = aLower.contains('biere') || aLower.contains('bière');
+        final bIsBeer = bLower.contains('biere') || bLower.contains('bière');
+        if (aIsBeer && !bIsBeer) return -1;
+        if (!aIsBeer && bIsBeer) return 1;
+        
+        // 2. Vin en deuxième
+        final aIsVin = a == '__VIN__';
+        final bIsVin = b == '__VIN__';
+        if (aIsVin && !bIsVin) return -1;
+        if (!aIsVin && bIsVin) return 1;
+        
+        // 3. Le reste
+        return a.compareTo(b);
+      });
+    }
+
     return result;
   }
 
@@ -237,7 +265,7 @@ class _PosMenuGridState extends State<PosMenuGrid> {
         final itType = (it['type'] as String?) ?? '';
         if (t == '__VIN__') {
           if (activeWineSubType != null) {
-            if (itType == activeWineSubType) result.add(it);
+            if (itType.toLowerCase() == activeWineSubType!.toLowerCase()) result.add(it);
           } else {
             if (itType.toLowerCase().startsWith('vin ')) result.add(it);
           }
@@ -370,7 +398,11 @@ class _PosMenuGridState extends State<PosMenuGrid> {
             onPressed: () {
               setState(() {
                 activeType = t;
-                activeWineSubType = null;
+                if (t == '__VIN__') {
+                  activeWineSubType = 'Vin blanc';
+                } else {
+                  activeWineSubType = null;
+                }
               });
             },
             style: ElevatedButton.styleFrom(

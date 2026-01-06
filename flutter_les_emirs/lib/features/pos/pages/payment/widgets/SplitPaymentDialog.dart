@@ -367,6 +367,7 @@ class _SplitPaymentDialogState extends State<SplitPaymentDialog> {
         'mode': t.mode,
         'amount': t.amount,
         'clientId': t.clientId,
+        'transactionId': t.id, // 🆕 Envoyer l'ID unique de la transaction
       };
     }).toList();
 

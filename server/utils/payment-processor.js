@@ -30,22 +30,22 @@ function deduplicateAndCalculate(payments) {
     };
     const tipsByServer = {};     // serveur -> montant pourboire
     const paymentsByMode = {};   // mode -> { total, count }
-    
+
     // ⚠️ RÈGLE .cursorrules 2.1: Pour les split payments multi-commandes,
     // chaque transaction apparaît N fois (une par commande) avec :
     // - enteredAmount IDENTIQUE (montant réel encaissé)
     // - allocatedAmount DIFFÉRENT (part proportionnelle de la commande)
     // 
     // Solution: Accumuler les allocatedAmount, mais ne compter enteredAmount qu'une fois
-    
+
     // Map pour accumuler les données des transactions split uniques
     // Clé: splitPaymentId_mode_enteredAmount -> { enteredAmount, totalAllocated, hasCash, counted }
     const splitTransactionAccumulator = new Map();
-    
+
     // Sets pour tracking des éléments déjà traités
     const processedDiscountActs = new Set();       // Pour compter les remises uniques
     const processedSplitTips = new Set();          // Pour dédupliquer les pourboires split
-    
+
     // Grouper les split payments pour calcul du pourboire global
     const splitPaymentGroups = {};
     for (const payment of payments) {
@@ -56,30 +56,35 @@ function deduplicateAndCalculate(payments) {
             splitPaymentGroups[payment.splitPaymentId].push(payment);
         }
     }
-    
+
     // ÉTAPE 1: Pour chaque splitPaymentId, accumuler les données
     // ⚠️ IMPORTANT: Deux transactions du MÊME montant (ex: 2 × TPE 80 TND) ont la même clé
     // Solution: Compter les occurrences et diviser par le nombre de commandes
-    
+
     for (const splitId in splitPaymentGroups) {
         const groupPayments = splitPaymentGroups[splitId];
-        
+
         // Compter le nombre de commandes distinctes
         const distinctOrderIds = new Set(groupPayments.map(p => p.orderId || p.sessionId)).size;
         const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
-        
+
         // Compter les occurrences de chaque mode + enteredAmount
         // Ex: { "TPE_80.000": { count: 6, enteredAmount: 80, allocatedSum: 254 } }
         const txCounts = {};
-        
+
         for (const payment of groupPayments) {
             if (payment.type === 'refund') continue;
-            
+
             const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
             const allocatedAmount = payment.allocatedAmount != null ? payment.allocatedAmount : (payment.amount || 0);
             const mode = payment.paymentMode || 'INCONNU';
-            const txKey = `${mode}_${enteredAmount.toFixed(3)}`;
-            
+
+            // 🆕 PRIORITÉ: Utiliser transactionId pour la déduplication si disponible
+            // Sinon, fallback sur mode + enteredAmount (pour les anciens records)
+            const txKey = payment.transactionId
+                ? `tx_${payment.transactionId}`
+                : `${mode}_${enteredAmount.toFixed(3)}`;
+
             if (!txCounts[txKey]) {
                 txCounts[txKey] = {
                     count: 0,
@@ -89,23 +94,23 @@ function deduplicateAndCalculate(payments) {
                     hasCashInPayment: false
                 };
             }
-            
+
             txCounts[txKey].count += 1;
             txCounts[txKey].allocatedSum += allocatedAmount;
             if (payment.hasCashInPayment === true) {
                 txCounts[txKey].hasCashInPayment = true;
             }
         }
-        
+
         // Calculer le nombre réel de transactions et les totaux
         for (const txKey in txCounts) {
             const tx = txCounts[txKey];
             // Nombre réel de transactions = occurrences / nombre de commandes
             const numTransactions = Math.round(tx.count / nbOrders);
-            
+
             // Ajouter au chiffre d'affaire (somme des allocatedAmount)
             totals.chiffreAffaire += tx.allocatedSum;
-            
+
             // Ajouter à la recette (enteredAmount × nombre de transactions)
             if (tx.mode !== 'CREDIT') {
                 if (tx.hasCashInPayment) {
@@ -113,7 +118,7 @@ function deduplicateAndCalculate(payments) {
                 } else {
                     totals.totalRecette += tx.enteredAmount * numTransactions;
                 }
-                
+
                 // Paiements par mode
                 if (!paymentsByMode[tx.mode]) {
                     paymentsByMode[tx.mode] = { total: 0, count: 0 };
@@ -123,7 +128,7 @@ function deduplicateAndCalculate(payments) {
             }
         }
     }
-    
+
     // ÉTAPE 3: Traiter les paiements simples (non-split)
     for (const payment of payments) {
         // Ignorer les remboursements
@@ -131,13 +136,13 @@ function deduplicateAndCalculate(payments) {
             totals.totalRecette += payment.amount || 0; // Négatif
             continue;
         }
-        
+
         // Ignorer les split payments (déjà traités)
         if (payment.isSplitPayment && payment.splitPaymentId) {
             // Juste ajouter aux remises si applicable
             const discountAmount = payment.discountAmount || 0;
             const hasDiscount = payment.hasDiscount || discountAmount > 0.01;
-            
+
             if (hasDiscount && discountAmount > 0.01) {
                 const discountKey = `${payment.table}_${payment.splitPaymentId}`;
                 if (!processedDiscountActs.has(discountKey)) {
@@ -148,22 +153,22 @@ function deduplicateAndCalculate(payments) {
             }
             continue;
         }
-        
+
         // ===== PAIEMENT SIMPLE =====
         const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
         const allocatedAmount = payment.allocatedAmount != null ? payment.allocatedAmount : (payment.amount || 0);
         const subtotal = payment.subtotal || payment.amount || 0;
         const mode = payment.paymentMode || 'INCONNU';
-        
+
         totals.chiffreAffaire += subtotal;
-        
+
         if (mode !== 'CREDIT') {
             if (payment.hasCashInPayment === true) {
                 totals.totalRecette += allocatedAmount;
             } else {
                 totals.totalRecette += enteredAmount;
             }
-            
+
             // Paiements par mode
             if (!paymentsByMode[mode]) {
                 paymentsByMode[mode] = { total: 0, count: 0 };
@@ -171,11 +176,11 @@ function deduplicateAndCalculate(payments) {
             paymentsByMode[mode].total += enteredAmount;
             paymentsByMode[mode].count += 1;
         }
-        
+
         // ===== REMISES =====
         const discountAmount = payment.discountAmount || 0;
         const hasDiscount = payment.hasDiscount || discountAmount > 0.01;
-        
+
         if (hasDiscount && discountAmount > 0.01) {
             totals.totalRemises += discountAmount;
             const discountKey = `${payment.table}_${payment.timestamp}_${mode}`;
@@ -184,25 +189,25 @@ function deduplicateAndCalculate(payments) {
                 totals.nombreRemises += 1;
             }
         }
-        
+
         // Ajouter à la liste des paiements uniques
         uniquePayments.push(payment);
     }
-    
+
     // ===== POURBOIRES =====
     // Pour les split payments, calculer le pourboire au niveau du groupe
     for (const splitId in splitPaymentGroups) {
         if (processedSplitTips.has(splitId)) continue;
         processedSplitTips.add(splitId);
-        
+
         const groupPayments = splitPaymentGroups[splitId];
         const hasCash = groupPayments.some(p => p.hasCashInPayment === true);
-        
+
         if (hasCash) {
             // Pas de pourboire scriptural si liquide présent
             continue;
         }
-        
+
         // Dédupliquer les transactions du groupe
         const txByKey = {};
         for (const p of groupPayments) {
@@ -220,12 +225,12 @@ function deduplicateAndCalculate(payments) {
                 txByKey[key].allocatedAmounts.push(p.allocatedAmount || p.amount || 0);
             }
         }
-        
+
         // Calculer le pourboire total du split
         let totalEntered = 0;
         let totalAllocated = 0;
         let serverName = 'unknown';
-        
+
         for (const key in txByKey) {
             totalEntered += txByKey[key].enteredAmount;
             // Prendre la somme des allocatedAmounts (car chaque transaction apparaît N fois)
@@ -234,9 +239,9 @@ function deduplicateAndCalculate(payments) {
                 serverName = txByKey[key].server;
             }
         }
-        
+
         const tipAmount = Math.max(0, totalEntered - totalAllocated);
-        
+
         if (tipAmount > 0.01 && serverName !== 'unknown') {
             totals.totalPourboires += tipAmount;
             if (!tipsByServer[serverName]) {
@@ -245,12 +250,12 @@ function deduplicateAndCalculate(payments) {
             tipsByServer[serverName] += tipAmount;
         }
     }
-    
+
     // Pour les paiements simples, le pourboire est déjà dans excessAmount
     for (const payment of payments) {
         if (payment.isSplitPayment) continue;
         if (payment.hasCashInPayment === true) continue;
-        
+
         const excessAmount = payment.excessAmount || 0;
         if (excessAmount > 0.01) {
             const serverName = payment.server || 'unknown';
@@ -263,7 +268,7 @@ function deduplicateAndCalculate(payments) {
             }
         }
     }
-    
+
     return {
         uniquePayments,
         totals,
@@ -282,7 +287,7 @@ function groupSplitPayments(payments) {
     // Séparer split vs regular
     const splitPayments = payments.filter(p => p.isSplitPayment && p.splitPaymentId);
     const regularPayments = payments.filter(p => !p.isSplitPayment);
-    
+
     // Grouper les split payments par splitPaymentId
     const splitGroups = {};
     for (const payment of splitPayments) {
@@ -292,21 +297,25 @@ function groupSplitPayments(payments) {
         }
         splitGroups[splitId].push(payment);
     }
-    
+
     const result = [];
-    
+
     // Traiter chaque groupe de split payment
     for (const splitId in splitGroups) {
         const groupPayments = splitGroups[splitId];
         const firstPayment = groupPayments[0];
-        
+
         // Dédupliquer les transactions par mode + enteredAmount
         const txByKey = {};
         for (const p of groupPayments) {
             const mode = p.paymentMode;
             const entered = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
-            const key = `${mode}_${entered.toFixed(3)}`;
-            
+
+            // 🆕 PRIORITÉ: Utiliser transactionId pour la déduplication si disponible
+            const key = p.transactionId
+                ? `tx_${p.transactionId}`
+                : `${mode}_${entered.toFixed(3)}`;
+
             if (!txByKey[key]) {
                 txByKey[key] = {
                     mode: mode,
@@ -318,52 +327,53 @@ function groupSplitPayments(payments) {
             txByKey[key].allocatedAmount += p.allocatedAmount || p.amount || 0;
             txByKey[key].count += 1;
         }
-        
+
         // Calculer les totaux dédupliqués
         let totalEnteredAmount = 0;
         let totalAllocatedAmount = 0;
         const modes = [];
         const splitPaymentAmounts = [];
-        
+
         // Compter le nombre de commandes distinctes
         const distinctOrderIds = new Set(groupPayments.map(p => p.orderId || p.sessionId)).size;
         const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
-        
+
         for (const key in txByKey) {
             const tx = txByKey[key];
             totalEnteredAmount += tx.enteredAmount;
             // allocatedAmount est la somme de toutes les commandes, donc c'est correct
             totalAllocatedAmount += tx.allocatedAmount;
-            
+
             if (!modes.includes(tx.mode)) {
                 modes.push(tx.mode);
             }
-            
+
             // Nombre de transactions réelles = count / nbOrders
             const numTransactions = Math.round(tx.count / nbOrders);
             for (let i = 0; i < numTransactions; i++) {
                 splitPaymentAmounts.push({
                     mode: tx.mode,
                     amount: tx.enteredAmount,
+                    transactionId: key.startsWith('tx_') ? key.replace('tx_', '') : null, // 🆕 Préserver l'ID
                     index: splitPaymentAmounts.filter(s => s.mode === tx.mode).length + 1
                 });
             }
         }
-        
+
         const hasCashInPayment = groupPayments.some(p => p.hasCashInPayment === true);
         const excessAmount = (!hasCashInPayment && totalEnteredAmount > totalAllocatedAmount)
             ? totalEnteredAmount - totalAllocatedAmount
             : 0;
-        
+
         // Collecter les articles (dédupliqués)
         const itemsMap = {};
         const processedOrderNotes = new Set();
-        
+
         for (const p of groupPayments) {
             const orderNoteKey = `${p.orderId || p.sessionId}_${p.noteId}`;
             if (processedOrderNotes.has(orderNoteKey)) continue;
             processedOrderNotes.add(orderNoteKey);
-            
+
             for (const item of p.items || []) {
                 const itemKey = `${item.id}_${item.name}`;
                 if (!itemsMap[itemKey]) {
@@ -372,7 +382,7 @@ function groupSplitPayments(payments) {
                 itemsMap[itemKey].quantity += item.quantity || 0;
             }
         }
-        
+
         // Construire l'enregistrement unifié
         result.push({
             id: `split_${splitId}`,
@@ -401,10 +411,10 @@ function groupSplitPayments(payments) {
             orderIds: [...new Set(groupPayments.map(p => p.orderId || p.sessionId).filter(id => id != null))]
         });
     }
-    
+
     // Ajouter les paiements réguliers
     result.push(...regularPayments);
-    
+
     return result;
 }
 
@@ -420,7 +430,7 @@ function calculatePaymentsByMode(payments) {
     const tipsByServer = {};
     const processedSplitTips = new Set();
     const processedSplitIds = new Set();
-    
+
     // Grouper les split payments pour calcul du pourboire global
     const splitPaymentGroups = {};
     for (const payment of payments) {
@@ -431,29 +441,33 @@ function calculatePaymentsByMode(payments) {
             splitPaymentGroups[payment.splitPaymentId].push(payment);
         }
     }
-    
+
     // ÉTAPE 1: Traiter les split payments (avec comptage des occurrences)
     for (const splitId in splitPaymentGroups) {
         if (processedSplitIds.has(splitId)) continue;
         processedSplitIds.add(splitId);
-        
+
         const groupPayments = splitPaymentGroups[splitId];
-        
+
         // Compter le nombre de commandes distinctes
         const distinctOrderIds = new Set(groupPayments.map(p => p.orderId || p.sessionId)).size;
         const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
-        
+
         // Compter les occurrences de chaque mode + enteredAmount
         const txCounts = {};
-        
+
         for (const payment of groupPayments) {
             if (payment.type === 'refund') continue;
             if (payment.paymentMode === 'CREDIT') continue;
-            
+
             const mode = payment.paymentMode || 'INCONNU';
             const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
-            const txKey = `${mode}_${enteredAmount.toFixed(3)}`;
-            
+
+            // 🆕 PRIORITÉ: Utiliser transactionId pour la déduplication si disponible
+            const txKey = payment.transactionId
+                ? `tx_${payment.transactionId}`
+                : `${mode}_${enteredAmount.toFixed(3)}`;
+
             if (!txCounts[txKey]) {
                 txCounts[txKey] = {
                     count: 0,
@@ -464,72 +478,72 @@ function calculatePaymentsByMode(payments) {
             }
             txCounts[txKey].count += 1;
         }
-        
+
         // Ajouter au résultat avec le nombre correct de transactions
         for (const txKey in txCounts) {
             const tx = txCounts[txKey];
             const numTransactions = Math.round(tx.count / nbOrders);
-            
+
             if (!result[tx.mode]) {
                 result[tx.mode] = { total: 0, count: 0, payers: [] };
             }
-            
+
             result[tx.mode].total += tx.enteredAmount * numTransactions;
             result[tx.mode].count += numTransactions;
-            
+
             if (tx.noteName && !result[tx.mode].payers.includes(tx.noteName)) {
                 result[tx.mode].payers.push(tx.noteName);
             }
         }
     }
-    
+
     // ÉTAPE 2: Traiter les paiements simples (non-split)
     for (const payment of payments) {
         if (payment.type === 'refund') continue;
         if (payment.paymentMode === 'CREDIT') continue;
         if (payment.isSplitPayment && payment.splitPaymentId) continue; // Déjà traité
-        
+
         const mode = payment.paymentMode || 'INCONNU';
         const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
-        
+
         if (!result[mode]) {
             result[mode] = { total: 0, count: 0, payers: [] };
         }
-        
+
         result[mode].total += enteredAmount;
         result[mode].count += 1;
-        
+
         if (payment.noteName && !result[mode].payers.includes(payment.noteName)) {
             result[mode].payers.push(payment.noteName);
         }
     }
-    
+
     // ===== POURBOIRES =====
     // Pour les split payments, calculer le pourboire au niveau du groupe
     for (const splitId in splitPaymentGroups) {
         if (processedSplitTips.has(splitId)) continue;
         processedSplitTips.add(splitId);
-        
+
         const groupPayments = splitPaymentGroups[splitId];
         const hasCash = groupPayments.some(p => p.hasCashInPayment === true);
-        
+
         if (hasCash) continue; // Pas de pourboire scriptural si liquide présent
-        
+
         // Compter le nombre de commandes distinctes
         const distinctOrderIds = new Set(groupPayments.map(p => p.orderId || p.sessionId)).size;
         const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
-        
+
         // Compter les occurrences de chaque mode + enteredAmount
         const txCounts = {};
         let serverName = 'unknown';
-        
+
         for (const p of groupPayments) {
             const mode = p.paymentMode;
             if (mode === 'TPE' || mode === 'CHEQUE' || mode === 'CARTE') {
                 const entered = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
                 const allocated = p.allocatedAmount || p.amount || 0;
                 const key = `${mode}_${entered.toFixed(3)}`;
-                
+
                 if (!txCounts[key]) {
                     txCounts[key] = {
                         count: 0,
@@ -539,26 +553,26 @@ function calculatePaymentsByMode(payments) {
                 }
                 txCounts[key].count += 1;
                 txCounts[key].allocatedSum += allocated;
-                
+
                 if (p.server && p.server !== 'unknown') {
                     serverName = p.server;
                 }
             }
         }
-        
+
         // Calculer le pourboire total du split
         let totalEntered = 0;
         let totalAllocated = 0;
-        
+
         for (const key in txCounts) {
             const tx = txCounts[key];
             const numTransactions = Math.round(tx.count / nbOrders);
             totalEntered += tx.enteredAmount * numTransactions;
             totalAllocated += tx.allocatedSum;
         }
-        
+
         const tipAmount = Math.max(0, totalEntered - totalAllocated);
-        
+
         if (tipAmount > 0.01 && serverName !== 'unknown') {
             if (!tipsByServer[serverName]) {
                 tipsByServer[serverName] = 0;
@@ -567,16 +581,16 @@ function calculatePaymentsByMode(payments) {
             console.log(`[payment-processor] ✅ Pourboire split: splitId=${splitId}, serveur=${serverName}, entered=${totalEntered}, allocated=${totalAllocated}, tip=${tipAmount.toFixed(3)}`);
         }
     }
-    
+
     // Pour les paiements simples, le pourboire est déjà dans excessAmount
     for (const payment of payments) {
         if (payment.isSplitPayment) continue;
         if (payment.hasCashInPayment === true) continue;
         if (payment.type === 'refund') continue;
-        
+
         const mode = payment.paymentMode;
         if (mode !== 'TPE' && mode !== 'CHEQUE' && mode !== 'CARTE') continue;
-        
+
         const excessAmount = payment.excessAmount || 0;
         if (excessAmount > 0.01) {
             const serverName = payment.server || 'unknown';
@@ -589,13 +603,13 @@ function calculatePaymentsByMode(payments) {
             }
         }
     }
-    
+
     // Ajouter les pourboires au résultat
     if (Object.keys(tipsByServer).length > 0) {
         result['_tipsByServer'] = tipsByServer;
         console.log(`[payment-processor] Pourboires par serveur:`, tipsByServer);
     }
-    
+
     return result;
 }
 

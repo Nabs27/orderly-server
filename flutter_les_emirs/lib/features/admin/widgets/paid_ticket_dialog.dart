@@ -35,6 +35,8 @@ class PaidTicketDialog extends StatelessWidget {
         return 'Chèque';
       case 'TPE':
         return 'TPE';
+      case 'CREDIT':
+        return 'Crédit';
       default:
         return mode ?? '—';
     }
@@ -50,18 +52,26 @@ class PaidTicketDialog extends StatelessWidget {
     final discountAmount = (ticket['discountAmount'] as num?)?.toDouble() ?? 0.0;
     final isPercentDiscount = (ticket['isPercentDiscount'] as bool?) ?? false;
     final total = (ticket['total'] as num?)?.toDouble() ?? 0.0;
+    final excessAmount = (ticket['excessAmount'] as num?)?.toDouble(); // 🆕 Pourboire
     final covers = (ticket['covers'] as num?)?.toInt() ?? 1;
     final server = ticket['server']?.toString() ?? 'unknown';
     final paymentMode = ticket['paymentMode']?.toString();
     final isSplitPayment = (ticket['isSplitPayment'] as bool?) ?? false;
+    final paymentDetails = (ticket['paymentDetails'] as List?)?.cast<Map<String, dynamic>>() ?? []; // 🆕 Détails des paiements
+    final totalAmount = (ticket['totalAmount'] as num?)?.toDouble(); // 🆕 Montant total encaissé
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final dialogWidth = screenWidth > 800 ? 800.0 : screenWidth * 0.95;
 
     return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Container(
-        width: 420,
+        width: dialogWidth,
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.9,
+          maxWidth: 800,
         ),
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,12 +161,15 @@ class PaidTicketDialog extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            isPercentDiscount && discount > 0
-                                ? 'Remise ${discount.toStringAsFixed(0)}%:'
-                                : discount > 0 && !isPercentDiscount
-                                    ? 'Remise ${_formatCurrency(discount)}:'
-                                    : 'Remise:',
+                          Flexible(
+                            child: Text(
+                              isPercentDiscount && discount > 0
+                                  ? 'Remise ${discount.toStringAsFixed(0)}%:'
+                                  : discount > 0 && !isPercentDiscount
+                                      ? 'Remise ${_formatCurrency(discount)}:'
+                                      : 'Remise:',
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           Text(
                             '-${_formatCurrency(discountAmount)}',
@@ -186,56 +199,171 @@ class PaidTicketDialog extends StatelessWidget {
                         ),
                       ],
                     ),
+                    // 🆕 Afficher le pourboire si présent
+                    if (excessAmount != null && excessAmount > 0.01) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              'Pourboire ${server.toUpperCase()}:',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.green.shade700,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Text(
+                            _formatCurrency(excessAmount),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.green.shade700,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      // 🆕 Ne pas afficher "Montant encaissé" ici car il n'est pas disponible dans le ticket
+                      // Le ticket principal dans le dialog parent l'affichera correctement
+                    ],
                     const SizedBox(height: 8),
-                    // Mode de paiement
-                    if (isSplitPayment) ...[
+                    // 🆕 Détails des paiements (modes et montants)
+                    if (paymentDetails.isNotEmpty) ...[
+                      const Divider(),
+                      const Text(
+                        'Détails des paiements:',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      ...paymentDetails.map((detail) {
+                        final mode = detail['mode']?.toString() ?? 'N/A';
+                        final amount = (detail['amount'] as num?)?.toDouble() ?? 0.0;
+                        final clientName = detail['clientName']?.toString(); // 🆕 Nom du client pour CREDIT
+                        final isCredit = mode == 'CREDIT';
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  isCredit && clientName != null && clientName.isNotEmpty
+                                      ? '${_getPaymentModeLabel(mode)} ($clientName)'
+                                      : _getPaymentModeLabel(mode),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontStyle: isCredit ? FontStyle.italic : FontStyle.normal, // 🆕 Italique pour CREDIT
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Text(
+                                _formatCurrency(amount),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: isCredit ? Colors.orange.shade700 : null, // 🆕 Couleur différente pour CREDIT
+                                  fontStyle: isCredit ? FontStyle.italic : FontStyle.normal, // 🆕 Italique pour CREDIT
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      // 🆕 Calculer et afficher le montant CREDIT non encaissé (différence entre total et montant encaissé)
+                      if (total != null && totalAmount != null && total > totalAmount + 0.01) ...[
+                        const Divider(),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  'Crédit non encaissé:',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.orange.shade700,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Text(
+                                _formatCurrency(total - totalAmount),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange.shade700,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (totalAmount != null && totalAmount > 0.01) ...[
+                        const Divider(),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Flexible(
+                              child: Text(
+                                'Montant total encaissé:',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Text(
+                              _formatCurrency(totalAmount),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ] else if (paymentMode != null) ...[
+                      // Fallback si paymentDetails n'est pas disponible
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.orange.shade50,
+                          color: Colors.green.shade50,
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: Colors.orange.shade300),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.account_balance_wallet, size: 16, color: Colors.orange.shade700),
+                            Icon(Icons.payment, size: 16, color: Colors.green.shade700),
                             const SizedBox(width: 4),
-                            Text(
-                              'Paiement divisé',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.orange.shade700,
+                            Flexible(
+                              child: Text(
+                                'Payé en ${_getPaymentModeLabel(paymentMode)}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.green.shade700,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 4),
                     ],
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.payment, size: 16, color: Colors.green.shade700),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Payé en ${_getPaymentModeLabel(paymentMode)}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.green.shade700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ),

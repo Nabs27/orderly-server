@@ -35,42 +35,48 @@
           "name": "Coca",
           "price": 5,
           "type": "Boisson froide",
-          "available": true
+          "available": true,
+          "hidden": false
         },
         {
           "id": 10001,
           "name": "Fanta",
           "price": 5,
           "type": "Boisson froide",
-          "available": true
+          "available": true,
+          "hidden": false
         },
         {
           "id": 10002,
           "name": "Boga",
           "price": 5,
           "type": "Boisson froide",
-          "available": true
+          "available": true,
+          "hidden": false
         },
         {
           "id": 10003,
           "name": "Sprite",
           "price": 5,
           "type": "Boisson froide",
-          "available": true
+          "available": true,
+          "hidden": false
         },
         {
           "id": 10004,
           "name": "Coca Zéro",
           "price": 6,
           "type": "Boisson froide",
-          "available": true
+          "available": true,
+          "hidden": false
         },
         {
           "id": 10005,
           "name": "Schweppes Tonic",
           "price": 6,
           "type": "Boisson froide",
-          "available": true
+          "available": true,
+          "hidden": false
         },
         {
           "id": 9304,
@@ -768,15 +774,15 @@
         },
         {
           "id": 10037,
-          "name": "djej mosli",
+          "name": "Djaj Mosli",
           "price": 45,
           "type": "Volaille",
           "available": true
         },
         {
           "id": 10038,
-          "name": "djej mokli",
-          "price": 40,
+          "name": "origati",
+          "price": 56,
           "type": "Volaille",
           "available": true
         }

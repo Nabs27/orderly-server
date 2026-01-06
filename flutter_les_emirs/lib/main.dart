@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'features/menu/menu_page.dart';
 import 'features/confirm/confirm_page.dart';
@@ -35,30 +36,37 @@ Future<void> main() async {
     CartService.instance.lastOrderAt = null;
     await CartService.instance.save();
   } catch (_) {}
-  // 🖼️ Intercepter la fermeture de la fenêtre (Windows/Mac/Linux)
-  FlutterWindowClose.setWindowShouldCloseHandler(() async {
-    // Afficher une boîte de dialogue de confirmation
-    final shouldClose = await showDialog<bool>(
-      context: navigatorKey.currentContext!,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Quitter l\'application ?'),
-          content: const Text('Êtes-vous sûr de vouloir fermer le POS ?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Annuler'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Quitter'),
-            ),
-          ],
+  // 🖼️ Intercepter la fermeture de la fenêtre (Windows/Mac/Linux uniquement, pas sur Web)
+  if (!kIsWeb) {
+    try {
+      FlutterWindowClose.setWindowShouldCloseHandler(() async {
+        // Afficher une boîte de dialogue de confirmation
+        final shouldClose = await showDialog<bool>(
+          context: navigatorKey.currentContext!,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('Quitter l\'application ?'),
+              content: const Text('Êtes-vous sûr de vouloir fermer le POS ?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Annuler'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Quitter'),
+                ),
+              ],
+            );
+          },
         );
-      },
-    );
-    return shouldClose ?? false; // false = empêcher la fermeture
-  });
+        return shouldClose ?? false; // false = empêcher la fermeture
+      });
+    } catch (e) {
+      // Ignorer les erreurs si le package n'est pas disponible
+      print('[MAIN] FlutterWindowClose non disponible: $e');
+    }
+  }
 
   runApp(const MyApp());
 }

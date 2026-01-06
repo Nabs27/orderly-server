@@ -20,6 +20,7 @@ class PosOrderTicketPanel extends StatefulWidget {
   final Function(String) onNoteSelected;
   final VoidCallback onShowAddNoteDialog;
   final List<Map<String, dynamic>> rawOrders;
+  final int? pendingQuantity; // 🆕 Quantité en attente pour affichage
 
   const PosOrderTicketPanel({
     super.key,
@@ -38,6 +39,7 @@ class PosOrderTicketPanel extends StatefulWidget {
     required this.onNoteSelected,
     required this.onShowAddNoteDialog,
     required this.rawOrders,
+    this.pendingQuantity, // 🆕 Quantité en attente (optionnelle)
   });
 
   @override
@@ -296,16 +298,50 @@ class _PosOrderTicketPanelState extends State<PosOrderTicketPanel> {
   }
 
   Widget _buildAggregatedView() {
-    if (widget.activeNote.items.isEmpty) {
+    // Ne pas afficher "Aucun article" si on a une quantité en attente
+    final hasItems = widget.activeNote.items.isNotEmpty;
+    final hasPending = widget.pendingQuantity != null && widget.pendingQuantity! > 0;
+
+    if (!hasItems && !hasPending) {
       return const Center(
         child: Text('Aucun article', style: TextStyle(color: Colors.grey, fontSize: 16)),
       );
     }
 
     return ListView.builder(
-      itemCount: widget.activeNote.items.length,
+      itemCount: widget.activeNote.items.length + (widget.pendingQuantity != null && widget.pendingQuantity! > 0 ? 1 : 0), // 🆕 Ajouter une ligne pour le badge
                       itemBuilder: (_, i) {
-        final item = widget.activeNote.items[i];
+                        // 🆕 Afficher le badge de quantité en attente après la dernière ligne
+                        if (i == widget.activeNote.items.length && widget.pendingQuantity != null && widget.pendingQuantity! > 0) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              border: Border.all(color: Colors.blue.shade300, width: 2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.add_shopping_cart, color: Colors.blue.shade700, size: 20),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Quantité en attente: ${widget.pendingQuantity}',
+                                  style: TextStyle(
+                                    color: Colors.blue.shade900,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        
+                        // Ligne normale d'article
+                        final itemIndex = i;
+                        final item = widget.activeNote.items[itemIndex];
         final isSelected = widget.selectedLineIndex == i;
         final isNewlyAdded = widget.newlyAddedItems.contains(item.id);
                         

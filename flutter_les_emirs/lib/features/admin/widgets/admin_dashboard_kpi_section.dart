@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
-import '../../core/api_client.dart';
+import '../../../core/api_client.dart';
 import '../models/kpi_model.dart';
 import '../services/kpi_service.dart';
 import '../pages/ca_details_page.dart';

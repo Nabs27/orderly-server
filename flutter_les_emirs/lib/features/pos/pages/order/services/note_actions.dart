@@ -127,12 +127,13 @@ class NoteActions {
     required List<OrderNote> subNotes,
     required Set<int> newlyAddedItems,
     required Map<int, int> newlyAddedQuantities,
+    int quantity = 1, // 🐛 BUG FIX #3 : Quantité personnalisée (par défaut 1)
   }) {
     final noteItem = OrderNoteItem(
       id: item['id'] as int,
       name: item['name'] as String,
       price: (item['price'] as num).toDouble(),
-      quantity: 1,
+      quantity: quantity, // 🐛 BUG FIX #3 : Utiliser la quantité personnalisée
     );
     
     OrderNote updatedMainNote = mainNote;
@@ -151,24 +152,24 @@ class NoteActions {
         // Augmenter la quantité
         final updatedItems = List<OrderNoteItem>.from(mainNote.items);
         updatedItems[existingIndex] = updatedItems[existingIndex].copyWith(
-          quantity: updatedItems[existingIndex].quantity + 1,
+          quantity: updatedItems[existingIndex].quantity + quantity, // 🐛 BUG FIX #3 : Ajouter la quantité personnalisée
         );
         updatedMainNote = mainNote.copyWith(
           items: updatedItems,
-          total: mainNote.total + noteItem.price,
+          total: mainNote.total + (noteItem.price * quantity), // 🐛 BUG FIX #3 : Multiplier par la quantité
         );
         // Marquer comme nouvellement ajouté et compter la quantité
         updatedNewlyAddedItems.add(noteItem.id);
-        updatedNewlyAddedQuantities[noteItem.id] = (updatedNewlyAddedQuantities[noteItem.id] ?? 0) + 1;
+        updatedNewlyAddedQuantities[noteItem.id] = (updatedNewlyAddedQuantities[noteItem.id] ?? 0) + quantity; // 🐛 BUG FIX #3 : Ajouter la quantité personnalisée
       } else {
         // Ajouter nouvel article
         updatedMainNote = mainNote.copyWith(
           items: [...mainNote.items, noteItem],
-          total: mainNote.total + noteItem.price,
+          total: mainNote.total + (noteItem.price * quantity), // 🐛 BUG FIX #3 : Multiplier par la quantité
         );
         // Marquer comme nouvellement ajouté et compter la quantité
         updatedNewlyAddedItems.add(noteItem.id);
-        updatedNewlyAddedQuantities[noteItem.id] = 1;
+        updatedNewlyAddedQuantities[noteItem.id] = quantity; // 🐛 BUG FIX #3 : Utiliser la quantité personnalisée
       }
     } else {
       // Ajouter à une sous-note
@@ -182,22 +183,22 @@ class NoteActions {
           // Augmenter la quantité
           final updatedItems = List<OrderNoteItem>.from(subNotes[noteIndex].items);
           updatedItems[existingIndex] = updatedItems[existingIndex].copyWith(
-            quantity: updatedItems[existingIndex].quantity + 1,
+            quantity: updatedItems[existingIndex].quantity + quantity, // 🐛 BUG FIX #3 : Ajouter la quantité personnalisée
           );
           updatedSubNotes[noteIndex] = subNotes[noteIndex].copyWith(
             items: updatedItems,
-            total: subNotes[noteIndex].total + noteItem.price,
+            total: subNotes[noteIndex].total + (noteItem.price * quantity), // 🐛 BUG FIX #3 : Multiplier par la quantité
           );
           updatedNewlyAddedItems.add(noteItem.id);
-          updatedNewlyAddedQuantities[noteItem.id] = (updatedNewlyAddedQuantities[noteItem.id] ?? 0) + 1;
+          updatedNewlyAddedQuantities[noteItem.id] = (updatedNewlyAddedQuantities[noteItem.id] ?? 0) + quantity; // 🐛 BUG FIX #3 : Ajouter la quantité personnalisée
         } else {
           // Ajouter nouvel article
           updatedSubNotes[noteIndex] = subNotes[noteIndex].copyWith(
             items: [...subNotes[noteIndex].items, noteItem],
-            total: subNotes[noteIndex].total + noteItem.price,
+            total: subNotes[noteIndex].total + (noteItem.price * quantity), // 🐛 BUG FIX #3 : Multiplier par la quantité
           );
           updatedNewlyAddedItems.add(noteItem.id);
-          updatedNewlyAddedQuantities[noteItem.id] = 1;
+          updatedNewlyAddedQuantities[noteItem.id] = quantity; // 🐛 BUG FIX #3 : Utiliser la quantité personnalisée
         }
       }
     }
