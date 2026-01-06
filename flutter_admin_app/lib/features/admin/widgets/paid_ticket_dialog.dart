@@ -242,10 +242,11 @@ class PaidTicketDialog extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      ...paymentDetails.map((detail) {
+                      ...paymentDetails.asMap().entries.map((entry) {
+                        final detail = entry.value;
                         final mode = detail['mode']?.toString() ?? 'N/A';
                         final amount = (detail['amount'] as num?)?.toDouble() ?? 0.0;
-                        final clientName = detail['clientName']?.toString(); // 🆕 Nom du client pour CREDIT
+                        final clientName = detail['clientName']?.toString();
                         final isCredit = mode == 'CREDIT';
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 2),
@@ -259,7 +260,7 @@ class PaidTicketDialog extends StatelessWidget {
                                       : _getPaymentModeLabel(mode),
                                   style: TextStyle(
                                     fontSize: 14,
-                                    fontStyle: isCredit ? FontStyle.italic : FontStyle.normal, // 🆕 Italique pour CREDIT
+                                    fontStyle: isCredit ? FontStyle.italic : FontStyle.normal,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -269,8 +270,8 @@ class PaidTicketDialog extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: isCredit ? Colors.orange.shade700 : null, // 🆕 Couleur différente pour CREDIT
-                                  fontStyle: isCredit ? FontStyle.italic : FontStyle.normal, // 🆕 Italique pour CREDIT
+                                  color: isCredit ? Colors.orange.shade700 : null,
+                                  fontStyle: isCredit ? FontStyle.italic : FontStyle.normal,
                                 ),
                               ),
                             ],

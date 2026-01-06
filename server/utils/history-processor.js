@@ -319,84 +319,55 @@ function groupPaymentsByTimestamp(sessions) {
 		const isCompletePayment = payments.every(p => p.isCompletePayment === true);
 		const hasCashInPayment = payments.some(p => p.hasCashInPayment === true);
 
-		// 🆕 Créer une entrée par mode avec tous les montants numérotés
+		// 🆕 Créer une entrée détaillée pour CHAQUE transaction sans regroupement par mode
 		const splitPaymentModes = [];
 		const splitPaymentAmounts = [];
 
-		// 🆕 Calculer le nombre de commandes distinctes pour ce split payment
-		const distinctOrderIds = new Set(payments.map(p => p.sessionId)).size;
-		const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
+		// 🆕 Extraire chaque transaction unique de manière brute
+		// On identifie d'abord toutes les transactions uniques par leur transactionId ou mode/montant/timestamp
+		const uniqueTxMap = new Map();
 
-		for (const [mode, modePayments] of Object.entries(paymentsByMode)) {
-			// 🆕 Compter les occurrences de chaque montant
-			// Chaque transaction apparaît N fois (une par commande)
-			// Ex: avec 3 commandes et 2 TPE de 80 TND chacun, TPE 80 apparaît 6 fois (2 × 3)
-			const amountCounts = {};
-			const amountPayments = {}; // Premier paiement pour chaque montant
+		for (const payment of payments) {
+			const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
+			const mode = payment.paymentMode || 'INCONNU';
 
-			for (const payment of modePayments) {
-				const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
+			// Clé unique pour identifier la transaction physique
+			// 🆕 PRIORITÉ: transactionId pour la déduplication si disponible
+			const txKey = payment.transactionId
+				? `tx_${payment.transactionId}`
+				: `${mode}_${enteredAmount.toFixed(3)}_${payment.timestamp}`;
 
-				// 🆕 PRIORITÉ: Utiliser transactionId pour la déduplication si disponible
-				const amountKey = payment.transactionId
-					? `tx_${payment.transactionId}`
-					: enteredAmount.toFixed(3);
-
-				if (!amountCounts[amountKey]) {
-					amountCounts[amountKey] = 0;
-					amountPayments[amountKey] = payment;
-				}
-				amountCounts[amountKey]++;
-			}
-
-			// 🆕 Extraire les transactions uniques
-			// Nombre de transactions = count / nbOrders
-			const uniqueTransactions = [];
-			for (const [key, count] of Object.entries(amountCounts)) {
-				const nbTransactions = Math.round(count / nbOrders); // Nombre de transactions avec cette clé
-				const payment = amountPayments[key];
-				const enteredAmount = key.startsWith('tx_')
-					? (payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0))
-					: parseFloat(key);
-
-				// Créer N entrées pour ce montant
-				for (let i = 0; i < nbTransactions; i++) {
-					uniqueTransactions.push({
-						payment: payment,
-						enteredAmount: enteredAmount,
-					});
-				}
-			}
-
-			// 🆕 Ajouter tous les montants avec un index (1, 2, 3...)
-			splitPaymentModes.push(mode);
-			uniqueTransactions.forEach((transaction, index) => {
-				const creditClientName = transaction.payment.paymentMode === 'CREDIT'
-					? (transaction.payment.creditClientName || null)
-					: null;
-
-				splitPaymentAmounts.push({
+			if (!uniqueTxMap.has(txKey)) {
+				uniqueTxMap.set(txKey, {
 					mode: mode,
-					amount: transaction.enteredAmount,
-					index: index + 1, // 🆕 Index pour numéroter (1, 2, 3...)
-					clientName: creditClientName,
+					amount: enteredAmount,
+					clientName: (mode === 'CREDIT' ? payment.creditClientName : null),
+					timestamp: payment.timestamp
 				});
-			});
+			}
 		}
 
+		// 🆕 Transformer la map en liste de lignes de paiement
+		let idx = 1;
+		uniqueTxMap.forEach((tx) => {
+			if (!splitPaymentModes.includes(tx.mode)) {
+				splitPaymentModes.push(tx.mode);
+			}
+			splitPaymentAmounts.push({
+				mode: tx.mode,
+				amount: tx.amount,
+				index: idx++,
+				clientName: tx.clientName,
+			});
+		});
+
 		// 🆕 Calculer les totaux pour l'entrée
-		// ⚠️ IMPORTANT: Utiliser totalSubtotal et ticketAmount (déjà calculés depuis les articles dédupliqués)
-		// Ne pas sommer les subtotals des paiements car ils sont multipliés par le nombre de commandes
 		const totalEnteredAmountForAll = splitPaymentAmounts.reduce((sum, s) => sum + s.amount, 0);
 
-		// 🆕 Calculer la remise totale correctement (prendre depuis le premier paiement et multiplier par nbModes)
-		// Car chaque mode a sa propre répartition de remise
-		const nbModes = Object.keys(paymentsByMode).length;
-		const firstPaymentDiscount = (firstPayment.discountAmount || 0) * nbOrders; // Remise pour une commande × nbOrders
-		const totalDiscountAmountForAll = nbModes > 0 ? firstPaymentDiscount / nbModes : 0; // Diviser par nbModes car chaque mode a sa part
+		// 🆕 Calculer la remise totale correctement
+		const totalDiscountAmountForAll = totalDiscountAmount;
 
 		// Calculer le pourboire total
-		// ticketAmount = totalSubtotal - totalDiscountAmount (déjà calculé correctement depuis les articles)
 		let totalExcessAmount = 0;
 		if (!hasCashInPayment && totalEnteredAmountForAll > ticketAmount) {
 			totalExcessAmount = Math.max(0, totalEnteredAmountForAll - ticketAmount);
