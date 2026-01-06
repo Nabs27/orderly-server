@@ -198,9 +198,33 @@ dbManager.connect().then(() => {
 // Gestion des connexions Socket.IO
 io.on('connection', (socket) => {
 	console.log('[socket] Client connecté:', socket.id);
+
+	// 🆕 Identification (différencier POS Local du Dashboard Admin)
+	socket.on('client:identify', (data) => {
+		const type = data?.type || 'unknown';
+		console.log(`[socket] Client identifié comme: ${type} (${socket.id})`);
+		if (type === 'local-server') {
+			socket.join('local-servers');
+		} else if (type === 'admin-dashboard') {
+			socket.join('admin-dashboards');
+		}
+	});
+
+	// 🆕 Relais de synchronisation : Le serveur local notifie qu'il a poussé des données vers MongoDB
+	socket.on('local:sync-completed', (data) => {
+		console.log('[sync] 📡 Reçu notification local:sync-completed. Relais vers dashboards admin...');
+		// Notifier les dashboards admin de rafraîchir les stats
+		io.emit('sync:stats', {
+			timestamp: new Date().toISOString(),
+			source: 'local-server-sync',
+			details: data
+		});
+	});
+
 	socket.on('disconnect', () => {
 		console.log('[socket] Client déconnecté:', socket.id);
 	});
+
 	// Endpoint de reset (TEST uniquement)
 	socket.on('dev:reset', () => {
 		dataStore.orders = [];

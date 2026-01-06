@@ -203,6 +203,23 @@ class CloudSyncClient {
     }
 
     /**
+     * Notifie le serveur Cloud qu'une synchronisation locale vers MongoDB a été effectuée
+     * @param {Object} details - Détails optionnels sur la sync
+     */
+    notifySync(details = {}) {
+        if (!this.isConnected || !this.socket) {
+            return false;
+        }
+
+        console.log('[cloud-sync] 📤 Notification local:sync-completed envoyée au Cloud');
+        this.socket.emit('local:sync-completed', {
+            timestamp: new Date().toISOString(),
+            ...details
+        });
+        return true;
+    }
+
+    /**
      * Force une synchronisation complète depuis le Cloud
      */
     async forceSync() {

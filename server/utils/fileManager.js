@@ -5,6 +5,7 @@ const fs = require('fs');
 const fsp = fs.promises;
 const dataStore = require('../data');
 const dbManager = require('./dbManager');
+const cloudSyncClient = require('./cloudSyncClient');
 
 // Créer un dossier s'il n'existe pas
 async function ensureDir(p) {
@@ -551,6 +552,15 @@ async function saveToMongoDB() {
 		);
 
 		console.log('[sync] ☁️ ✅ Synchronisation MongoDB terminée');
+
+		// 🆕 NOTIFIER LE CLOUD (pour que les dashboards admin se rafraîchissent en temps réel)
+		if (!dbManager.isCloud) {
+			cloudSyncClient.notifySync({
+				type: 'stats-update',
+				ordersCount: dataStore.orders.length,
+				archivedCount: dataStore.archivedOrders.length
+			});
+		}
 	} catch (e) {
 		console.error('[sync] ❌ Erreur synchronisation MongoDB:', e);
 		// Ne pas bloquer le POS en cas d'erreur cloud
