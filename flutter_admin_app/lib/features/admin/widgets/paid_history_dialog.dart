@@ -636,11 +636,12 @@ class _ServiceDetailDialog extends StatelessWidget {
       final paymentMode = payment['paymentMode']?.toString() ?? '';
       
       // 🆕 PRIORITÉ: transactionId pour les nouveaux paiements
-      // Fallback sur mode + montant + timestamp pour les anciens
+      // Fallback: _id (ID unique du record en DB) pour ne JAMAIS fusionner par erreur
       final transactionId = payment['transactionId']?.toString();
+      final recordId = payment['_id']?.toString() ?? payment['id']?.toString();
       final txKey = transactionId != null 
           ? 'tx_$transactionId' 
-          : '${paymentMode}_${enteredAmount.toStringAsFixed(3)}_${payment['timestamp']}';
+          : (recordId != null ? 'id_$recordId' : '${paymentMode}_${enteredAmount.toStringAsFixed(3)}_${payment['timestamp']}');
           
       if (!txCounts.containsKey(txKey)) {
         txCounts[txKey] = 0;

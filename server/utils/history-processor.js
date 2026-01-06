@@ -333,9 +333,10 @@ function groupPaymentsByTimestamp(sessions) {
 
 			// Clé unique pour identifier la transaction physique
 			// 🆕 PRIORITÉ: transactionId pour la déduplication si disponible
+			// Fallback: paymentId (ID unique du record) pour ne JAMAIS fusionner par erreur
 			const txKey = payment.transactionId
 				? `tx_${payment.transactionId}`
-				: `${mode}_${enteredAmount.toFixed(3)}_${payment.timestamp}`;
+				: (payment.paymentId ? `id_${payment.paymentId}` : `${mode}_${enteredAmount.toFixed(3)}_${payment.timestamp}_${idx++}`);
 
 			if (!uniqueTxMap.has(txKey)) {
 				uniqueTxMap.set(txKey, {
@@ -389,7 +390,8 @@ function groupPaymentsByTimestamp(sessions) {
 			subtotal: totalSubtotal,
 			paymentMode: splitPaymentModes.join(' + '), // Afficher tous les modes
 			splitPaymentModes: splitPaymentModes, // Liste des modes pour l'affichage
-			splitPaymentAmounts: splitPaymentAmounts, // 🆕 Tous les montants avec index (1, 2, 3...)
+			splitPaymentAmounts: splitPaymentAmounts, // Pour compatibilité POS
+			paymentDetails: splitPaymentAmounts, // Pour compatibilité Admin
 			items: uniqueItems, // Articles partagés (même ticket)
 			orderIds: [...new Set(allOrderIds)],
 			noteId: primaryNoteId,
