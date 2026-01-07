@@ -689,20 +689,11 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			const txDate = new Date(tx.date);
 			const fromDate = new Date(effectiveDateFrom);
 			const toDate = new Date(effectiveDateTo);
-			// 🆕 DEBUG: Log pour vérifier le filtrage
-			console.log(`[report-x] Transaction DEBIT: date=${tx.date}, amount=${tx.amount}, clientName=${tx.clientName}`);
-			console.log(`[report-x] Filtre: fromDate=${effectiveDateFrom}, toDate=${effectiveDateTo}`);
-			console.log(`[report-x] txDate=${txDate.toISOString()}, fromDate=${fromDate.toISOString()}, toDate=${toDate.toISOString()}`);
-			if (txDate < fromDate || txDate > toDate) {
-				console.log(`[report-x] ❌ Transaction exclue (hors période)`);
-				return false;
-			}
-			console.log(`[report-x] ✅ Transaction incluse`);
+			if (txDate < fromDate || txDate > toDate) return false;
 		}
 		return true;
 	});
 	const totalDebitsInPeriod = debitsInPeriod.reduce((sum, tx) => sum + (tx.amount || 0), 0);
-	console.log(`[report-x] totalDebitsInPeriod calculé: ${totalDebitsInPeriod}, nombre de transactions: ${debitsInPeriod.length}`);
 
 	// 🆕 Le montant CREDIT = seulement les dettes créées dans la période (pas les soldes de la veille)
 	// On utilise directement totalDebitsInPeriod qui est la somme des DEBIT dans creditData.details (déjà filtrés)
@@ -933,32 +924,14 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			const hasCashInPayment = payments.some(p => p.hasCashInPayment === true);
 
 			if (act.isSplitPayment) {
-				// 🆕 CORRECTION: Dédupliquer les paiements comme dans getPaymentDetails
-				// Car les paiements peuvent être dupliqués dans paymentHistory
-				const uniquePaymentsMap = new Map();
-				for (const p of payments) {
-					const splitId = p.splitPaymentId || 'single';
-					const mode = p.paymentMode || 'N/A';
-					const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
-					const orderId = p.orderId || p.sessionId;
-					// Clé unique : splitPaymentId + mode + enteredAmount + orderId
-					const uniqueKey = `${splitId}_${mode}_${enteredAmount.toFixed(3)}_${orderId}`;
-					
-					if (!uniquePaymentsMap.has(uniqueKey)) {
-						uniquePaymentsMap.set(uniqueKey, p);
-					}
-				}
-				
-				const uniquePayments = Array.from(uniquePaymentsMap.values());
-				
 				// 🆕 CORRECTION: Utiliser la même logique que payment-processor.js
 				// Compter les occurrences de chaque mode + enteredAmount, puis diviser par nbOrders
-				const distinctOrderIds = new Set(uniquePayments.map(p => p.orderId || p.sessionId)).size;
+				const distinctOrderIds = new Set(payments.map(p => p.orderId || p.sessionId)).size;
 				const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
 				
 				// Compter les occurrences de chaque transaction
 				const txCounts = {};
-				for (const p of uniquePayments) {
+				for (const p of payments) {
 					const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
 					const allocatedAmount = p.allocatedAmount != null ? p.allocatedAmount : (p.amount || 0);
 					const txKey = `${p.paymentMode}_${enteredAmount.toFixed(3)}`;
@@ -1041,33 +1014,14 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 					// 🆕 Calculer le montant total encaissé (exclut CREDIT car c'est une dette différée)
 					// ⚠️ RÈGLE 3.1 .cursorrules: Utiliser la même logique que payment-processor.js
 					const totalAmountEncaisse = act.isSplitPayment ? (() => {
-						// 🆕 CORRECTION: Dédupliquer les paiements comme dans getPaymentDetails
-						// Car les paiements peuvent être dupliqués dans paymentHistory
-						const uniquePaymentsMap = new Map();
-						for (const p of payments) {
-							// Exclure CREDIT du montant encaissé
-							if (p.paymentMode === 'CREDIT') continue;
-							
-							const splitId = p.splitPaymentId || 'single';
-							const mode = p.paymentMode || 'N/A';
-							const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
-							const orderId = p.orderId || p.sessionId;
-							// Clé unique : splitPaymentId + mode + enteredAmount + orderId
-							const uniqueKey = `${splitId}_${mode}_${enteredAmount.toFixed(3)}_${orderId}`;
-							
-							if (!uniquePaymentsMap.has(uniqueKey)) {
-								uniquePaymentsMap.set(uniqueKey, p);
-							}
-						}
-						
-						const uniquePayments = Array.from(uniquePaymentsMap.values());
-						
 						// Utiliser la même logique que pour totalEnteredAmount (dédupliquer correctement)
-						const distinctOrderIds = new Set(uniquePayments.map(p => p.orderId || p.sessionId)).size;
+						const distinctOrderIds = new Set(payments.map(p => p.orderId || p.sessionId)).size;
 						const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
 						
 						const txCounts = {};
-						for (const p of uniquePayments) {
+						for (const p of payments) {
+							// Exclure CREDIT du montant encaissé
+							if (p.paymentMode === 'CREDIT') continue;
 							const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
 							const txKey = `${p.paymentMode}_${enteredAmount.toFixed(3)}`;
 							
@@ -1106,18 +1060,10 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 						isSplitPayment: act.isSplitPayment || false, // 🆕 Ajouter le flag
 						covers: covers,
 						server: server,
-					// 🆕 Ajouter les détails des paiements et le montant total encaissé
-					// ⚠️ RÈGLE .cursorrules 3.1: Utiliser payment-processor.js comme source de vérité unique
-					paymentDetails: act.isSplitPayment 
-						? (() => {
-							// 🆕 CORRECTION: Ajouter orderIds aux paiements avant de les passer à getPaymentDetails
-							// pour que le calcul de nbOrders soit correct
-							const paymentsWithOrderIds = payments.map(p => ({
-								...p,
-								orderIds: orderIds.length > 0 ? orderIds : (p.orderId ? [p.orderId] : [])
-							}));
-							return paymentProcessor.getPaymentDetails(paymentsWithOrderIds); // 🆕 Utiliser la fonction centralisée
-						})()
+						// 🆕 Ajouter les détails des paiements et le montant total encaissé
+						// ⚠️ RÈGLE .cursorrules 3.1: Utiliser payment-processor.js comme source de vérité unique
+						paymentDetails: act.isSplitPayment 
+							? paymentProcessor.getPaymentDetails(payments) // 🆕 Utiliser la fonction centralisée
 							: [{
 							mode: payments[0].paymentMode,
 							amount: payments[0].enteredAmount != null ? payments[0].enteredAmount : (payments[0].amount || 0),

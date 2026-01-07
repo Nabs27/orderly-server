@@ -611,36 +611,10 @@ function getPaymentDetails(payments) {
         return [];
     }
 
-    // 🆕 DEBUG: Log pour diagnostiquer
-    console.log(`[payment-processor] getPaymentDetails appelé avec ${payments.length} paiements`);
-    
-    // 🆕 CORRECTION: Dédupliquer les paiements par splitPaymentId + mode + enteredAmount + orderId
-    // Car les paiements peuvent être dupliqués dans paymentHistory (ex: 2 fois le même paiement dans une commande)
-    const uniquePaymentsMap = new Map();
-    for (const p of payments) {
-        const splitId = p.splitPaymentId || 'single';
-        const mode = p.paymentMode || 'N/A';
-        const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
-        const orderId = p.orderId || p.sessionId;
-        // Clé unique : splitPaymentId + mode + enteredAmount + orderId
-        // Cela permet de dédupliquer les paiements dupliqués dans paymentHistory
-        const uniqueKey = `${splitId}_${mode}_${enteredAmount.toFixed(3)}_${orderId}`;
-        
-        if (!uniquePaymentsMap.has(uniqueKey)) {
-            uniquePaymentsMap.set(uniqueKey, p);
-        }
-    }
-    
-    const uniquePayments = Array.from(uniquePaymentsMap.values());
-    console.log(`[payment-processor] Après déduplication: ${uniquePayments.length} paiements uniques`);
-    
-    const orderIds = [...new Set(uniquePayments.map(p => p.orderId || p.sessionId).filter(id => id != null))];
-    console.log(`[payment-processor] orderIds distincts: ${orderIds.length} (${orderIds.join(', ')})`);
-
     // Compter les occurrences de chaque mode + enteredAmount
     const txCounts = {};
     
-    for (const p of uniquePayments) {
+    for (const p of payments) {
         const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
         const mode = p.paymentMode || 'N/A';
         const txKey = `${mode}_${enteredAmount.toFixed(3)}`;
@@ -657,32 +631,8 @@ function getPaymentDetails(payments) {
     }
     
     // Calculer le nombre de commandes distinctes
-    // 🆕 CORRECTION: Pour les paiements divisés multi-commandes, utiliser orderIds (tableau) si disponible
-    // Sinon, utiliser orderId individuel de chaque paiement
-    const allOrderIds = new Set();
-    for (const p of uniquePayments) {
-        // Si le paiement a un tableau orderIds, l'utiliser (paiement divisé multi-commandes)
-        if (p.orderIds && Array.isArray(p.orderIds) && p.orderIds.length > 0) {
-            p.orderIds.forEach(id => {
-                if (id != null && id !== undefined) {
-                    allOrderIds.add(id);
-                }
-            });
-        } else if (p.orderId != null && p.orderId !== undefined) {
-            // Sinon, utiliser orderId individuel
-            allOrderIds.add(p.orderId);
-        } else if (p.sessionId != null && p.sessionId !== undefined) {
-            // Fallback sur sessionId
-            allOrderIds.add(p.sessionId);
-        }
-    }
-    const nbOrders = allOrderIds.size > 0 ? allOrderIds.size : 1;
-    
-    console.log(`[payment-processor] nbOrders: ${nbOrders}`);
-    console.log(`[payment-processor] txCounts:`, Object.keys(txCounts).map(key => {
-        const tx = txCounts[key];
-        return `${key}: count=${tx.count}, nbTransactions=${Math.round(tx.count / nbOrders)}`;
-    }).join(', '));
+    const distinctOrderIds = new Set(payments.map(p => p.orderId || p.sessionId)).size;
+    const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
     
     // Créer les paymentDetails avec index (CARTE #1, CARTE #2, etc.)
     const paymentDetails = [];
@@ -691,8 +641,6 @@ function getPaymentDetails(payments) {
         const tx = txCounts[txKey];
         // Nombre réel de transactions = occurrences / nombre de commandes
         const nbTransactions = Math.round(tx.count / nbOrders);
-        
-        console.log(`[payment-processor] ${txKey}: count=${tx.count}, nbOrders=${nbOrders}, nbTransactions=${nbTransactions}`);
         
         // Créer N entrées pour cette transaction
         for (let i = 0; i < nbTransactions; i++) {
@@ -710,8 +658,6 @@ function getPaymentDetails(payments) {
             paymentDetails.push(detail);
         }
     }
-    
-    console.log(`[payment-processor] paymentDetails final: ${paymentDetails.length} items`);
     
     return paymentDetails;
 }
