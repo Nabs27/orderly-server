@@ -292,36 +292,36 @@ class PaidTicketDialog extends StatelessWidget {
                         if (creditAmount <= 0.01) return <Widget>[];
                         
                         return [
-                          const Divider(),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    'Crédit non encaissé:',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.orange.shade700,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                Text(
-                                  _formatCurrency(creditAmount),
+                        const Divider(),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  'Crédit non encaissé:',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     color: Colors.orange.shade700,
                                     fontStyle: FontStyle.italic,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ],
-                            ),
+                              ),
+                              Text(
+                                  _formatCurrency(creditAmount),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange.shade700,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
                           ),
+                        ),
                         ];
                       })(),
                       if (totalAmount != null && totalAmount > 0.01) ...[

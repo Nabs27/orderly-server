@@ -689,11 +689,20 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			const txDate = new Date(tx.date);
 			const fromDate = new Date(effectiveDateFrom);
 			const toDate = new Date(effectiveDateTo);
-			if (txDate < fromDate || txDate > toDate) return false;
+			// 🆕 DEBUG: Log pour vérifier le filtrage
+			console.log(`[report-x] Transaction DEBIT: date=${tx.date}, amount=${tx.amount}, clientName=${tx.clientName}`);
+			console.log(`[report-x] Filtre: fromDate=${effectiveDateFrom}, toDate=${effectiveDateTo}`);
+			console.log(`[report-x] txDate=${txDate.toISOString()}, fromDate=${fromDate.toISOString()}, toDate=${toDate.toISOString()}`);
+			if (txDate < fromDate || txDate > toDate) {
+				console.log(`[report-x] ❌ Transaction exclue (hors période)`);
+				return false;
+			}
+			console.log(`[report-x] ✅ Transaction incluse`);
 		}
 		return true;
 	});
 	const totalDebitsInPeriod = debitsInPeriod.reduce((sum, tx) => sum + (tx.amount || 0), 0);
+	console.log(`[report-x] totalDebitsInPeriod calculé: ${totalDebitsInPeriod}, nombre de transactions: ${debitsInPeriod.length}`);
 
 	// 🆕 Le montant CREDIT = seulement les dettes créées dans la période (pas les soldes de la veille)
 	// On utilise directement totalDebitsInPeriod qui est la somme des DEBIT dans creditData.details (déjà filtrés)
@@ -1065,10 +1074,10 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 						paymentDetails: act.isSplitPayment 
 							? paymentProcessor.getPaymentDetails(payments) // 🆕 Utiliser la fonction centralisée
 							: [{
-								mode: payments[0].paymentMode,
-								amount: payments[0].enteredAmount != null ? payments[0].enteredAmount : (payments[0].amount || 0),
-								...(payments[0].paymentMode === 'CREDIT' && payments[0].creditClientName ? { clientName: payments[0].creditClientName } : {})
-							}],
+							mode: payments[0].paymentMode,
+							amount: payments[0].enteredAmount != null ? payments[0].enteredAmount : (payments[0].amount || 0),
+							...(payments[0].paymentMode === 'CREDIT' && payments[0].creditClientName ? { clientName: payments[0].creditClientName } : {})
+						}],
 						totalAmount: totalAmountEncaisse > 0.01 ? totalAmountEncaisse : undefined, // 🆕 Montant total encaissé (exclut CREDIT)
 						excessAmount: totalExcessAmount > 0.01 ? totalExcessAmount : undefined // 🆕 Pourboire
 					};

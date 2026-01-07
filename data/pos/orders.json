@@ -1,92 +1,124 @@
 [
   {
-    "id": 9,
-    "tempId": null,
-    "table": "6",
+    "id": 14,
+    "table": "1",
     "server": "ALI",
-    "covers": 4,
+    "covers": 1,
     "notes": "",
     "status": "nouvelle",
     "source": "pos",
     "serverConfirmed": true,
     "consumptionConfirmed": false,
-    "createdAt": "2026-01-07T13:10:03.018Z",
+    "createdAt": "2026-01-07T15:01:22.539Z",
     "paymentHistory": [],
     "orderHistory": [
       {
-        "timestamp": "2026-01-07T13:10:03.018Z",
+        "timestamp": "2026-01-07T15:01:22.539Z",
         "action": "order_created",
         "noteId": "main",
         "noteName": "Note Principale",
         "items": [
           {
-            "id": 10000,
-            "name": "Coca",
-            "price": 5,
-            "quantity": 1
-          },
-          {
-            "id": 10003,
-            "name": "Sprite",
-            "price": 5,
-            "quantity": 1
-          },
-          {
             "id": 9001,
             "name": "Eau Minérale (0,5L)",
             "price": 4,
             "quantity": 1
+          },
+          {
+            "id": 10001,
+            "name": "Fanta",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 9101,
+            "name": "Anisette",
+            "price": 10,
+            "quantity": 1
+          },
+          {
+            "id": 10008,
+            "name": "Pastis 51",
+            "price": 13,
+            "quantity": 1
           }
         ],
-        "details": "Création commande initiale"
+        "details": "Création commande initiale",
+        "orderId": 14
+      },
+      {
+        "timestamp": "2026-01-07T15:01:33.988Z",
+        "action": "server_confirmed",
+        "server": "ALI",
+        "orderId": 14,
+        "details": "Commande client confirmée et convertie en commande POS par le serveur ALI"
+      },
+      {
+        "timestamp": "2026-01-07T15:01:33.988Z",
+        "action": "order_normalized",
+        "orderId": 14,
+        "details": "Événements orderHistory normalisés après confirmation (ancien tempId: temp_1767798082539_l2v1v82yh, nouvel ID: 14)"
       }
     ],
     "mainNote": {
       "id": "main",
       "name": "Note Principale",
-      "covers": 4,
+      "covers": 1,
       "items": [
-        {
-          "id": 10000,
-          "name": "Coca",
-          "price": 5,
-          "quantity": 1
-        },
-        {
-          "id": 10003,
-          "name": "Sprite",
-          "price": 5,
-          "quantity": 1
-        },
         {
           "id": 9001,
           "name": "Eau Minérale (0,5L)",
           "price": 4,
           "quantity": 1
+        },
+        {
+          "id": 10001,
+          "name": "Fanta",
+          "price": 5,
+          "quantity": 1
+        },
+        {
+          "id": 9101,
+          "name": "Anisette",
+          "price": 10,
+          "quantity": 1
+        },
+        {
+          "id": 10008,
+          "name": "Pastis 51",
+          "price": 13,
+          "quantity": 1
         }
       ],
-      "total": 14,
+      "total": 32,
       "paid": false
     },
     "subNotes": [],
-    "total": 14
+    "total": 32,
+    "waitingForPos": false,
+    "processedByPos": true,
+    "originalTempId": "temp_1767798082539_l2v1v82yh",
+    "originalSource": "client",
+    "confirmedAt": "2026-01-07T15:01:33.988Z",
+    "confirmedBy": "ALI",
+    "updatedAt": "2026-01-07T15:01:33.988Z"
   },
   {
-    "id": 10,
+    "id": 15,
     "tempId": null,
-    "table": "6",
+    "table": "1",
     "server": "ALI",
-    "covers": 4,
+    "covers": 1,
     "notes": "",
     "status": "nouvelle",
     "source": "pos",
     "serverConfirmed": true,
     "consumptionConfirmed": false,
-    "createdAt": "2026-01-07T13:22:50.078Z",
+    "createdAt": "2026-01-07T15:02:18.825Z",
     "paymentHistory": [],
     "orderHistory": [
       {
-        "timestamp": "2026-01-07T13:22:50.078Z",
+        "timestamp": "2026-01-07T15:02:18.825Z",
         "action": "order_created",
         "noteId": "main",
         "noteName": "Note Principale",
@@ -104,7 +136,7 @@
     "mainNote": {
       "id": "main",
       "name": "Note Principale",
-      "covers": 4,
+      "covers": 1,
       "items": [
         {
           "id": 9502,

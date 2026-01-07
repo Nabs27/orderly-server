@@ -239,16 +239,16 @@ function groupPaymentsByTimestamp(sessions) {
 		const splitId = payment.splitPaymentId || null;
 		if (!splitId) {
 			// Fallback pour anciennes données sans splitPaymentId (rétrocompatibilité uniquement)
-			let timestampKey;
-			try {
-				const roundedTimestamp = new Date(payment.timestamp).toISOString().substring(0, 19);
+		let timestampKey;
+		try {
+			const roundedTimestamp = new Date(payment.timestamp).toISOString().substring(0, 19);
 				timestampKey = `fallback_${roundedTimestamp}`;
-			} catch (e) {
+		} catch (e) {
 				timestampKey = `fallback_${payment.timestamp}`;
-			}
+		}
 			if (!splitPaymentsBySplitId[timestampKey]) {
 				splitPaymentsBySplitId[timestampKey] = [];
-			}
+		}
 			splitPaymentsBySplitId[timestampKey].push(payment);
 		} else {
 			if (!splitPaymentsBySplitId[splitId]) {
@@ -343,7 +343,7 @@ function groupPaymentsByTimestamp(sessions) {
 			if (!splitPaymentModes.includes(detail.mode)) {
 				splitPaymentModes.push(detail.mode);
 			}
-			splitPaymentAmounts.push({
+				splitPaymentAmounts.push({
 				mode: detail.mode,
 				amount: detail.amount,
 				index: detail.index,

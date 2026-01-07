@@ -1,1 +1,96 @@
-[]
+[
+  {
+    "id": 1,
+    "name": "Nabil Gafsi",
+    "phone": "22713000",
+    "transactions": [
+      {
+        "id": 1767795157090,
+        "type": "DEBIT",
+        "amount": 117,
+        "description": "CREDIT • Table 6 - Paiement complet (4 commandes)",
+        "date": "2026-01-07T14:12:37.090Z",
+        "orderId": null,
+        "orderIds": [
+          9,
+          10,
+          11,
+          12
+        ],
+        "ticket": {
+          "table": "6",
+          "date": "2026-01-07T14:12:37.090Z",
+          "items": [
+            {
+              "name": "Beck's",
+              "quantity": 10,
+              "price": 7.4,
+              "total": 74
+            },
+            {
+              "name": "Coca",
+              "quantity": 1,
+              "price": 5,
+              "total": 5
+            },
+            {
+              "name": "Eau Minérale (0,5L)",
+              "quantity": 1,
+              "price": 4,
+              "total": 4
+            },
+            {
+              "name": "Sprite",
+              "quantity": 1,
+              "price": 5,
+              "total": 5
+            },
+            {
+              "name": "Carpaccio de Bœuf à l’Huile de Truffe",
+              "quantity": 1,
+              "price": 35,
+              "total": 35
+            },
+            {
+              "name": "Carpaccio de Poulpe aux Baies Roses",
+              "quantity": 1,
+              "price": 40,
+              "total": 40
+            },
+            {
+              "name": "Salade César",
+              "quantity": 1,
+              "price": 26,
+              "total": 26
+            },
+            {
+              "name": "Couscous au Calamar Farci",
+              "quantity": 1,
+              "price": 50,
+              "total": 50
+            },
+            {
+              "name": "Ojja aux Crevettes",
+              "quantity": 1,
+              "price": 38,
+              "total": 38
+            },
+            {
+              "name": "Calamar Farci à la Sfaxienne",
+              "quantity": 1,
+              "price": 50,
+              "total": 50
+            }
+          ],
+          "subtotal": 327,
+          "discount": 0,
+          "total": 117,
+          "paymentMode": "CREDIT",
+          "server": "unknown"
+        },
+        "server": "unknown",
+        "paymentMode": "CREDIT"
+      }
+    ]
+  }
+]

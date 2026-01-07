@@ -32,6 +32,13 @@ class KpiService {
       queryParams['server'] = server;
     }
 
+    // 🆕 DEBUG: Log des paramètres envoyés
+    print('[KPI Android Service] Paramètres envoyés:');
+    print('  - dateFrom: ${start.toIso8601String()}');
+    print('  - dateTo: ${end.toIso8601String()}');
+    print('  - period: ${period ?? 'ALL'}');
+    print('  - server: ${server ?? 'null'}');
+
     try {
       // Le token sera ajouté automatiquement par l'interceptor
       final response = await ApiClient.dio.get(

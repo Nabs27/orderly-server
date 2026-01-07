@@ -470,91 +470,91 @@ class _ServiceDetailPage extends StatelessWidget {
         ? backendTicket // ✅ Utiliser le ticket du backend tel quel (déjà calculé correctement)
         : (() {
             // Fallback : reconstruire seulement pour les paiements simples ou si le backend n'a pas fourni de ticket
-            final totalAmount = payments.fold<double>(
-              0.0,
-              (sum, p) {
+    final totalAmount = payments.fold<double>(
+      0.0,
+      (sum, p) {
                 // Exclure CREDIT du montant encaissé
                 if (p['paymentMode']?.toString() == 'CREDIT') return sum;
-                final enteredAmount = (p['enteredAmount'] as num?)?.toDouble();
-                final amount = (p['amount'] as num?)?.toDouble() ?? 0.0;
-                return sum + (enteredAmount ?? amount);
-              },
-            );
+        final enteredAmount = (p['enteredAmount'] as num?)?.toDouble();
+        final amount = (p['amount'] as num?)?.toDouble() ?? 0.0;
+        return sum + (enteredAmount ?? amount);
+      },
+    );
 
-            final allItems = <Map<String, dynamic>>[];
-            double totalSubtotal = 0.0;
-            double totalDiscountAmount = 0.0;
-            
-            for (final payment in payments) {
-              final items = (payment['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-              for (final item in items) {
-                final existingIndex = allItems.indexWhere(
-                  (i) => i['id'] == item['id'] && i['name'] == item['name'],
-                );
-                if (existingIndex != -1) {
-                  allItems[existingIndex]['quantity'] = (allItems[existingIndex]['quantity'] as int) + (item['quantity'] as int? ?? 0);
-                } else {
-                  allItems.add(Map<String, dynamic>.from(item));
-                }
-              }
-            }
-            totalSubtotal = allItems.fold<double>(0.0, (sum, item) {
-              final price = (item['price'] as num?)?.toDouble() ?? 0.0;
-              final quantity = (item['quantity'] as num?)?.toInt() ?? 0;
-              return sum + (price * quantity);
-            });
-            if (payments.isNotEmpty) {
-              double sumDiscountAmounts = 0.0;
-              for (final payment in payments) {
-                final paymentDiscountAmount = (payment['discountAmount'] as num?)?.toDouble() ?? 0.0;
-                if (paymentDiscountAmount > 0.01) {
-                  sumDiscountAmounts += paymentDiscountAmount;
-                }
-              }
-              totalDiscountAmount = sumDiscountAmounts;
-            }
-
-            final ticketTotal = totalSubtotal - totalDiscountAmount;
-            
-            double discountRate = 0.0;
-            bool isPercentDiscount = false;
-            if (totalDiscountAmount > 0.01 && totalSubtotal > 0.01) {
-              discountRate = (totalDiscountAmount / totalSubtotal) * 100;
-              isPercentDiscount = true;
-            }
-            
-            final paymentDetails = <Map<String, dynamic>>[];
-            for (final payment in payments) {
-              final enteredAmount = (payment['enteredAmount'] as num?)?.toDouble() ?? 
-                  ((payment['amount'] as num?)?.toDouble() ?? 0.0);
-              final paymentMode = payment['paymentMode']?.toString() ?? '';
+    final allItems = <Map<String, dynamic>>[];
+    double totalSubtotal = 0.0;
+    double totalDiscountAmount = 0.0;
+    
+      for (final payment in payments) {
+        final items = (payment['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+        for (final item in items) {
+          final existingIndex = allItems.indexWhere(
+            (i) => i['id'] == item['id'] && i['name'] == item['name'],
+          );
+          if (existingIndex != -1) {
+            allItems[existingIndex]['quantity'] = (allItems[existingIndex]['quantity'] as int) + (item['quantity'] as int? ?? 0);
+          } else {
+            allItems.add(Map<String, dynamic>.from(item));
+          }
+        }
+      }
+      totalSubtotal = allItems.fold<double>(0.0, (sum, item) {
+        final price = (item['price'] as num?)?.toDouble() ?? 0.0;
+        final quantity = (item['quantity'] as num?)?.toInt() ?? 0;
+        return sum + (price * quantity);
+      });
+      if (payments.isNotEmpty) {
+        double sumDiscountAmounts = 0.0;
+        for (final payment in payments) {
+          final paymentDiscountAmount = (payment['discountAmount'] as num?)?.toDouble() ?? 0.0;
+          if (paymentDiscountAmount > 0.01) {
+            sumDiscountAmounts += paymentDiscountAmount;
+          }
+        }
+        totalDiscountAmount = sumDiscountAmounts;
+    }
+    
+    final ticketTotal = totalSubtotal - totalDiscountAmount;
+    
+    double discountRate = 0.0;
+    bool isPercentDiscount = false;
+    if (totalDiscountAmount > 0.01 && totalSubtotal > 0.01) {
+      discountRate = (totalDiscountAmount / totalSubtotal) * 100;
+      isPercentDiscount = true;
+    }
+    
+    final paymentDetails = <Map<String, dynamic>>[];
+      for (final payment in payments) {
+        final enteredAmount = (payment['enteredAmount'] as num?)?.toDouble() ?? 
+            ((payment['amount'] as num?)?.toDouble() ?? 0.0);
+        final paymentMode = payment['paymentMode']?.toString() ?? '';
               final detail = {
-                'mode': paymentMode,
-                'amount': enteredAmount,
+            'mode': paymentMode,
+            'amount': enteredAmount,
               };
               if (paymentMode == 'CREDIT' && payment['creditClientName'] != null) {
                 detail['clientName'] = payment['creditClientName'].toString();
               }
               paymentDetails.add(detail);
-            }
+      }
             
             return {
-              'table': tableNumber,
-              'date': payments.first['timestamp']?.toString() ?? DateTime.now().toIso8601String(),
-              'items': allItems,
-              'subtotal': totalSubtotal,
-              'discount': discountRate,
-              'isPercentDiscount': isPercentDiscount,
-              'discountAmount': totalDiscountAmount,
-              'total': ticketTotal,
+      'table': tableNumber,
+      'date': payments.first['timestamp']?.toString() ?? DateTime.now().toIso8601String(),
+      'items': allItems,
+      'subtotal': totalSubtotal,
+      'discount': discountRate,
+      'isPercentDiscount': isPercentDiscount,
+      'discountAmount': totalDiscountAmount,
+      'total': ticketTotal,
               'excessAmount': payments.first['excessAmount'] != null ? (payments.first['excessAmount'] as num?)?.toDouble() : null,
-              'covers': payments.first['covers'] ?? 1,
-              'server': payments.first['server'] ?? 'unknown',
+      'covers': payments.first['covers'] ?? 1,
+      'server': payments.first['server'] ?? 'unknown',
               'paymentMode': payments.first['paymentMode']?.toString() ?? 'N/A',
               'isSplitPayment': false,
-              'paymentDetails': paymentDetails,
-              'totalAmount': totalAmount,
-            };
+      'paymentDetails': paymentDetails,
+      'totalAmount': totalAmount,
+    };
           })();
     
     // Extraire les valeurs du ticket (qu'il vienne du backend ou du fallback)
@@ -663,17 +663,17 @@ class _ServiceDetailPage extends StatelessWidget {
               final effectiveTicket = isSplitPayment 
                   ? mainTicket // Utiliser le ticket principal avec paymentDetails et excessAmount du backend
                   : (ticket ?? {
-                      'table': payment['table']?.toString() ?? '—',
-                      'date': payment['timestamp']?.toString() ?? DateTime.now().toIso8601String(),
-                      'items': (payment['items'] as List?)?.cast<Map<String, dynamic>>() ?? [],
-                      'subtotal': (payment['subtotal'] as num?)?.toDouble() ?? 0.0,
-                      'discount': (payment['discount'] as num?)?.toDouble() ?? 0.0,
-                      'discountAmount': (payment['discountAmount'] as num?)?.toDouble() ?? 0.0,
-                      'isPercentDiscount': payment['isPercentDiscount'] == true,
-                      'total': (payment['amount'] as num?)?.toDouble() ?? 0.0,
-                      'covers': payment['covers'] ?? 1,
-                      'server': payment['server']?.toString() ?? 'unknown',
-                      'paymentMode': payment['paymentMode']?.toString(),
+                'table': payment['table']?.toString() ?? '—',
+                'date': payment['timestamp']?.toString() ?? DateTime.now().toIso8601String(),
+                'items': (payment['items'] as List?)?.cast<Map<String, dynamic>>() ?? [],
+                'subtotal': (payment['subtotal'] as num?)?.toDouble() ?? 0.0,
+                'discount': (payment['discount'] as num?)?.toDouble() ?? 0.0,
+                'discountAmount': (payment['discountAmount'] as num?)?.toDouble() ?? 0.0,
+                'isPercentDiscount': payment['isPercentDiscount'] == true,
+                'total': (payment['amount'] as num?)?.toDouble() ?? 0.0,
+                'covers': payment['covers'] ?? 1,
+                'server': payment['server']?.toString() ?? 'unknown',
+                'paymentMode': payment['paymentMode']?.toString(),
                       'isSplitPayment': false,
                       // 🆕 Ajouter les détails de paiement et pourboire pour les paiements individuels
                       'excessAmount': payment['excessAmount'] != null ? (payment['excessAmount'] as num?)?.toDouble() : null,

@@ -225,9 +225,16 @@ class KpiModel {
     // Données crédit client
     // 🆕 Utiliser totalDebitsInPeriod (dettes créées dans la période) au lieu de totalBalance (solde qui peut être négatif)
     // Le KPI doit afficher les dettes créées aujourd'hui, pas le solde (qui peut être négatif si des remboursements dépassent les nouvelles dettes)
+    // 🆕 DEBUG: Log pour vérifier ce qui est reçu du backend
+    print('[KPI Android] creditSummary keys: ${creditSummary.keys.toList()}');
+    print('[KPI Android] totalDebitsInPeriod: ${creditSummary['totalDebitsInPeriod']}');
+    print('[KPI Android] totalAmount: ${creditSummary['totalAmount']}');
+    print('[KPI Android] totalDebit: ${creditSummary['totalDebit']}');
+    print('[KPI Android] totalCredit: ${creditSummary['totalCredit']}');
     final creditBalance = (creditSummary['totalDebitsInPeriod'] as num?)?.toDouble() 
         ?? (creditSummary['totalAmount'] as num?)?.toDouble() 
         ?? 0.0;
+    print('[KPI Android] creditBalance calculé: $creditBalance');
     final totalDebit = (creditSummary['totalDebit'] as num?)?.toDouble() ?? 0.0;
     final totalCredit = (creditSummary['totalCredit'] as num?)?.toDouble() ?? 0.0;
     final clients = (creditSummary['clients'] as List<dynamic>?) ?? [];
