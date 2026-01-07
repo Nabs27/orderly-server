@@ -1026,28 +1026,14 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 						covers: covers,
 						server: server,
 						// 🆕 Ajouter les détails des paiements et le montant total encaissé
-						paymentDetails: act.isSplitPayment ? (() => {
-							const processedTxs = new Set();
-							const uniqueDetails = [];
-							for (const p of payments) {
-								const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
-								const txKey = `${p.paymentMode}_${enteredAmount.toFixed(3)}`;
-								if (!processedTxs.has(txKey)) {
-									processedTxs.add(txKey);
-									const detail = { mode: p.paymentMode, amount: enteredAmount };
-									// 🆕 Ajouter le nom du client pour les paiements CREDIT
-									if (p.paymentMode === 'CREDIT' && p.creditClientName) {
-										detail.clientName = p.creditClientName;
-									}
-									uniqueDetails.push(detail);
-								}
-							}
-							return uniqueDetails;
-						})() : [{
-							mode: payments[0].paymentMode,
-							amount: payments[0].enteredAmount != null ? payments[0].enteredAmount : (payments[0].amount || 0),
-							...(payments[0].paymentMode === 'CREDIT' && payments[0].creditClientName ? { clientName: payments[0].creditClientName } : {})
-						}],
+						// ⚠️ RÈGLE .cursorrules 3.1: Utiliser payment-processor.js comme source de vérité unique
+						paymentDetails: act.isSplitPayment 
+							? paymentProcessor.getPaymentDetails(payments) // 🆕 Utiliser la fonction centralisée
+							: [{
+								mode: payments[0].paymentMode,
+								amount: payments[0].enteredAmount != null ? payments[0].enteredAmount : (payments[0].amount || 0),
+								...(payments[0].paymentMode === 'CREDIT' && payments[0].creditClientName ? { clientName: payments[0].creditClientName } : {})
+							}],
 						totalAmount: totalAmountEncaisse > 0.01 ? totalAmountEncaisse : undefined, // 🆕 Montant total encaissé (exclut CREDIT)
 						excessAmount: totalExcessAmount > 0.01 ? totalExcessAmount : undefined // 🆕 Pourboire
 					};

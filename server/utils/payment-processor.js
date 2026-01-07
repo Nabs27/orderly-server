@@ -78,12 +78,7 @@ function deduplicateAndCalculate(payments) {
             const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
             const allocatedAmount = payment.allocatedAmount != null ? payment.allocatedAmount : (payment.amount || 0);
             const mode = payment.paymentMode || 'INCONNU';
-
-            // 🆕 PRIORITÉ: Utiliser transactionId pour la déduplication si disponible
-            // Sinon, fallback sur mode + enteredAmount (pour les anciens records)
-            const txKey = payment.transactionId
-                ? `tx_${payment.transactionId}`
-                : `${mode}_${enteredAmount.toFixed(3)}`;
+            const txKey = `${mode}_${enteredAmount.toFixed(3)}`;
 
             if (!txCounts[txKey]) {
                 txCounts[txKey] = {
@@ -310,11 +305,7 @@ function groupSplitPayments(payments) {
         for (const p of groupPayments) {
             const mode = p.paymentMode;
             const entered = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
-
-            // 🆕 PRIORITÉ: Utiliser transactionId pour la déduplication si disponible
-            const key = p.transactionId
-                ? `tx_${p.transactionId}`
-                : `${mode}_${entered.toFixed(3)}`;
+            const key = `${mode}_${entered.toFixed(3)}`;
 
             if (!txByKey[key]) {
                 txByKey[key] = {
@@ -354,7 +345,6 @@ function groupSplitPayments(payments) {
                 splitPaymentAmounts.push({
                     mode: tx.mode,
                     amount: tx.enteredAmount,
-                    transactionId: key.startsWith('tx_') ? key.replace('tx_', '') : null, // 🆕 Préserver l'ID
                     index: splitPaymentAmounts.filter(s => s.mode === tx.mode).length + 1
                 });
             }
@@ -462,11 +452,7 @@ function calculatePaymentsByMode(payments) {
 
             const mode = payment.paymentMode || 'INCONNU';
             const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
-
-            // 🆕 PRIORITÉ: Utiliser transactionId pour la déduplication si disponible
-            const txKey = payment.transactionId
-                ? `tx_${payment.transactionId}`
-                : `${mode}_${enteredAmount.toFixed(3)}`;
+            const txKey = `${mode}_${enteredAmount.toFixed(3)}`;
 
             if (!txCounts[txKey]) {
                 txCounts[txKey] = {
@@ -613,9 +599,73 @@ function calculatePaymentsByMode(payments) {
     return result;
 }
 
+/**
+ * Extrait les détails de paiement dédupliqués pour un groupe de paiements divisés
+ * ⚠️ RÈGLE .cursorrules 3.2: Utiliser splitPaymentId, pas timestamp
+ * 
+ * @param {Array} payments - Liste des paiements d'un même splitPaymentId (peut contenir des doublons)
+ * @returns {Array} Liste des paymentDetails avec index (CARTE #1, CARTE #2, CHEQUE #1, etc.)
+ */
+function getPaymentDetails(payments) {
+    if (!payments || payments.length === 0) {
+        return [];
+    }
+
+    // Compter les occurrences de chaque mode + enteredAmount
+    const txCounts = {};
+    
+    for (const p of payments) {
+        const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
+        const mode = p.paymentMode || 'N/A';
+        const txKey = `${mode}_${enteredAmount.toFixed(3)}`;
+        
+        if (!txCounts[txKey]) {
+            txCounts[txKey] = {
+                count: 0,
+                mode: mode,
+                amount: enteredAmount,
+                payment: p // Garder une référence pour creditClientName
+            };
+        }
+        txCounts[txKey].count++;
+    }
+    
+    // Calculer le nombre de commandes distinctes
+    const distinctOrderIds = new Set(payments.map(p => p.orderId || p.sessionId)).size;
+    const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
+    
+    // Créer les paymentDetails avec index (CARTE #1, CARTE #2, etc.)
+    const paymentDetails = [];
+    
+    for (const txKey in txCounts) {
+        const tx = txCounts[txKey];
+        // Nombre réel de transactions = occurrences / nombre de commandes
+        const nbTransactions = Math.round(tx.count / nbOrders);
+        
+        // Créer N entrées pour cette transaction
+        for (let i = 0; i < nbTransactions; i++) {
+            const detail = {
+                mode: tx.mode,
+                amount: tx.amount,
+                index: paymentDetails.filter(d => d.mode === tx.mode).length + 1 // Index par mode (CARTE #1, CARTE #2, etc.)
+            };
+            
+            // Ajouter le nom du client pour les paiements CREDIT
+            if (tx.mode === 'CREDIT' && tx.payment.creditClientName) {
+                detail.clientName = tx.payment.creditClientName;
+            }
+            
+            paymentDetails.push(detail);
+        }
+    }
+    
+    return paymentDetails;
+}
+
 module.exports = {
     deduplicateAndCalculate,
     groupSplitPayments,
-    calculatePaymentsByMode
+    calculatePaymentsByMode,
+    getPaymentDetails
 };
 

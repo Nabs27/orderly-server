@@ -334,55 +334,20 @@ function groupPaymentsByTimestamp(sessions) {
 		const distinctOrderIds = new Set(payments.map(p => p.sessionId)).size;
 		const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
 
-		for (const [mode, modePayments] of Object.entries(paymentsByMode)) {
-			// 🆕 DÉDUPLICATION CORRECTE : Compter les occurrences et diviser par nbOrders
-			// ⚠️ RÈGLE .cursorrules 3.2: Ne jamais utiliser timestamp pour dédupliquer
-			// Logique identique à payment-processor.js : compter occurrences puis diviser par nbOrders
-			const txCounts = {}; // mode_enteredAmount -> { count, enteredAmount, payment }
-			
-			for (const payment of modePayments) {
-				const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
-				const txKey = `${mode}_${enteredAmount.toFixed(3)}`;
-				
-				if (!txCounts[txKey]) {
-					txCounts[txKey] = {
-						count: 0,
-						enteredAmount: enteredAmount,
-						payment: payment,
-					};
-				}
-				txCounts[txKey].count++;
+		// 🆕 Utiliser payment-processor.js comme source de vérité unique
+		// ⚠️ RÈGLE .cursorrules 3.1: Utiliser payment-processor.js pour la déduplication
+		const allPaymentDetails = paymentProcessor.getPaymentDetails(payments);
+		
+		// Extraire les modes uniques et construire splitPaymentAmounts
+		for (const detail of allPaymentDetails) {
+			if (!splitPaymentModes.includes(detail.mode)) {
+				splitPaymentModes.push(detail.mode);
 			}
-			
-			// 🆕 Calculer le nombre réel de transactions (occurrences / nbOrders)
-			const uniqueTransactions = [];
-			for (const txKey in txCounts) {
-				const tx = txCounts[txKey];
-				// Nombre réel de transactions = occurrences / nombre de commandes
-				const numTransactions = Math.round(tx.count / nbOrders);
-				
-				// Créer N entrées pour cette transaction (si plusieurs transactions du même montant)
-				for (let i = 0; i < numTransactions; i++) {
-					uniqueTransactions.push({
-						payment: tx.payment,
-						enteredAmount: tx.enteredAmount,
-					});
-				}
-			}
-
-			// 🆕 Ajouter tous les montants avec un index (1, 2, 3...)
-			splitPaymentModes.push(mode);
-			uniqueTransactions.forEach((transaction, index) => {
-				const creditClientName = transaction.payment.paymentMode === 'CREDIT'
-					? (transaction.payment.creditClientName || null)
-					: null;
-
-				splitPaymentAmounts.push({
-					mode: mode,
-					amount: transaction.enteredAmount,
-					index: index + 1, // 🆕 Index pour numéroter (1, 2, 3...)
-					clientName: creditClientName,
-				});
+			splitPaymentAmounts.push({
+				mode: detail.mode,
+				amount: detail.amount,
+				index: detail.index,
+				clientName: detail.clientName || null,
 			});
 		}
 
