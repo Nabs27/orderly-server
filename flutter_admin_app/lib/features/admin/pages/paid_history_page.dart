@@ -471,6 +471,15 @@ class _ServiceDetailPage extends StatelessWidget {
         ? ((payments.first['ticket'] as Map<String, dynamic>)?['paymentDetails'] as List?)
         : null;
     
+    // 🆕 DEBUG: Log pour diagnostiquer
+    print('🔍 [DEBUG Android Ticket] Table $tableNumber:');
+    print('  - isSplitPayment: $isSplitPayment');
+    print('  - backendTicket: ${backendTicket != null ? 'PRÉSENT' : 'ABSENT'}');
+    print('  - backendPaymentDetails: ${backendPaymentDetails != null ? 'PRÉSENT (${backendPaymentDetails.length} items)' : 'ABSENT'}');
+    if (backendTicket != null) {
+      print('  - backendTicket[paymentDetails]: ${backendTicket['paymentDetails']}');
+    }
+    
     final mainTicket = backendTicket != null && isSplitPayment
         ? backendTicket // ✅ Utiliser le ticket du backend tel quel (déjà calculé correctement)
         : (() {

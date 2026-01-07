@@ -453,8 +453,8 @@ class _ServiceDetailPage extends StatelessWidget {
         : null;
     
     // 🆕 DEBUG: Vérifier ce qui est reçu du backend
-    if (isSplitPayment && tableNumber == '2') {
-      print('🔍 [DEBUG] Table 2 - Paiement divisé:');
+    if (isSplitPayment) {
+      print('🔍 [DEBUG POS] Table $tableNumber - Paiement divisé:');
       print('  - payments.length: ${payments.length}');
       print('  - payments.first[isSplitPayment]: ${payments.first['isSplitPayment']}');
       print('  - payments.first[ticket]: ${payments.first['ticket'] != null ? 'PRÉSENT' : 'ABSENT'}');
@@ -462,6 +462,7 @@ class _ServiceDetailPage extends StatelessWidget {
         print('  - backendTicket[excessAmount]: ${backendTicket['excessAmount']}');
         print('  - backendTicket[totalAmount]: ${backendTicket['totalAmount']}');
         print('  - backendTicket[paymentDetails]: ${backendTicket['paymentDetails']}');
+        print('  - backendTicket[paymentDetails].length: ${(backendTicket['paymentDetails'] as List?)?.length ?? 0}');
       }
     }
     

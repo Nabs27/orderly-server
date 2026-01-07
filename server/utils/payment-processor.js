@@ -611,6 +611,11 @@ function getPaymentDetails(payments) {
         return [];
     }
 
+    // 🆕 DEBUG: Log pour diagnostiquer
+    console.log(`[payment-processor] getPaymentDetails appelé avec ${payments.length} paiements`);
+    const orderIds = [...new Set(payments.map(p => p.orderId || p.sessionId).filter(id => id != null))];
+    console.log(`[payment-processor] orderIds distincts: ${orderIds.length} (${orderIds.join(', ')})`);
+
     // Compter les occurrences de chaque mode + enteredAmount
     const txCounts = {};
     
@@ -631,8 +636,32 @@ function getPaymentDetails(payments) {
     }
     
     // Calculer le nombre de commandes distinctes
-    const distinctOrderIds = new Set(payments.map(p => p.orderId || p.sessionId)).size;
-    const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
+    // 🆕 CORRECTION: Pour les paiements divisés multi-commandes, utiliser orderIds (tableau) si disponible
+    // Sinon, utiliser orderId individuel de chaque paiement
+    const allOrderIds = new Set();
+    for (const p of payments) {
+        // Si le paiement a un tableau orderIds, l'utiliser (paiement divisé multi-commandes)
+        if (p.orderIds && Array.isArray(p.orderIds) && p.orderIds.length > 0) {
+            p.orderIds.forEach(id => {
+                if (id != null && id !== undefined) {
+                    allOrderIds.add(id);
+                }
+            });
+        } else if (p.orderId != null && p.orderId !== undefined) {
+            // Sinon, utiliser orderId individuel
+            allOrderIds.add(p.orderId);
+        } else if (p.sessionId != null && p.sessionId !== undefined) {
+            // Fallback sur sessionId
+            allOrderIds.add(p.sessionId);
+        }
+    }
+    const nbOrders = allOrderIds.size > 0 ? allOrderIds.size : 1;
+    
+    console.log(`[payment-processor] nbOrders: ${nbOrders}`);
+    console.log(`[payment-processor] txCounts:`, Object.keys(txCounts).map(key => {
+        const tx = txCounts[key];
+        return `${key}: count=${tx.count}, nbTransactions=${Math.round(tx.count / nbOrders)}`;
+    }).join(', '));
     
     // Créer les paymentDetails avec index (CARTE #1, CARTE #2, etc.)
     const paymentDetails = [];
@@ -641,6 +670,8 @@ function getPaymentDetails(payments) {
         const tx = txCounts[txKey];
         // Nombre réel de transactions = occurrences / nombre de commandes
         const nbTransactions = Math.round(tx.count / nbOrders);
+        
+        console.log(`[payment-processor] ${txKey}: count=${tx.count}, nbOrders=${nbOrders}, nbTransactions=${nbTransactions}`);
         
         // Créer N entrées pour cette transaction
         for (let i = 0; i < nbTransactions; i++) {
@@ -658,6 +689,8 @@ function getPaymentDetails(payments) {
             paymentDetails.push(detail);
         }
     }
+    
+    console.log(`[payment-processor] paymentDetails final: ${paymentDetails.length} items`);
     
     return paymentDetails;
 }
