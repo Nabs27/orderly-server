@@ -214,7 +214,6 @@ function groupPaymentsByTimestamp(sessions) {
 				hasCashInPayment: payment.hasCashInPayment != null ? payment.hasCashInPayment : false,
 				// 🆕 Préserver l'ID du paiement pour distinguer les paiements multiples du même mode
 				paymentId: payment.id || null,
-				transactionId: payment.transactionId || null, // 🆕 Préserver l'ID de transaction unique
 			});
 		}
 	}
@@ -231,30 +230,38 @@ function groupPaymentsByTimestamp(sessions) {
 		}
 	}
 
-	// 🆕 ÉTAPE 2: Regrouper les paiements divisés par timestamp (arrondi à la seconde)
-	// Tous les paiements divisés avec le même timestamp font partie du même acte de paiement
-	const splitPaymentsByTimestamp = {}; // timestamp (arrondi) -> [payments]
+	// 🆕 ÉTAPE 2: Regrouper les paiements divisés par splitPaymentId
+	// ⚠️ RÈGLE .cursorrules 3.2: Utiliser splitPaymentId (identifiant dédié) au lieu du timestamp
+	// Tous les paiements divisés avec le même splitPaymentId font partie du même acte de paiement
+	const splitPaymentsBySplitId = {}; // splitPaymentId -> [payments]
 
 	for (const payment of splitPayments) {
-		let timestampKey;
-		try {
-			// Arrondir le timestamp à la seconde pour regrouper
-			const roundedTimestamp = new Date(payment.timestamp).toISOString().substring(0, 19);
-			timestampKey = roundedTimestamp;
-		} catch (e) {
-			timestampKey = payment.timestamp;
+		const splitId = payment.splitPaymentId || null;
+		if (!splitId) {
+			// Fallback pour anciennes données sans splitPaymentId (rétrocompatibilité uniquement)
+			let timestampKey;
+			try {
+				const roundedTimestamp = new Date(payment.timestamp).toISOString().substring(0, 19);
+				timestampKey = `fallback_${roundedTimestamp}`;
+			} catch (e) {
+				timestampKey = `fallback_${payment.timestamp}`;
+			}
+			if (!splitPaymentsBySplitId[timestampKey]) {
+				splitPaymentsBySplitId[timestampKey] = [];
+			}
+			splitPaymentsBySplitId[timestampKey].push(payment);
+		} else {
+			if (!splitPaymentsBySplitId[splitId]) {
+				splitPaymentsBySplitId[splitId] = [];
+			}
+			splitPaymentsBySplitId[splitId].push(payment);
 		}
-
-		if (!splitPaymentsByTimestamp[timestampKey]) {
-			splitPaymentsByTimestamp[timestampKey] = [];
-		}
-		splitPaymentsByTimestamp[timestampKey].push(payment);
 	}
 
 	// 🆕 ÉTAPE 3: Regrouper les paiements divisés par mode et créer une entrée avec tous les montants numérotés
 	// 🆕 CORRECTION: Regrouper par mode, mais inclure tous les montants avec un index (1, 2, 3...)
 	const groupedSplitPayments = [];
-	for (const [timestampKey, payments] of Object.entries(splitPaymentsByTimestamp)) {
+	for (const [splitId, payments] of Object.entries(splitPaymentsBySplitId)) {
 		// 🆕 Regrouper par mode de paiement
 		const paymentsByMode = {};
 		for (const payment of payments) {
@@ -319,56 +326,79 @@ function groupPaymentsByTimestamp(sessions) {
 		const isCompletePayment = payments.every(p => p.isCompletePayment === true);
 		const hasCashInPayment = payments.some(p => p.hasCashInPayment === true);
 
-		// 🆕 Créer une entrée détaillée pour CHAQUE transaction sans regroupement par mode
+		// 🆕 Créer une entrée par mode avec tous les montants numérotés
 		const splitPaymentModes = [];
 		const splitPaymentAmounts = [];
 
-		// 🆕 Extraire chaque transaction unique de manière brute
-		// On identifie d'abord toutes les transactions uniques par leur transactionId ou mode/montant/timestamp
-		const uniqueTxMap = new Map();
+		// 🆕 Calculer le nombre de commandes distinctes pour ce split payment
+		const distinctOrderIds = new Set(payments.map(p => p.sessionId)).size;
+		const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
 
-		for (const payment of payments) {
-			const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
-			const mode = payment.paymentMode || 'INCONNU';
-
-			// Clé unique pour identifier la transaction physique
-			// 🆕 PRIORITÉ: transactionId pour la déduplication si disponible
-			// Fallback: paymentId (ID unique du record) pour ne JAMAIS fusionner par erreur
-			const txKey = payment.transactionId
-				? `tx_${payment.transactionId}`
-				: (payment.paymentId ? `id_${payment.paymentId}` : `${mode}_${enteredAmount.toFixed(3)}_${payment.timestamp}_${idx++}`);
-
-			if (!uniqueTxMap.has(txKey)) {
-				uniqueTxMap.set(txKey, {
-					mode: mode,
-					amount: enteredAmount,
-					clientName: (mode === 'CREDIT' ? payment.creditClientName : null),
-					timestamp: payment.timestamp
-				});
+		for (const [mode, modePayments] of Object.entries(paymentsByMode)) {
+			// 🆕 DÉDUPLICATION CORRECTE : Compter les occurrences et diviser par nbOrders
+			// ⚠️ RÈGLE .cursorrules 3.2: Ne jamais utiliser timestamp pour dédupliquer
+			// Logique identique à payment-processor.js : compter occurrences puis diviser par nbOrders
+			const txCounts = {}; // mode_enteredAmount -> { count, enteredAmount, payment }
+			
+			for (const payment of modePayments) {
+				const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
+				const txKey = `${mode}_${enteredAmount.toFixed(3)}`;
+				
+				if (!txCounts[txKey]) {
+					txCounts[txKey] = {
+						count: 0,
+						enteredAmount: enteredAmount,
+						payment: payment,
+					};
+				}
+				txCounts[txKey].count++;
 			}
+			
+			// 🆕 Calculer le nombre réel de transactions (occurrences / nbOrders)
+			const uniqueTransactions = [];
+			for (const txKey in txCounts) {
+				const tx = txCounts[txKey];
+				// Nombre réel de transactions = occurrences / nombre de commandes
+				const numTransactions = Math.round(tx.count / nbOrders);
+				
+				// Créer N entrées pour cette transaction (si plusieurs transactions du même montant)
+				for (let i = 0; i < numTransactions; i++) {
+					uniqueTransactions.push({
+						payment: tx.payment,
+						enteredAmount: tx.enteredAmount,
+					});
+				}
+			}
+
+			// 🆕 Ajouter tous les montants avec un index (1, 2, 3...)
+			splitPaymentModes.push(mode);
+			uniqueTransactions.forEach((transaction, index) => {
+				const creditClientName = transaction.payment.paymentMode === 'CREDIT'
+					? (transaction.payment.creditClientName || null)
+					: null;
+
+				splitPaymentAmounts.push({
+					mode: mode,
+					amount: transaction.enteredAmount,
+					index: index + 1, // 🆕 Index pour numéroter (1, 2, 3...)
+					clientName: creditClientName,
+				});
+			});
 		}
 
-		// 🆕 Transformer la map en liste de lignes de paiement
-		let idx = 1;
-		uniqueTxMap.forEach((tx) => {
-			if (!splitPaymentModes.includes(tx.mode)) {
-				splitPaymentModes.push(tx.mode);
-			}
-			splitPaymentAmounts.push({
-				mode: tx.mode,
-				amount: tx.amount,
-				index: idx++,
-				clientName: tx.clientName,
-			});
-		});
-
 		// 🆕 Calculer les totaux pour l'entrée
+		// ⚠️ IMPORTANT: Utiliser totalSubtotal et ticketAmount (déjà calculés depuis les articles dédupliqués)
+		// Ne pas sommer les subtotals des paiements car ils sont multipliés par le nombre de commandes
 		const totalEnteredAmountForAll = splitPaymentAmounts.reduce((sum, s) => sum + s.amount, 0);
 
-		// 🆕 Calculer la remise totale correctement
-		const totalDiscountAmountForAll = totalDiscountAmount;
+		// 🆕 Calculer la remise totale correctement (prendre depuis le premier paiement et multiplier par nbModes)
+		// Car chaque mode a sa propre répartition de remise
+		const nbModes = Object.keys(paymentsByMode).length;
+		const firstPaymentDiscount = (firstPayment.discountAmount || 0) * nbOrders; // Remise pour une commande × nbOrders
+		const totalDiscountAmountForAll = nbModes > 0 ? firstPaymentDiscount / nbModes : 0; // Diviser par nbModes car chaque mode a sa part
 
 		// Calculer le pourboire total
+		// ticketAmount = totalSubtotal - totalDiscountAmount (déjà calculé correctement depuis les articles)
 		let totalExcessAmount = 0;
 		if (!hasCashInPayment && totalEnteredAmountForAll > ticketAmount) {
 			totalExcessAmount = Math.max(0, totalEnteredAmountForAll - ticketAmount);
@@ -390,8 +420,7 @@ function groupPaymentsByTimestamp(sessions) {
 			subtotal: totalSubtotal,
 			paymentMode: splitPaymentModes.join(' + '), // Afficher tous les modes
 			splitPaymentModes: splitPaymentModes, // Liste des modes pour l'affichage
-			splitPaymentAmounts: splitPaymentAmounts, // Pour compatibilité POS
-			paymentDetails: splitPaymentAmounts, // Pour compatibilité Admin
+			splitPaymentAmounts: splitPaymentAmounts, // 🆕 Tous les montants avec index (1, 2, 3...)
 			items: uniqueItems, // Articles partagés (même ticket)
 			orderIds: [...new Set(allOrderIds)],
 			noteId: primaryNoteId,
@@ -406,7 +435,7 @@ function groupPaymentsByTimestamp(sessions) {
 			isPercentDiscount: firstPaymentWithDiscount?.isPercentDiscount ?? firstPayment.isPercentDiscount,
 			discountAmount: totalDiscountAmount,
 			isSplitPayment: true,
-			splitPaymentId: `split_${timestampKey}`,
+			splitPaymentId: splitId.startsWith('fallback_') ? splitId : splitId, // Préserver le splitPaymentId original
 			creditClientName: creditClientName,
 			excessAmount: (!hasCashInPayment && totalExcessAmount > 0.01) ? totalExcessAmount : null,
 			enteredAmount: totalEnteredAmountForAll,
