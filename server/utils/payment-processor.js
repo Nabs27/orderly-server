@@ -613,13 +613,34 @@ function getPaymentDetails(payments) {
 
     // 🆕 DEBUG: Log pour diagnostiquer
     console.log(`[payment-processor] getPaymentDetails appelé avec ${payments.length} paiements`);
-    const orderIds = [...new Set(payments.map(p => p.orderId || p.sessionId).filter(id => id != null))];
+    
+    // 🆕 CORRECTION: Dédupliquer les paiements par splitPaymentId + mode + enteredAmount + orderId
+    // Car les paiements peuvent être dupliqués dans paymentHistory (ex: 2 fois le même paiement dans une commande)
+    const uniquePaymentsMap = new Map();
+    for (const p of payments) {
+        const splitId = p.splitPaymentId || 'single';
+        const mode = p.paymentMode || 'N/A';
+        const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
+        const orderId = p.orderId || p.sessionId;
+        // Clé unique : splitPaymentId + mode + enteredAmount + orderId
+        // Cela permet de dédupliquer les paiements dupliqués dans paymentHistory
+        const uniqueKey = `${splitId}_${mode}_${enteredAmount.toFixed(3)}_${orderId}`;
+        
+        if (!uniquePaymentsMap.has(uniqueKey)) {
+            uniquePaymentsMap.set(uniqueKey, p);
+        }
+    }
+    
+    const uniquePayments = Array.from(uniquePaymentsMap.values());
+    console.log(`[payment-processor] Après déduplication: ${uniquePayments.length} paiements uniques`);
+    
+    const orderIds = [...new Set(uniquePayments.map(p => p.orderId || p.sessionId).filter(id => id != null))];
     console.log(`[payment-processor] orderIds distincts: ${orderIds.length} (${orderIds.join(', ')})`);
 
     // Compter les occurrences de chaque mode + enteredAmount
     const txCounts = {};
     
-    for (const p of payments) {
+    for (const p of uniquePayments) {
         const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
         const mode = p.paymentMode || 'N/A';
         const txKey = `${mode}_${enteredAmount.toFixed(3)}`;
@@ -639,7 +660,7 @@ function getPaymentDetails(payments) {
     // 🆕 CORRECTION: Pour les paiements divisés multi-commandes, utiliser orderIds (tableau) si disponible
     // Sinon, utiliser orderId individuel de chaque paiement
     const allOrderIds = new Set();
-    for (const p of payments) {
+    for (const p of uniquePayments) {
         // Si le paiement a un tableau orderIds, l'utiliser (paiement divisé multi-commandes)
         if (p.orderIds && Array.isArray(p.orderIds) && p.orderIds.length > 0) {
             p.orderIds.forEach(id => {
