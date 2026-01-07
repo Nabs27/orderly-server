@@ -1069,10 +1069,18 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 						isSplitPayment: act.isSplitPayment || false, // 🆕 Ajouter le flag
 						covers: covers,
 						server: server,
-						// 🆕 Ajouter les détails des paiements et le montant total encaissé
-						// ⚠️ RÈGLE .cursorrules 3.1: Utiliser payment-processor.js comme source de vérité unique
-						paymentDetails: act.isSplitPayment 
-							? paymentProcessor.getPaymentDetails(payments) // 🆕 Utiliser la fonction centralisée
+					// 🆕 Ajouter les détails des paiements et le montant total encaissé
+					// ⚠️ RÈGLE .cursorrules 3.1: Utiliser payment-processor.js comme source de vérité unique
+					paymentDetails: act.isSplitPayment 
+						? (() => {
+							// 🆕 CORRECTION: Ajouter orderIds aux paiements avant de les passer à getPaymentDetails
+							// pour que le calcul de nbOrders soit correct
+							const paymentsWithOrderIds = payments.map(p => ({
+								...p,
+								orderIds: orderIds.length > 0 ? orderIds : (p.orderId ? [p.orderId] : [])
+							}));
+							return paymentProcessor.getPaymentDetails(paymentsWithOrderIds); // 🆕 Utiliser la fonction centralisée
+						})()
 							: [{
 							mode: payments[0].paymentMode,
 							amount: payments[0].enteredAmount != null ? payments[0].enteredAmount : (payments[0].amount || 0),
