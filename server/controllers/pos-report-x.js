@@ -418,6 +418,14 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			dataStore.orders.length = 0;
 			dataStore.orders.push(...activeOrders);
 			console.log(`[report-x] ☁️ ${dataStore.orders.length} commandes actives rechargées depuis MongoDB (sur ${orders.length} total)`);
+
+			// 🆕 IMPORTANT : Recharger aussi les clients crédit, sinon le KPI crédit peut être faux sur cloud
+			// Les tickets montrent bien les paiements CREDIT car ils viennent de paymentHistory des commandes,
+			// mais le KPI "Crédit client" lit dataStore.clientCredits qui n'était pas rechargé depuis MongoDB
+			const clients = await dbManager.clientCredits.find({}).toArray();
+			dataStore.clientCredits.length = 0;
+			dataStore.clientCredits.push(...clients);
+			console.log(`[report-x] ☁️ ${dataStore.clientCredits.length} clients crédit rechargés depuis MongoDB`);
 		} catch (e) {
 			console.error('[report-x] ⚠️ Erreur rechargement données:', e.message);
 		}
