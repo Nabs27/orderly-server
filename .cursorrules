@@ -55,6 +55,21 @@ L'application Flutter gère les commandes, paiements, et rapports financiers en 
 - **Clé de déduplication** : `splitPaymentId + mode + enteredAmount` pour identifier les transactions uniques
 - **Problème résolu** : Pour N commandes, chaque transaction apparaît N fois dans `paymentHistory`. Le module commun déduplique correctement.
 
+### 3.2. ⚠️ INTERDICTION D'UTILISER TIMESTAMP POUR LA DÉDUPLICATION OU REGROUPEMENT
+**❌ NE JAMAIS utiliser le timestamp pour dédupliquer, regrouper ou identifier des transactions/entités.**
+- ❌ Le timestamp n'est **PAS fiable** pour la déduplication (plusieurs entités peuvent avoir le même timestamp)
+- ❌ Le timestamp n'est **PAS fiable** pour le regroupement (problèmes de précision, arrondis, collisions)
+- ✅ **TOUJOURS utiliser des identifiants dédiés** (`splitPaymentId`, `orderId`, `paymentId`, etc.) quand ils existent
+- ✅ **Clé de déduplication** : Utiliser des combinaisons d'identifiants (`splitPaymentId + mode + enteredAmount`, etc.)
+- **Règle absolue** : Si un identifiant dédié existe, l'utiliser. Ne jamais utiliser le timestamp comme alternative.
+- **Exception** : Le timestamp peut être utilisé uniquement comme fallback pour les anciennes données sans identifiant (rétrocompatibilité uniquement)
+- **Exemples de bonnes pratiques** :
+  - ✅ Paiements divisés : `splitPaymentId` pour regrouper
+  - ✅ Commandes : `orderId` pour identifier
+  - ✅ Transactions : `paymentId` ou `splitPaymentId + mode + enteredAmount` pour dédupliquer
+  - ❌ Ne jamais : `timestamp` pour regrouper des paiements divisés
+  - ❌ Ne jamais : `timestamp` pour dédupliquer des transactions
+
 ### 4. Interface tactile Windows
 - **Optimiser pour l'interaction tactile** : boutons suffisamment grands, espacement approprié
 - **Dialogs positionnés correctement** : utiliser `showGeneralDialog` avec `Align(topCenter)` pour éviter les conflits avec le clavier virtuel
@@ -65,6 +80,37 @@ L'application Flutter gère les commandes, paiements, et rapports financiers en 
 - Les données viennent du backend via **Socket.IO** (`HomeSocketService`, `OrderSocketService`)
 - **Ne jamais modifier directement** les données locales sans synchronisation backend
 - Toujours utiliser les services dédiés (`OrdersSyncService`, `PaymentService`) pour les opérations
+
+### 5.1. ⚠️ APPLICATIONS FLUTTER MULTIPLES - DASHBOARD ADMIN (CRITIQUE - PRIORITÉ ABSOLUE)
+**Il existe DEUX applications Flutter distinctes qui partagent le même code admin :**
+- **`flutter_les_emirs/`** : Application POS principale (Windows tactile) avec dashboard admin intégré
+- **`flutter_admin_app/`** : Application Admin Android indépendante avec son propre dashboard
+
+**⚠️ RÈGLE ABSOLUE - À RESPECTER EN PREMIER : Lors de toute modification du code admin (dashboard, historique, KPI, tickets, rapports), TOUJOURS modifier les DEUX applications :**
+- ✅ `flutter_les_emirs/lib/features/admin/` 
+- ✅ `flutter_admin_app/lib/features/admin/`
+
+**⚠️ NE JAMAIS modifier une seule application sans modifier l'autre !**
+
+**Fichiers à modifier en double (liste non exhaustive) :**
+- `pages/paid_history_page.dart` - Historique des encaissements
+- `widgets/paid_ticket_dialog.dart` - Dialog des tickets
+- `widgets/paid_history_dialog.dart` - Dialog de l'historique
+- `pages/admin_dashboard_page.dart` - Dashboard principal
+- `widgets/admin_dashboard_kpi_section.dart` - Section KPI
+- `widgets/enriched_history_section.dart` - Section historique
+- `pages/report_x_page.dart` - Page Rapport X
+- **Tous les autres fichiers dans `features/admin/`**
+
+**Workflow obligatoire :**
+1. ✅ Identifier le fichier à modifier dans `flutter_les_emirs/lib/features/admin/`
+2. ✅ Appliquer la modification dans `flutter_les_emirs/`
+3. ✅ **IMMÉDIATEMENT** appliquer la même modification dans `flutter_admin_app/lib/features/admin/`
+4. ✅ Vérifier que les modifications sont identiques dans les deux apps
+5. ✅ Tester les deux apps si possible
+6. ✅ Documenter si une différence est intentionnelle
+
+**⚠️ Cette règle doit être vérifiée AVANT chaque commit et AVANT chaque réponse à l'utilisateur.**
 
 ## 📋 Bonnes pratiques générales
 
@@ -127,15 +173,20 @@ La documentation est organisée de manière modulaire pour éviter que `STRUCTUR
 
 ## 🔍 Avant de modifier du code
 
+**⚠️ ÉTAPE 0 - PRIORITÉ ABSOLUE : Vérifier si la modification concerne le code admin**
+- Si OUI → **IMMÉDIATEMENT** vérifier la section 5.1 et modifier les DEUX applications
+- Ne jamais modifier une seule application admin sans modifier l'autre
+
 1. **Identifier le module concerné** : Home, Order, Payment, ou Admin (voir `STRUCTURE_POS.md`)
-2. **Vérifier les dépendances** : Quels services/utilisateurs sont impactés ?
-3. **⚠️ Vérifier la multiplicité des commandes** : Est-ce que le code gère correctement plusieurs commandes par table ?
+2. **⚠️ Si Admin : Vérifier les deux applications** (voir section 5.1)
+3. **Vérifier les dépendances** : Quels services/utilisateurs sont impactés ?
+4. **⚠️ Vérifier la multiplicité des commandes** : Est-ce que le code gère correctement plusieurs commandes par table ?
    - Les calculs agrègent-ils toutes les commandes de la table ?
    - La répartition proportionnelle est-elle correcte pour chaque commande ?
    - Les paiements multi-commandes sont-ils bien gérés ?
-4. **Tester les calculs** : Vérifier les totaux, pourboires, remises dans le X Report
-5. **Valider l'UI tactile** : S'assurer que les interactions sont fluides sur écran tactile
-6. **Documenter** : Mettre à jour la documentation si l'architecture change (voir section Documentation ci-dessous)
+5. **Tester les calculs** : Vérifier les totaux, pourboires, remises dans le X Report
+6. **Valider l'UI tactile** : S'assurer que les interactions sont fluides sur écran tactile
+7. **Documenter** : Mettre à jour la documentation si l'architecture change (voir section Documentation ci-dessous)
 
 ## 🚫 À éviter
 

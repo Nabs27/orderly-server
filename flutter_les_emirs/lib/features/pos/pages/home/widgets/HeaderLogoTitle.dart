@@ -6,31 +6,25 @@ class HeaderLogoTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Icon(Icons.point_of_sale, color: Color(0xFF3498DB), size: 32),
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Taille de police adaptative similaire à PaymentAppBar
+    final fontSize = (screenWidth * 0.08).clamp(36.0, 72.0);
+    
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Text(
+        userName.toUpperCase(),
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: fontSize,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 2.0,
+          height: 1.1,
         ),
-        const SizedBox(width: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'MACAISE APPLICATION D\'ENCAISSEMENT',
-              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
-            ),
-            Text(
-              'Caissier $userName',
-              style: const TextStyle(color: Color(0xFF3498DB), fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      ],
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
   }
 }

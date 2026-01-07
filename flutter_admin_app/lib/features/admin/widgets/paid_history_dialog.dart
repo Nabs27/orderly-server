@@ -475,14 +475,9 @@ class _ServiceDetailDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 🆕 Calculer le nombre de commandes distinctes dans ce service
-    final distinctOrderIds = payments.map((p) => p['orderId'] ?? p['sessionId']).toSet().where((id) => id != null).toSet();
-    final nbOrders = distinctOrderIds.length > 0 ? distinctOrderIds.length : 1;
-
     // Calculer le total du service
     // 🆕 Utiliser enteredAmount (montant encaissé) si disponible
-    // ⚠️ IMPORTANT: Diviser par nbOrders car chaque transaction est répétée pour chaque commande du service
-    final totalAmountRaw = payments.fold<double>(
+    final totalAmount = payments.fold<double>(
       0.0,
       (sum, p) {
         final enteredAmount = (p['enteredAmount'] as num?)?.toDouble();
@@ -490,7 +485,6 @@ class _ServiceDetailDialog extends StatelessWidget {
         return sum + (enteredAmount ?? amount);
       },
     );
-    final totalAmount = totalAmountRaw / nbOrders;
 
     // Créer le ticket principal (consolidé)
     final allItems = <Map<String, dynamic>>[];
@@ -625,45 +619,42 @@ class _ServiceDetailDialog extends StatelessWidget {
     
     // 🆕 Collecter les détails des paiements (modes et montants encaissés)
     final paymentDetails = <Map<String, dynamic>>[];
-    
-    // 🆕 Faire un comptage précis de chaque transaction
-    final Map<String, int> txCounts = {};
-    final Map<String, Map<String, dynamic>> txData = {};
-    
-    for (final payment in payments) {
-      final enteredAmount = (payment['enteredAmount'] as num?)?.toDouble() ?? 
-          ((payment['amount'] as num?)?.toDouble() ?? 0.0);
-      final paymentMode = payment['paymentMode']?.toString() ?? '';
-      
-      // 🆕 PRIORITÉ: transactionId pour les nouveaux paiements
-      // Fallback: _id (ID unique du record en DB) pour ne JAMAIS fusionner par erreur
-      final transactionId = payment['transactionId']?.toString();
-      final recordId = payment['_id']?.toString() ?? payment['id']?.toString();
-      final txKey = transactionId != null 
-          ? 'tx_$transactionId' 
-          : (recordId != null ? 'id_$recordId' : '${paymentMode}_${enteredAmount.toStringAsFixed(3)}_${payment['timestamp']}');
-          
-      if (!txCounts.containsKey(txKey)) {
-        txCounts[txKey] = 0;
-        txData[txKey] = {
+    if (isSplitPayment) {
+      // Pour paiement divisé : dédupliquer par mode + enteredAmount
+      final processedTxs = <String>{};
+      for (final payment in payments) {
+        final enteredAmount = (payment['enteredAmount'] as num?)?.toDouble() ?? 
+            ((payment['amount'] as num?)?.toDouble() ?? 0.0);
+        final paymentMode = payment['paymentMode']?.toString() ?? '';
+        final txKey = '${paymentMode}_${enteredAmount.toStringAsFixed(3)}';
+        if (!processedTxs.contains(txKey)) {
+          processedTxs.add(txKey);
+          final detail = {
+            'mode': paymentMode,
+            'amount': enteredAmount,
+          };
+          // 🆕 Ajouter le nom du client pour les paiements CREDIT
+          if (paymentMode == 'CREDIT' && payment['creditClientName'] != null) {
+            detail['clientName'] = payment['creditClientName'].toString();
+          }
+          paymentDetails.add(detail);
+        }
+      }
+    } else {
+      // Pour paiement normal : un paiement par entrée
+      for (final payment in payments) {
+        final enteredAmount = (payment['enteredAmount'] as num?)?.toDouble() ?? 
+            ((payment['amount'] as num?)?.toDouble() ?? 0.0);
+        final paymentMode = payment['paymentMode']?.toString() ?? '';
+        final detail = {
           'mode': paymentMode,
           'amount': enteredAmount,
-          'clientName': (paymentMode == 'CREDIT' && payment['creditClientName'] != null) 
-              ? payment['creditClientName'].toString() 
-              : null,
         };
-      }
-      txCounts[txKey] = txCounts[txKey]! + 1;
-    }
-    
-    // 🆕 Ajouter chaque transaction (count / nbOrders) fois
-    for (final entry in txCounts.entries) {
-      final key = entry.key;
-      final count = entry.value;
-      final numAppearances = (count / nbOrders).round();
-      
-      for (int i = 0; i < numAppearances; i++) {
-        paymentDetails.add(txData[key]!);
+        // 🆕 Ajouter le nom du client pour les paiements CREDIT
+        if (paymentMode == 'CREDIT' && payment['creditClientName'] != null) {
+          detail['clientName'] = payment['creditClientName'].toString();
+        }
+        paymentDetails.add(detail);
       }
     }
     

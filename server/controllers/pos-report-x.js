@@ -918,21 +918,41 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 
 			// 🆕 Calculer les totaux pourboire pour paiement divisé
 			// ⚠️ RÈGLE 2.1 .cursorrules: Dédupliquer les transactions (chaque transaction apparaît N fois par commande)
+			// ⚠️ RÈGLE 3.1 .cursorrules: Utiliser la même logique que payment-processor.js (source de vérité unique)
 			let totalEnteredAmount = 0;
 			let totalAllocatedAmount = 0;
 			const hasCashInPayment = payments.some(p => p.hasCashInPayment === true);
 
 			if (act.isSplitPayment) {
-				// Dédupliquer par mode + enteredAmount
-				const processedTxs = new Set();
+				// 🆕 CORRECTION: Utiliser la même logique que payment-processor.js
+				// Compter les occurrences de chaque mode + enteredAmount, puis diviser par nbOrders
+				const distinctOrderIds = new Set(payments.map(p => p.orderId || p.sessionId)).size;
+				const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
+				
+				// Compter les occurrences de chaque transaction
+				const txCounts = {};
 				for (const p of payments) {
 					const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
+					const allocatedAmount = p.allocatedAmount != null ? p.allocatedAmount : (p.amount || 0);
 					const txKey = `${p.paymentMode}_${enteredAmount.toFixed(3)}`;
-					if (!processedTxs.has(txKey)) {
-						processedTxs.add(txKey);
-						totalEnteredAmount += enteredAmount;
-						totalAllocatedAmount += p.allocatedAmount != null ? p.allocatedAmount : (p.amount || 0);
+					
+					if (!txCounts[txKey]) {
+						txCounts[txKey] = {
+							count: 0,
+							enteredAmount: enteredAmount,
+							allocatedSum: 0
+						};
 					}
+					txCounts[txKey].count++;
+					txCounts[txKey].allocatedSum += allocatedAmount;
+				}
+				
+				// Calculer les totaux en tenant compte du nombre réel de transactions
+				for (const txKey in txCounts) {
+					const tx = txCounts[txKey];
+					const numTransactions = Math.round(tx.count / nbOrders);
+					totalEnteredAmount += tx.enteredAmount * numTransactions;
+					totalAllocatedAmount += tx.allocatedSum; // allocatedSum est déjà la somme de toutes les commandes
 				}
 			} else {
 				totalEnteredAmount = payments.reduce((sum, p) => sum + (p.enteredAmount != null ? p.enteredAmount : (p.amount || 0)), 0);
@@ -992,18 +1012,33 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				// 🆕 Ticket encaissé (format ticket de caisse)
 				ticket: (() => {
 					// 🆕 Calculer le montant total encaissé (exclut CREDIT car c'est une dette différée)
+					// ⚠️ RÈGLE 3.1 .cursorrules: Utiliser la même logique que payment-processor.js
 					const totalAmountEncaisse = act.isSplitPayment ? (() => {
-						const processedTxs = new Set();
-						let total = 0;
+						// Utiliser la même logique que pour totalEnteredAmount (dédupliquer correctement)
+						const distinctOrderIds = new Set(payments.map(p => p.orderId || p.sessionId)).size;
+						const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
+						
+						const txCounts = {};
 						for (const p of payments) {
 							// Exclure CREDIT du montant encaissé
 							if (p.paymentMode === 'CREDIT') continue;
 							const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
 							const txKey = `${p.paymentMode}_${enteredAmount.toFixed(3)}`;
-							if (!processedTxs.has(txKey)) {
-								processedTxs.add(txKey);
-								total += enteredAmount;
+							
+							if (!txCounts[txKey]) {
+								txCounts[txKey] = {
+									count: 0,
+									enteredAmount: enteredAmount
+								};
 							}
+							txCounts[txKey].count++;
+						}
+						
+						let total = 0;
+						for (const txKey in txCounts) {
+							const tx = txCounts[txKey];
+							const numTransactions = Math.round(tx.count / nbOrders);
+							total += tx.enteredAmount * numTransactions;
 						}
 						return total;
 					})() : (payments[0].paymentMode === 'CREDIT' ? 0 : totalEnteredAmount);

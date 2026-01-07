@@ -888,6 +888,7 @@ class _PosOrderPageState extends State<PosOrderPage> {
       // 🐛 BUG FIX #3 : Réinitialiser la quantité en attente après ajout
       _pendingQuantity = 0;
     });
+    // 🆕 Le mode d'affichage sera réinitialisé automatiquement via didUpdateWidget
   }
 
   void _updateQuantity(int index, int newQty) {
@@ -908,6 +909,7 @@ class _PosOrderPageState extends State<PosOrderPage> {
         mainNote = result['mainNote'] as OrderNote;
         subNotes = (result['subNotes'] as List<OrderNote>?) ?? [];
       });
+      // 🆕 Le mode d'affichage sera réinitialisé automatiquement via didUpdateWidget
     }
   }
 
@@ -929,6 +931,7 @@ class _PosOrderPageState extends State<PosOrderPage> {
         subNotes = (result['subNotes'] as List<OrderNote>?) ?? [];
         selectedLineIndex = null;
       });
+      // 🆕 Le mode d'affichage sera réinitialisé automatiquement via didUpdateWidget
     }
   }
 

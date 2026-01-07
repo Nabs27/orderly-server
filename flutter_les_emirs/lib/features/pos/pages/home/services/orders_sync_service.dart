@@ -49,6 +49,15 @@ class OrdersSyncService {
       for (final tableNumber in ordersByTable.keys) {
         final tableOrders = ordersByTable[tableNumber]!;
         if (tableOrders.isNotEmpty) {
+          // 🆕 Trouver la commande la plus ancienne pour déterminer openedAt
+          final oldestOrder = tableOrders.reduce((a, b) {
+            final aCreatedAt = DateTime.tryParse(a['createdAt'] as String? ?? '');
+            final bCreatedAt = DateTime.tryParse(b['createdAt'] as String? ?? '');
+            if (aCreatedAt == null) return b;
+            if (bCreatedAt == null) return a;
+            return aCreatedAt.isBefore(bCreatedAt) ? a : b;
+          });
+          
           final firstOrder = tableOrders.first;
           final server = firstOrder['server'] as String? ?? 'MOHAMED';
           final existingTables = serverTables[server] ?? [];
@@ -58,13 +67,20 @@ class OrdersSyncService {
             final inferredCovers = (mainNoteData != null
                 ? (mainNoteData['covers'] as num?)
                 : firstOrder['covers'] as num?)?.toInt() ?? 1;
+            
+            // 🆕 Utiliser le createdAt de la commande la plus ancienne comme openedAt
+            final oldestCreatedAt = oldestOrder['createdAt'] as String?;
+            final openedAt = oldestCreatedAt != null 
+                ? DateTime.tryParse(oldestCreatedAt) ?? DateTime.now()
+                : DateTime.now();
+            
             final newTable = {
               'id': 'table_${server}_$tableNumber',
               'number': tableNumber,
               'status': 'occupee',
               'server': server,
               'covers': inferredCovers,
-              'openedAt': DateTime.now(),
+              'openedAt': openedAt,
               'orderId': null,
               'orderTotal': 0.0,
               'orderItems': [],
@@ -127,6 +143,37 @@ class OrdersSyncService {
             // Trouver la commande la plus récente par createdAt (pour orderId et covers)
             final latestOrder = tableOrders.reduce((a, b) =>
                 DateTime.parse(a['createdAt'] as String).isAfter(DateTime.parse(b['createdAt'] as String)) ? a : b);
+            
+            // 🆕 Trouver la commande la plus ancienne pour mettre à jour openedAt si nécessaire
+            final oldestOrder = tableOrders.reduce((a, b) {
+              final aCreatedAt = DateTime.tryParse(a['createdAt'] as String? ?? '');
+              final bCreatedAt = DateTime.tryParse(b['createdAt'] as String? ?? '');
+              if (aCreatedAt == null) return b;
+              if (bCreatedAt == null) return a;
+              return aCreatedAt.isBefore(bCreatedAt) ? a : b;
+            });
+            final oldestCreatedAt = oldestOrder['createdAt'] as String?;
+            final oldestDateTime = oldestCreatedAt != null 
+                ? DateTime.tryParse(oldestCreatedAt) 
+                : null;
+            
+            // 🆕 Mettre à jour openedAt si la table n'en a pas ou si elle est plus récente que la première commande
+            if (oldestDateTime != null) {
+              final currentOpenedAt = table['openedAt'];
+              DateTime? currentOpenedAtDateTime;
+              if (currentOpenedAt is String) {
+                currentOpenedAtDateTime = DateTime.tryParse(currentOpenedAt);
+              } else if (currentOpenedAt is DateTime) {
+                currentOpenedAtDateTime = currentOpenedAt;
+              }
+              
+              // Si openedAt n'existe pas ou est plus récent que la première commande, le mettre à jour
+              if (currentOpenedAtDateTime == null || currentOpenedAtDateTime.isAfter(oldestDateTime)) {
+                table['openedAt'] = oldestDateTime;
+                print('[SYNC] ⏰ openedAt mis à jour pour table $tableNumber: ${oldestDateTime.toIso8601String()}');
+              }
+            }
+            
             final latestMain = latestOrder['mainNote'] as Map<String, dynamic>?;
             final syncedCovers = (latestMain != null
                     ? (latestMain['covers'] as num?)

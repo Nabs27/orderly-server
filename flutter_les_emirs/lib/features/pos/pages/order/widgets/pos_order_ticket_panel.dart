@@ -21,6 +21,7 @@ class PosOrderTicketPanel extends StatefulWidget {
   final VoidCallback onShowAddNoteDialog;
   final List<Map<String, dynamic>> rawOrders;
   final int? pendingQuantity; // 🆕 Quantité en attente pour affichage
+  final VoidCallback? onActionPerformed; // 🆕 Callback appelé après chaque action pour réinitialiser le mode
 
   const PosOrderTicketPanel({
     super.key,
@@ -40,6 +41,7 @@ class PosOrderTicketPanel extends StatefulWidget {
     required this.onShowAddNoteDialog,
     required this.rawOrders,
     this.pendingQuantity, // 🆕 Quantité en attente (optionnelle)
+    this.onActionPerformed, // 🆕 Callback optionnel
   });
 
   @override
@@ -48,6 +50,69 @@ class PosOrderTicketPanel extends StatefulWidget {
 
 class _PosOrderTicketPanelState extends State<PosOrderTicketPanel> {
   OrderDisplayMode _displayMode = OrderDisplayMode.aggregated;
+  // 🆕 ScrollController pour le ListView des articles
+  final ScrollController _scrollController = ScrollController();
+  int? _lastPendingQuantity; // 🆕 Suivre la dernière quantité en attente pour détecter les changements
+
+  @override
+  void initState() {
+    super.initState();
+    _lastPendingQuantity = widget.pendingQuantity;
+    // 🆕 Si une quantité en attente existe déjà à l'initialisation, scroller vers le bas
+    if (widget.pendingQuantity != null && widget.pendingQuantity! > 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToBottomIfNeeded();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // 🆕 Méthode helper pour scroller vers le bas
+  void _scrollToBottomIfNeeded() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  @override
+  void didUpdateWidget(PosOrderTicketPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 🆕 Réinitialiser le mode d'affichage si une action a été effectuée
+    // On détecte cela en vérifiant si les items ont changé dans la MÊME note
+    if (oldWidget.activeNoteId == widget.activeNoteId) {
+      // Même note : vérifier si les items ou le total ont changé (ajout/modification/suppression)
+      if (oldWidget.activeNote.items.length != widget.activeNote.items.length ||
+          oldWidget.activeNote.total != widget.activeNote.total) {
+        if (_displayMode != OrderDisplayMode.aggregated) {
+          setState(() {
+            _displayMode = OrderDisplayMode.aggregated;
+          });
+        }
+      }
+    }
+    
+    // 🆕 Scroll automatique vers le bas si une quantité en attente apparaît ou change
+    if (widget.pendingQuantity != null && widget.pendingQuantity! > 0) {
+      if (_lastPendingQuantity == null || _lastPendingQuantity == 0 || _lastPendingQuantity != widget.pendingQuantity) {
+        _lastPendingQuantity = widget.pendingQuantity;
+        // Attendre que le widget soit construit avant de scroller
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToBottomIfNeeded();
+        });
+      }
+    } else {
+      _lastPendingQuantity = widget.pendingQuantity;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -309,6 +374,7 @@ class _PosOrderTicketPanelState extends State<PosOrderTicketPanel> {
     }
 
     return ListView.builder(
+      controller: _scrollController, // 🆕 Ajouter le ScrollController
       itemCount: widget.activeNote.items.length + (widget.pendingQuantity != null && widget.pendingQuantity! > 0 ? 1 : 0), // 🆕 Ajouter une ligne pour le badge
                       itemBuilder: (_, i) {
                         // 🆕 Afficher le badge de quantité en attente après la dernière ligne

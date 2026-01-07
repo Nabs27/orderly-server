@@ -242,11 +242,10 @@ class PaidTicketDialog extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      ...paymentDetails.asMap().entries.map((entry) {
-                        final detail = entry.value;
+                      ...paymentDetails.map((detail) {
                         final mode = detail['mode']?.toString() ?? 'N/A';
                         final amount = (detail['amount'] as num?)?.toDouble() ?? 0.0;
-                        final clientName = detail['clientName']?.toString();
+                        final clientName = detail['clientName']?.toString(); // 🆕 Nom du client pour CREDIT
                         final isCredit = mode == 'CREDIT';
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 2),
@@ -260,7 +259,7 @@ class PaidTicketDialog extends StatelessWidget {
                                       : _getPaymentModeLabel(mode),
                                   style: TextStyle(
                                     fontSize: 14,
-                                    fontStyle: isCredit ? FontStyle.italic : FontStyle.normal,
+                                    fontStyle: isCredit ? FontStyle.italic : FontStyle.normal, // 🆕 Italique pour CREDIT
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -270,47 +269,61 @@ class PaidTicketDialog extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: isCredit ? Colors.orange.shade700 : null,
-                                  fontStyle: isCredit ? FontStyle.italic : FontStyle.normal,
+                                  color: isCredit ? Colors.orange.shade700 : null, // 🆕 Couleur différente pour CREDIT
+                                  fontStyle: isCredit ? FontStyle.italic : FontStyle.normal, // 🆕 Italique pour CREDIT
                                 ),
                               ),
                             ],
                           ),
                         );
                       }).toList(),
-                      // 🆕 Calculer et afficher le montant CREDIT non encaissé (différence entre total et montant encaissé)
-                      if (total != null && totalAmount != null && total > totalAmount + 0.01) ...[
-                        const Divider(),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  'Reste à payer:',
+                      // 🆕 Calculer et afficher le montant CREDIT non encaissé
+                      // ⚠️ IMPORTANT: Ne l'afficher QUE s'il y a vraiment un CREDIT dans paymentDetails
+                      // La différence total - totalAmount peut être due au pourboire, pas forcément au crédit
+                      ...(() {
+                        final hasCredit = paymentDetails.any((d) => d['mode']?.toString() == 'CREDIT');
+                        if (!hasCredit) return <Widget>[];
+                        
+                        // Calculer le montant CREDIT total depuis paymentDetails
+                        final creditAmount = paymentDetails
+                            .where((d) => d['mode']?.toString() == 'CREDIT')
+                            .fold<double>(0.0, (sum, d) => sum + ((d['amount'] as num?)?.toDouble() ?? 0.0));
+                        
+                        if (creditAmount <= 0.01) return <Widget>[];
+                        
+                        return [
+                          const Divider(),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    'Crédit non encaissé:',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.orange.shade700,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Text(
+                                  _formatCurrency(creditAmount),
                                   style: TextStyle(
                                     fontSize: 14,
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.bold,
                                     color: Colors.orange.shade700,
                                     fontStyle: FontStyle.italic,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                              Text(
-                                _formatCurrency(total - totalAmount),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.orange.shade700,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ];
+                      })(),
                       if (totalAmount != null && totalAmount > 0.01) ...[
                         const Divider(),
                         Row(

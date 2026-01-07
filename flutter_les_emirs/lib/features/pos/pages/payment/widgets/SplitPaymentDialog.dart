@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:math';
 import 'CreditClientDialog.dart';
 import '../../../widgets/virtual_keyboard/virtual_keyboard.dart';
 
@@ -18,7 +17,7 @@ class PaymentTransaction {
     this.clientId,
     String? id,
     this.isConfirmed = false, // 🆕 Par défaut non confirmée
-  }) : id = id ?? 'tx_${DateTime.now().microsecondsSinceEpoch}_${Random().nextInt(99999)}';
+  }) : id = id ?? '${mode}_${DateTime.now().millisecondsSinceEpoch}_${(1000 + (999 * (0.5 - 0.5))).round()}';
 
   PaymentTransaction copyWith({
     String? mode,
@@ -101,7 +100,6 @@ class _SplitPaymentDialogState extends State<SplitPaymentDialog> {
           amount: adjustedAmount, // 🆕 Utiliser le montant ajusté
           clientId: tx['clientId'] as int?,
           isConfirmed: true, // 🆕 Les transactions existantes sont déjà confirmées
-          id: tx['transactionId']?.toString(), // 🆕 PRÉSERVER l'ID existant pour éviter les doublons au rafraîchissement
         );
         _transactions.add(transaction);
         // Initialiser les controllers pour les transactions existantes
@@ -369,7 +367,6 @@ class _SplitPaymentDialogState extends State<SplitPaymentDialog> {
         'mode': t.mode,
         'amount': t.amount,
         'clientId': t.clientId,
-        'transactionId': t.id, // 🆕 Envoyer l'ID unique de la transaction
       };
     }).toList();
 

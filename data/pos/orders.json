@@ -1,1 +1,122 @@
-[]
+[
+  {
+    "id": 9,
+    "tempId": null,
+    "table": "6",
+    "server": "ALI",
+    "covers": 4,
+    "notes": "",
+    "status": "nouvelle",
+    "source": "pos",
+    "serverConfirmed": true,
+    "consumptionConfirmed": false,
+    "createdAt": "2026-01-07T13:10:03.018Z",
+    "paymentHistory": [],
+    "orderHistory": [
+      {
+        "timestamp": "2026-01-07T13:10:03.018Z",
+        "action": "order_created",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10003,
+            "name": "Sprite",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 9001,
+            "name": "Eau Minérale (0,5L)",
+            "price": 4,
+            "quantity": 1
+          }
+        ],
+        "details": "Création commande initiale"
+      }
+    ],
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 4,
+      "items": [
+        {
+          "id": 10000,
+          "name": "Coca",
+          "price": 5,
+          "quantity": 1
+        },
+        {
+          "id": 10003,
+          "name": "Sprite",
+          "price": 5,
+          "quantity": 1
+        },
+        {
+          "id": 9001,
+          "name": "Eau Minérale (0,5L)",
+          "price": 4,
+          "quantity": 1
+        }
+      ],
+      "total": 14,
+      "paid": false
+    },
+    "subNotes": [],
+    "total": 14
+  },
+  {
+    "id": 10,
+    "tempId": null,
+    "table": "6",
+    "server": "ALI",
+    "covers": 4,
+    "notes": "",
+    "status": "nouvelle",
+    "source": "pos",
+    "serverConfirmed": true,
+    "consumptionConfirmed": false,
+    "createdAt": "2026-01-07T13:22:50.078Z",
+    "paymentHistory": [],
+    "orderHistory": [
+      {
+        "timestamp": "2026-01-07T13:22:50.078Z",
+        "action": "order_created",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "items": [
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 10
+          }
+        ],
+        "details": "Création commande initiale"
+      }
+    ],
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 4,
+      "items": [
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 10
+        }
+      ],
+      "total": 74,
+      "paid": false
+    },
+    "subNotes": [],
+    "total": 74
+  }
+]
