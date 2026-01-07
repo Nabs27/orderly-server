@@ -933,14 +933,32 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			const hasCashInPayment = payments.some(p => p.hasCashInPayment === true);
 
 			if (act.isSplitPayment) {
+				// 🆕 CORRECTION: Dédupliquer les paiements comme dans getPaymentDetails
+				// Car les paiements peuvent être dupliqués dans paymentHistory
+				const uniquePaymentsMap = new Map();
+				for (const p of payments) {
+					const splitId = p.splitPaymentId || 'single';
+					const mode = p.paymentMode || 'N/A';
+					const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
+					const orderId = p.orderId || p.sessionId;
+					// Clé unique : splitPaymentId + mode + enteredAmount + orderId
+					const uniqueKey = `${splitId}_${mode}_${enteredAmount.toFixed(3)}_${orderId}`;
+					
+					if (!uniquePaymentsMap.has(uniqueKey)) {
+						uniquePaymentsMap.set(uniqueKey, p);
+					}
+				}
+				
+				const uniquePayments = Array.from(uniquePaymentsMap.values());
+				
 				// 🆕 CORRECTION: Utiliser la même logique que payment-processor.js
 				// Compter les occurrences de chaque mode + enteredAmount, puis diviser par nbOrders
-				const distinctOrderIds = new Set(payments.map(p => p.orderId || p.sessionId)).size;
+				const distinctOrderIds = new Set(uniquePayments.map(p => p.orderId || p.sessionId)).size;
 				const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
 				
 				// Compter les occurrences de chaque transaction
 				const txCounts = {};
-				for (const p of payments) {
+				for (const p of uniquePayments) {
 					const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
 					const allocatedAmount = p.allocatedAmount != null ? p.allocatedAmount : (p.amount || 0);
 					const txKey = `${p.paymentMode}_${enteredAmount.toFixed(3)}`;
@@ -1023,14 +1041,33 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 					// 🆕 Calculer le montant total encaissé (exclut CREDIT car c'est une dette différée)
 					// ⚠️ RÈGLE 3.1 .cursorrules: Utiliser la même logique que payment-processor.js
 					const totalAmountEncaisse = act.isSplitPayment ? (() => {
-						// Utiliser la même logique que pour totalEnteredAmount (dédupliquer correctement)
-						const distinctOrderIds = new Set(payments.map(p => p.orderId || p.sessionId)).size;
-						const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
-						
-						const txCounts = {};
+						// 🆕 CORRECTION: Dédupliquer les paiements comme dans getPaymentDetails
+						// Car les paiements peuvent être dupliqués dans paymentHistory
+						const uniquePaymentsMap = new Map();
 						for (const p of payments) {
 							// Exclure CREDIT du montant encaissé
 							if (p.paymentMode === 'CREDIT') continue;
+							
+							const splitId = p.splitPaymentId || 'single';
+							const mode = p.paymentMode || 'N/A';
+							const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
+							const orderId = p.orderId || p.sessionId;
+							// Clé unique : splitPaymentId + mode + enteredAmount + orderId
+							const uniqueKey = `${splitId}_${mode}_${enteredAmount.toFixed(3)}_${orderId}`;
+							
+							if (!uniquePaymentsMap.has(uniqueKey)) {
+								uniquePaymentsMap.set(uniqueKey, p);
+							}
+						}
+						
+						const uniquePayments = Array.from(uniquePaymentsMap.values());
+						
+						// Utiliser la même logique que pour totalEnteredAmount (dédupliquer correctement)
+						const distinctOrderIds = new Set(uniquePayments.map(p => p.orderId || p.sessionId)).size;
+						const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
+						
+						const txCounts = {};
+						for (const p of uniquePayments) {
 							const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
 							const txKey = `${p.paymentMode}_${enteredAmount.toFixed(3)}`;
 							
