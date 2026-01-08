@@ -388,20 +388,22 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	const dbManager = require('../utils/dbManager');
 	if (dbManager.isCloud && dbManager.db) {
 		try {
-			// 🆕 Identifier le serveur pour éviter les mélanges de données
-			const serverIdentifier = process.env.SERVER_IDENTIFIER || process.env.SERVER_ID || 'cloud-pos';
+			// 🆕 RAPPORTS CLOUD : Voir TOUTES les données synchronisées (pas de filtre)
+			// Les données sont taggées à la sauvegarde pour éviter les conflits,
+			// mais en lecture pour rapports, le cloud voit tout
+			console.log(`[report-x] ☁️ Rechargement complet des données pour rapports cloud`);
 
-			// Recharger les commandes archivées de ce serveur uniquement
+			// Recharger TOUTES les commandes archivées synchronisées
 			const archived = await dbManager.archivedOrders.find({
-				serverIdentifier: serverIdentifier
+				serverIdentifier: { $exists: true } // Au moins taggées par un serveur
 			}).toArray();
 			dataStore.archivedOrders.length = 0;
 			dataStore.archivedOrders.push(...archived);
-			console.log(`[report-x] ☁️ ${dataStore.archivedOrders.length} commandes archivées rechargées depuis MongoDB [${serverIdentifier}]`);
+			console.log(`[report-x] ☁️ ${dataStore.archivedOrders.length} commandes archivées rechargées depuis MongoDB`);
 
-			// 🆕 Recharger aussi les commandes actives de ce serveur uniquement (pour les tables non payées)
+			// 🆕 Recharger TOUTES les commandes actives synchronisées (pour les tables non payées)
 			const orders = await dbManager.orders.find({
-				serverIdentifier: serverIdentifier
+				serverIdentifier: { $exists: true } // Au moins taggées par un serveur
 			}).toArray();
 
 			// 🆕 Filtrer uniquement les commandes avec status !== 'archived' (comme getAllOrders)

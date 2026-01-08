@@ -85,10 +85,20 @@ async function loadFromMongoDB() {
 		const serverIdentifier = process.env.SERVER_IDENTIFIER || process.env.SERVER_ID || 'local-pos';
 		console.log(`[persistence] 🔍 Chargement pour serveur: ${serverIdentifier}`);
 
-		// Charger UNIQUEMENT les commandes de ce serveur
-		const orders = await dbManager.orders.find({
-			serverIdentifier: serverIdentifier
-		}).toArray();
+		// Charger les commandes selon le type de serveur
+		let orders;
+		if (serverIdentifier.includes('cloud')) {
+			// Serveur cloud : charger TOUTES les données synchronisées
+			orders = await dbManager.orders.find({
+				serverIdentifier: { $exists: true }
+			}).toArray();
+			console.log(`[persistence] ☁️ Serveur cloud : ${orders.length} commandes chargées depuis tous les serveurs`);
+		} else {
+			// Serveur local : charger seulement ses propres données
+			orders = await dbManager.orders.find({
+				serverIdentifier: serverIdentifier
+			}).toArray();
+		}
 
 		// 🆕 SOLUTION : Identifier les commandes confirmées par leur originalTempId
 		const confirmedTempIds = new Set(
@@ -116,10 +126,19 @@ async function loadFromMongoDB() {
 		dataStore.orders.length = 0;
 		dataStore.orders.push(...filteredOrders);
 
-		// Charger les archives de ce serveur uniquement
-		const archived = await dbManager.archivedOrders.find({
-			serverIdentifier: serverIdentifier
-		}).toArray();
+		// Charger les archives selon le type de serveur
+		let archived;
+		if (serverIdentifier.includes('cloud')) {
+			// Serveur cloud : charger TOUTES les archives synchronisées
+			archived = await dbManager.archivedOrders.find({
+				serverIdentifier: { $exists: true }
+			}).toArray();
+		} else {
+			// Serveur local : charger seulement ses propres archives
+			archived = await dbManager.archivedOrders.find({
+				serverIdentifier: serverIdentifier
+			}).toArray();
+		}
 		dataStore.archivedOrders.length = 0;
 		dataStore.archivedOrders.push(...archived);
 		console.log(`[persistence] ☁️ ${dataStore.archivedOrders.length} commandes archivées chargées depuis MongoDB`);
