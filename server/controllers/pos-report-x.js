@@ -388,17 +388,21 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	const dbManager = require('../utils/dbManager');
 	if (dbManager.isCloud && dbManager.db) {
 		try {
-			// Recharger les commandes archivées
-			const archived = await dbManager.archivedOrders.find({}).toArray();
+			// 🆕 Identifier le serveur pour éviter les mélanges de données
+			const serverIdentifier = process.env.SERVER_IDENTIFIER || process.env.SERVER_ID || 'cloud-pos';
+
+			// Recharger les commandes archivées de ce serveur uniquement
+			const archived = await dbManager.archivedOrders.find({
+				serverIdentifier: serverIdentifier
+			}).toArray();
 			dataStore.archivedOrders.length = 0;
 			dataStore.archivedOrders.push(...archived);
-			console.log(`[report-x] ☁️ ${dataStore.archivedOrders.length} commandes archivées rechargées depuis MongoDB`);
+			console.log(`[report-x] ☁️ ${dataStore.archivedOrders.length} commandes archivées rechargées depuis MongoDB [${serverIdentifier}]`);
 
-			// 🆕 Recharger aussi les commandes actives (pour les tables non payées)
-			// ⚠️ IMPORTANT : Ne pas filtrer les commandes client confirmées ici
-			// Le filtrage des doublons est déjà fait dans loadFromMongoDB() au démarrage
-			// Ici, on veut juste recharger TOUTES les commandes actives pour avoir les données à jour
-			const orders = await dbManager.orders.find({}).toArray();
+			// 🆕 Recharger aussi les commandes actives de ce serveur uniquement (pour les tables non payées)
+			const orders = await dbManager.orders.find({
+				serverIdentifier: serverIdentifier
+			}).toArray();
 
 			// 🆕 Filtrer uniquement les commandes avec status !== 'archived' (comme getAllOrders)
 			// Les commandes archivées sont dans archivedOrders, pas dans orders
@@ -1428,11 +1432,11 @@ function groupPaymentsByMode(payments) {
 						let totalAllocated = 0;
 						for (const [key, transaction] of Object.entries(transactionsByKey)) {
 							totalEntered += transaction.enteredAmount;
-							// Le total allocatedAmount pour une transaction = somme de tous les allocatedAmounts / nbOrders
-							// Car chaque commande a sa part proportionnelle
-							const nbOrders = new Set(groupPayments.map(p => p.orderId)).size;
+							// 🆕 CORRECTION : Le total allocatedAmount pour une transaction = somme de tous les allocatedAmounts
+							// Chaque commande a déjà son allocatedAmount proportionnel, donc on additionne simplement
+							// Ne PAS diviser par nbOrders car cela donnerait un montant incorrect
 							const sumAllocated = transaction.allocatedAmounts.reduce((sum, a) => sum + a, 0);
-							totalAllocated += nbOrders > 0 ? sumAllocated / nbOrders : sumAllocated;
+							totalAllocated += sumAllocated;
 						}
 
 						const tipAmount = Math.max(0, totalEntered - totalAllocated);
