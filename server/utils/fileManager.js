@@ -444,6 +444,9 @@ async function saveToMongoDB() {
 		// Synchroniser les commandes archivées
 		if (dataStore.archivedOrders.length > 0) {
 			const archivedIds = [];
+			// 🆕 Identifier le serveur pour éviter les mélanges de données (même valeur que pour actives)
+			const serverIdentifier = process.env.SERVER_IDENTIFIER || process.env.SERVER_ID || 'local-pos';
+
 			for (const order of dataStore.archivedOrders) {
 				// 🆕 CORRECTION : Supprimer _id MongoDB et ajouter serverIdentifier
 				const orderToSave = {
