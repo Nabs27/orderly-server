@@ -88,15 +88,21 @@ async function loadFromMongoDB() {
 		// Charger les commandes selon le type de serveur
 		let orders;
 		if (serverIdentifier.includes('cloud')) {
-			// Serveur cloud : charger TOUTES les données synchronisées
+			// Serveur cloud : charger TOUTES les données synchronisées (avec ou sans serverIdentifier)
 			orders = await dbManager.orders.find({
-				serverIdentifier: { $exists: true }
+				$or: [
+					{ serverIdentifier: { $exists: true } }, // Nouvelles données taggées
+					{ serverIdentifier: { $exists: false } } // Anciennes données non taggées (commandes client)
+				]
 			}).toArray();
 			console.log(`[persistence] ☁️ Serveur cloud : ${orders.length} commandes chargées depuis tous les serveurs`);
 		} else {
-			// Serveur local : charger seulement ses propres données
+			// Serveur local : charger seulement ses propres données + commandes client traitées
 			orders = await dbManager.orders.find({
-				serverIdentifier: serverIdentifier
+				$or: [
+					{ serverIdentifier: serverIdentifier }, // Ses propres données
+					{ serverIdentifier: { $exists: false }, processedByPos: true } // Commandes client traitées
+				]
 			}).toArray();
 		}
 
@@ -129,14 +135,20 @@ async function loadFromMongoDB() {
 		// Charger les archives selon le type de serveur
 		let archived;
 		if (serverIdentifier.includes('cloud')) {
-			// Serveur cloud : charger TOUTES les archives synchronisées
+			// Serveur cloud : charger TOUTES les archives synchronisées (avec ou sans serverIdentifier)
 			archived = await dbManager.archivedOrders.find({
-				serverIdentifier: { $exists: true }
+				$or: [
+					{ serverIdentifier: { $exists: true } }, // Nouvelles données taggées
+					{ serverIdentifier: { $exists: false } } // Anciennes données non taggées
+				]
 			}).toArray();
 		} else {
 			// Serveur local : charger seulement ses propres archives
 			archived = await dbManager.archivedOrders.find({
-				serverIdentifier: serverIdentifier
+				$or: [
+					{ serverIdentifier: serverIdentifier }, // Ses propres archives
+					{ serverIdentifier: { $exists: false } } // Archives de commandes client traitées
+				]
 			}).toArray();
 		}
 		dataStore.archivedOrders.length = 0;

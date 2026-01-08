@@ -393,17 +393,23 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			// mais en lecture pour rapports, le cloud voit tout
 			console.log(`[report-x] ☁️ Rechargement complet des données pour rapports cloud`);
 
-			// Recharger TOUTES les commandes archivées synchronisées
+			// Recharger TOUTES les commandes synchronisées (avec ou sans serverIdentifier pour compatibilité)
 			const archived = await dbManager.archivedOrders.find({
-				serverIdentifier: { $exists: true } // Au moins taggées par un serveur
+				$or: [
+					{ serverIdentifier: { $exists: true } }, // Nouvelles données taggées
+					{ serverIdentifier: { $exists: false } } // Anciennes données non taggées (commandes client)
+				]
 			}).toArray();
 			dataStore.archivedOrders.length = 0;
 			dataStore.archivedOrders.push(...archived);
 			console.log(`[report-x] ☁️ ${dataStore.archivedOrders.length} commandes archivées rechargées depuis MongoDB`);
 
-			// 🆕 Recharger TOUTES les commandes actives synchronisées (pour les tables non payées)
+			// 🆕 Recharger TOUTES les commandes actives synchronisées (avec ou sans serverIdentifier)
 			const orders = await dbManager.orders.find({
-				serverIdentifier: { $exists: true } // Au moins taggées par un serveur
+				$or: [
+					{ serverIdentifier: { $exists: true } }, // Nouvelles données taggées
+					{ serverIdentifier: { $exists: false } } // Anciennes données non taggées (commandes client)
+				]
 			}).toArray();
 
 			// 🆕 Filtrer uniquement les commandes avec status !== 'archived' (comme getAllOrders)
