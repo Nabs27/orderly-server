@@ -757,7 +757,6 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			if (payment.isSplitPayment && payment.splitPaymentId) {
 				// Utiliser directement le splitPaymentId (format: split_TIMESTAMP) pour regrouper tous les modes
 				timestampKey = `${tableKey}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount || false}`;
-				console.log(`[DEBUG] Split payment detected: table=${tableKey}, splitPaymentId=${payment.splitPaymentId}, mode=${payment.paymentMode}, amount=${payment.enteredAmount || payment.amount}`);
 			} else {
 				// Paiement normal : regroupement par timestamp + mode + remise
 				timestampKey = `${tableKey}_${roundedTimestamp}_${payment.paymentMode}_${payment.discount || 0}_${payment.isPercentDiscount || false}`;
@@ -785,11 +784,6 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			};
 		}
 		paymentsByAct[timestampKey].payments.push(payment);
-	}
-
-	console.log(`[DEBUG] Total acts created: ${Object.keys(paymentsByAct).length}`);
-	for (const [key, act] of Object.entries(paymentsByAct)) {
-		console.log(`[DEBUG] Act ${key}: ${act.payments.length} payments, isSplit=${act.isSplitPayment}, splitId=${act.splitPaymentId}`);
 	}
 
 	// 🆕 Créer les paiements finaux (regroupés par acte)
@@ -1090,7 +1084,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 						// ⚠️ RÈGLE .cursorrules 3.1: Utiliser payment-processor.js comme source de vérité unique
 						paymentDetails: payments
 							.filter(p => p.paymentMode !== 'CREDIT' || p.hasCashInPayment) // Exclure CREDIT pur (non comptabilisé)
-							.map((p, index) => ({
+							.map((p) => ({
 								mode: p.paymentMode || 'INCONNU',
 								amount: p.enteredAmount != null ? p.enteredAmount : (p.amount || 0),
 								...(p.paymentMode === 'CREDIT' && p.creditClientName ? { clientName: p.creditClientName } : {})
