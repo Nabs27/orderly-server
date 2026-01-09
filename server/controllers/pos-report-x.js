@@ -480,13 +480,19 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	// 🆕 Pour calculateTotals, on combine les deux listes de commandes
 	const allOrdersForTotals = [...filteredArchivedOrders, ...filteredActiveOrders];
 
-	// 🆕 NOTE: totals et itemsByCategory seront créés APRÈS la création de paidPayments
-	// pour éviter de compter les articles plusieurs fois pour les paiements divisés
-	// ⚠️ CORRECTION: Utiliser le module commun payment-processor pour la déduplication
-	// Cela garantit que History, KPI et X Report utilisent la même logique
-	// ⚠️ IMPORTANT: NE PAS utiliser groupPaymentsByTimestamp() car cela viole .cursorrules 3.2
-	// (interdiction d'utiliser timestamp pour déduplication/regroupement)
-	const paymentsByMode = paymentProcessor.calculatePaymentsByMode(allPayments);
+	// 🆕 COPIER EXACTEMENT LA LOGIQUE DE L'HISTORIQUE pour cohérence parfaite
+	// ⚠️ EXCEPTION .cursorrules: Ici c'est pour l'AFFICHAGE des tickets détaillés, pas la déduplication comptable
+	const historyProcessor = require('../utils/history-processor');
+	const simulatedSessions = [
+		...filteredArchivedOrders.map(order => ({ ...order, paymentHistory: order.paymentHistory || [] })),
+		...filteredActiveOrders.map(order => ({ ...order, paymentHistory: order.paymentHistory || [] }))
+	];
+
+	// Utiliser EXACTEMENT la même fonction que l'historique pour grouper les paiements
+	const groupedPayments = historyProcessor.groupPaymentsByTimestamp(simulatedSessions);
+
+	// Calculer les modes de paiement depuis les paiements groupés (cohérent avec historique)
+	const paymentsByMode = paymentProcessor.calculatePaymentsByMode(groupedPayments);
 	// totals sera calculé après paidPayments
 	const unpaidTables = calculateUnpaidTables(server);
 
