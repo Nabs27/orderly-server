@@ -556,32 +556,35 @@ class _ServiceDetailPage extends StatelessWidget {
         },
       );
       
-      // 🆕 ÉTAPE 2: Utiliser DIRECTEMENT les paymentDetails du backend (maintenant dédupliqués)
+      // 🆕 ÉTAPE 2: Collecter TOUS les paymentDetails de tous les paiements
       final consolidatedPaymentDetails = <Map<String, dynamic>>[];
 
-      // 🆕 LOGIC SIMPLIFIÉE : Le backend fait maintenant la déduplication correcte
-      // On prend simplement les paymentDetails du premier paiement (ils sont maintenant corrects)
-      if (payments.isNotEmpty) {
-        final firstPayment = payments.first;
-        if (firstPayment['ticket'] != null && firstPayment['ticket']['paymentDetails'] != null) {
+      // Pour chaque paiement dans la liste, récupérer ses paymentDetails
+      for (final payment in payments) {
+        if (payment['ticket'] != null && payment['ticket']['paymentDetails'] != null) {
           // Pour les paiements avec ticket (divisés ou non), utiliser paymentDetails du ticket
-          final ticket = firstPayment['ticket'] as Map<String, dynamic>;
+          final ticket = payment['ticket'] as Map<String, dynamic>;
           final ticketPaymentDetails = (ticket['paymentDetails'] as List?)?.cast<Map<String, dynamic>>() ?? [];
           consolidatedPaymentDetails.addAll(ticketPaymentDetails.map((detail) => Map<String, dynamic>.from(detail)));
         } else {
           // Pour les paiements simples sans ticket, construire depuis les données du paiement
-          final enteredAmount = (firstPayment['enteredAmount'] as num?)?.toDouble() ??
-              ((firstPayment['amount'] as num?)?.toDouble() ?? 0.0);
-          final paymentMode = firstPayment['paymentMode']?.toString() ?? '';
+          final enteredAmount = (payment['enteredAmount'] as num?)?.toDouble() ??
+              ((payment['amount'] as num?)?.toDouble() ?? 0.0);
+          final paymentMode = payment['paymentMode']?.toString() ?? '';
           final detail = {
             'mode': paymentMode,
             'amount': enteredAmount,
           };
-          if (paymentMode == 'CREDIT' && firstPayment['creditClientName'] != null) {
-            detail['clientName'] = firstPayment['creditClientName'].toString();
+          if (paymentMode == 'CREDIT' && payment['creditClientName'] != null) {
+            detail['clientName'] = payment['creditClientName'].toString();
           }
           consolidatedPaymentDetails.add(detail);
         }
+      }
+
+      // 🆕 DEBUG: Afficher les paymentDetails collectés pour diagnostiquer
+      if (tableNumber == '1') {
+        print('🔍 [DEBUG] Table 1 - PaymentDetails collectés: $consolidatedPaymentDetails');
       }
       
       // Calculer le taux de remise global
