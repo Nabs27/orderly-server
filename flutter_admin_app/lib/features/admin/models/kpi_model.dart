@@ -88,61 +88,29 @@ class KpiModel {
   });
 
   factory KpiModel.fromReportXData(Map<String, dynamic> reportData) {
-    // 🆕 CORRECTION WEB : Convertir tous les objets JSON avec Map.from() pour Flutter Web
-    // Sur Web, les objets JSON sont des _JsonMap qui ne peuvent pas être castés directement
+    final summary = (reportData['summary'] as Map<String, dynamic>?) ?? {};
     
-    // Convertir summary
-    dynamic summaryRaw = reportData['summary'];
-    Map<String, dynamic> summary = {};
-    if (summaryRaw != null && summaryRaw is Map) {
-      summary = Map<String, dynamic>.from(summaryRaw);
-    }
-    
-    // Convertir itemsByCategory
+    // 🆕 Vérifier et convertir itemsByCategory en Map si nécessaire
     dynamic itemsByCategoryRaw = reportData['itemsByCategory'];
     Map<String, dynamic> itemsByCategory = {};
     if (itemsByCategoryRaw != null) {
       if (itemsByCategoryRaw is Map) {
         itemsByCategory = Map<String, dynamic>.from(itemsByCategoryRaw);
       } else if (itemsByCategoryRaw is List) {
+        // Si c'est une liste, convertir en Map vide (structure incorrecte)
+        print('[KPI] ⚠️ itemsByCategory est une List au lieu d\'un Map, conversion en Map vide');
+        itemsByCategory = {};
+      } else {
+        print('[KPI] ⚠️ itemsByCategory type inattendu: ${itemsByCategoryRaw.runtimeType}');
         itemsByCategory = {};
       }
     }
     
-    // Convertir paymentsByMode
-    dynamic paymentsByModeRaw = reportData['paymentsByMode'];
-    Map<String, dynamic> paymentsByMode = {};
-    if (paymentsByModeRaw != null && paymentsByModeRaw is Map) {
-      paymentsByMode = Map<String, dynamic>.from(paymentsByModeRaw);
-    }
-    
-    // Convertir unpaidTables
-    dynamic unpaidTablesRaw = reportData['unpaidTables'];
-    Map<String, dynamic> unpaidTables = {};
-    if (unpaidTablesRaw != null && unpaidTablesRaw is Map) {
-      unpaidTables = Map<String, dynamic>.from(unpaidTablesRaw);
-    }
-    
-    // Convertir creditSummary
-    dynamic creditSummaryRaw = reportData['creditSummary'];
-    Map<String, dynamic> creditSummary = {};
-    if (creditSummaryRaw != null && creditSummaryRaw is Map) {
-      creditSummary = Map<String, dynamic>.from(creditSummaryRaw);
-    }
-    
-    // Convertir cancellations
-    dynamic cancellationsRaw = reportData['cancellations'];
-    Map<String, dynamic> cancellations = {};
-    if (cancellationsRaw != null && cancellationsRaw is Map) {
-      cancellations = Map<String, dynamic>.from(cancellationsRaw);
-    }
-    
-    // Convertir cancellationsSummary
-    dynamic cancellationsSummaryRaw = cancellations['summary'];
-    Map<String, dynamic> cancellationsSummary = {};
-    if (cancellationsSummaryRaw != null && cancellationsSummaryRaw is Map) {
-      cancellationsSummary = Map<String, dynamic>.from(cancellationsSummaryRaw);
-    }
+    final paymentsByMode = (reportData['paymentsByMode'] as Map<String, dynamic>?) ?? {};
+    final unpaidTables = (reportData['unpaidTables'] as Map<String, dynamic>?) ?? {};
+    final creditSummary = (reportData['creditSummary'] as Map<String, dynamic>?) ?? {};
+    final cancellations = (reportData['cancellations'] as Map<String, dynamic>?) ?? {};
+    final cancellationsSummary = (cancellations['summary'] as Map<String, dynamic>?) ?? {};
 
     // Calcul du top produit
     double topItemValue = 0.0;
@@ -225,16 +193,9 @@ class KpiModel {
     // Données crédit client
     // 🆕 Utiliser totalDebitsInPeriod (dettes créées dans la période) au lieu de totalBalance (solde qui peut être négatif)
     // Le KPI doit afficher les dettes créées aujourd'hui, pas le solde (qui peut être négatif si des remboursements dépassent les nouvelles dettes)
-    // 🆕 DEBUG: Log pour vérifier ce qui est reçu du backend
-    print('[KPI Android] creditSummary keys: ${creditSummary.keys.toList()}');
-    print('[KPI Android] totalDebitsInPeriod: ${creditSummary['totalDebitsInPeriod']}');
-    print('[KPI Android] totalAmount: ${creditSummary['totalAmount']}');
-    print('[KPI Android] totalDebit: ${creditSummary['totalDebit']}');
-    print('[KPI Android] totalCredit: ${creditSummary['totalCredit']}');
     final creditBalance = (creditSummary['totalDebitsInPeriod'] as num?)?.toDouble() 
         ?? (creditSummary['totalAmount'] as num?)?.toDouble() 
         ?? 0.0;
-    print('[KPI Android] creditBalance calculé: $creditBalance');
     final totalDebit = (creditSummary['totalDebit'] as num?)?.toDouble() ?? 0.0;
     final totalCredit = (creditSummary['totalCredit'] as num?)?.toDouble() ?? 0.0;
     final clients = (creditSummary['clients'] as List<dynamic>?) ?? [];

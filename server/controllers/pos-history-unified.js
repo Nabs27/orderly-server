@@ -16,14 +16,55 @@ async function getUnifiedHistoryByServer(req, res) {
 			return res.status(400).json({ error: 'Paramètre server requis' });
 		}
 		
-		// 🆕 Filtrer les commandes archivées ET actives par serveur
-		const archivedOrders = dataStore.archivedOrders.filter(o => {
-			return o && o.server && String(o.server).toUpperCase() === String(server).toUpperCase();
-		});
+		// 🆕 CORRECTION CLOUD : Recharger les données depuis MongoDB si serveur cloud
+		// Le serveur cloud charge les données uniquement au démarrage, donc il faut recharger
+		// les données à chaque requête pour avoir les données à jour
+		const dbManager = require('../utils/dbManager');
+		if (dbManager.isCloud && dbManager.db) {
+			try {
+				// Recharger les commandes archivées
+				const archived = await dbManager.archivedOrders.find({}).toArray();
+				dataStore.archivedOrders.length = 0;
+				dataStore.archivedOrders.push(...archived);
+				console.log(`[history-unified] ☁️ ${dataStore.archivedOrders.length} commandes archivées rechargées depuis MongoDB`);
+
+				// Recharger les commandes actives
+				const orders = await dbManager.orders.find({}).toArray();
+				const activeOrders = orders.filter(o => {
+					// Exclure les commandes archivées
+					if (o.status === 'archived') {
+						return false;
+					}
+					// Exclure les commandes client en attente
+					if (o.waitingForPos === true && (!o.id || o.id === null) && o.source === 'client') {
+						return false;
+					}
+					return true;
+				});
+
+				dataStore.orders.length = 0;
+				dataStore.orders.push(...activeOrders);
+				console.log(`[history-unified] ☁️ ${dataStore.orders.length} commandes actives rechargées depuis MongoDB`);
+			} catch (e) {
+				console.error('[history-unified] ⚠️ Erreur rechargement données:', e.message);
+			}
+		}
 		
-		const activeOrders = dataStore.orders.filter(o => {
-			return o && o.server && String(o.server).toUpperCase() === String(server).toUpperCase();
-		});
+		// 🆕 CORRECTION : Gérer le cas 'ALL' pour retourner toutes les commandes
+		const isAllServers = server === 'ALL' || server === 'TOUS';
+		
+		// 🆕 Filtrer les commandes archivées ET actives par serveur (ou toutes si 'ALL')
+		const archivedOrders = isAllServers 
+			? dataStore.archivedOrders.filter(o => o != null)
+			: dataStore.archivedOrders.filter(o => {
+				return o && o.server && String(o.server).toUpperCase() === String(server).toUpperCase();
+			});
+		
+		const activeOrders = isAllServers
+			? dataStore.orders.filter(o => o != null)
+			: dataStore.orders.filter(o => {
+				return o && o.server && String(o.server).toUpperCase() === String(server).toUpperCase();
+			});
 		
 		// 🆕 Combiner les deux listes (archivées + actives)
 		// Pour les actives, on ne garde que celles qui ont au moins un paiement

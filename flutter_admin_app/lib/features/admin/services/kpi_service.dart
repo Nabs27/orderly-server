@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import '../../../core/api_client.dart';
-import '../../../core/auth_service.dart';
 import '../models/kpi_model.dart';
 
 /// Service pour récupérer et gérer les KPI du dashboard admin
@@ -32,29 +31,28 @@ class KpiService {
       queryParams['server'] = server;
     }
 
-    // 🆕 DEBUG: Log des paramètres envoyés
-    print('[KPI Android Service] Paramètres envoyés:');
-    print('  - dateFrom: ${start.toIso8601String()}');
-    print('  - dateTo: ${end.toIso8601String()}');
-    print('  - period: ${period ?? 'ALL'}');
-    print('  - server: ${server ?? 'null'}');
-
     try {
-      // Le token sera ajouté automatiquement par l'interceptor
       final response = await ApiClient.dio.get(
         '/api/admin/report-x',
         queryParameters: queryParams,
+        options: Options(
+          headers: {'x-admin-token': 'admin123'},
+        ),
       );
 
-      // 🆕 CORRECTION WEB : Convertir response.data avec Map.from() pour Flutter Web
-      dynamic responseDataRaw = response.data;
-      Map<String, dynamic> reportData;
-      
-      if (responseDataRaw is Map) {
-        reportData = Map<String, dynamic>.from(responseDataRaw);
-      } else {
+      // 🆕 Vérifier que response.data est bien un Map
+      if (response.data is! Map) {
+        print('[KPI Service] ⚠️ response.data n\'est pas un Map: ${response.data.runtimeType}');
+        print('[KPI Service] response.data: ${response.data}');
         throw Exception('Format de réponse invalide: response.data n\'est pas un Map');
       }
+      
+      final reportData = response.data as Map<String, dynamic>;
+      
+      // 🆕 Log pour debug
+      print('[KPI Service] ✅ Données reçues, clés: ${reportData.keys.toList()}');
+      print('[KPI Service] itemsByCategory type: ${reportData['itemsByCategory']?.runtimeType}');
+      print('[KPI Service] paymentsByMode type: ${reportData['paymentsByMode']?.runtimeType}');
       
       return KpiModel.fromReportXData(reportData);
     } catch (e, stackTrace) {

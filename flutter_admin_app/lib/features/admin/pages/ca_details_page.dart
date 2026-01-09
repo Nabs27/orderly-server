@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import '../../../core/api_client.dart';
-import '../../../core/auth_service.dart';
 
 /// Page plein écran affichant les détails du Chiffre d'Affaires
 class CaDetailsPage extends StatefulWidget {
@@ -42,12 +41,6 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
       final start = DateTime(now.year, now.month, now.day);
       final end = start.add(const Duration(days: 1));
 
-      // Récupérer le token depuis AuthService
-      final token = await AuthService.getToken();
-      if (token == null) {
-        throw Exception('Non authentifié. Veuillez vous reconnecter.');
-      }
-      
       final response = await ApiClient.dio.get(
         '/api/admin/report-x',
         queryParameters: {
@@ -56,7 +49,7 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
           'period': 'ALL',
         },
         options: Options(
-          headers: {'x-admin-token': token},
+          headers: {'x-admin-token': 'admin123'},
         ),
       );
 
@@ -289,15 +282,40 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
   }
 
   Widget _buildServerBreakdown() {
+    // 🆕 CORRECTION : Utiliser paidPayments comme source principale (plus fiable que discountDetails uniquement)
+    // discountDetails peut être vide même si des paiements existent
+    final paidPayments = (_reportData!['paidPayments'] as List<dynamic>?) ?? [];
     final discountDetails = (_reportData!['discountDetails'] as List<dynamic>?) ?? [];
     final serverActivity = <String, double>{};
     
-    double totalWithDiscount = 0.0;
-    for (final discount in discountDetails) {
-      final server = (discount['server'] as String?) ?? 'unknown';
-      final amount = (discount['amount'] as num?)?.toDouble() ?? 0.0;
-      serverActivity[server] = (serverActivity[server] ?? 0.0) + amount;
-      totalWithDiscount += amount;
+    // 🆕 Méthode 1 : Collecter depuis paidPayments (source de vérité principale)
+    for (final payment in paidPayments) {
+      final server = (payment['server'] as String?)?.trim().toUpperCase() ?? 'UNKNOWN';
+      if (server.isEmpty || server == 'UNKNOWN') continue;
+      
+      // Utiliser totalAmount du ticket (montant réellement encaissé) si disponible, sinon amount
+      final ticket = payment['ticket'] as Map<String, dynamic>?;
+      final totalAmount = (ticket?['totalAmount'] as num?)?.toDouble();
+      final amount = totalAmount ?? (payment['amount'] as num?)?.toDouble() ?? 0.0;
+      
+      // Exclure CREDIT du calcul (c'est une dette différée, pas un encaissement réel)
+      if ((payment['paymentMode'] as String?) == 'CREDIT') continue;
+      
+      if (amount > 0.01) {
+        serverActivity[server] = (serverActivity[server] ?? 0.0) + amount;
+      }
+    }
+    
+    // 🆕 Méthode 2 : Compléter avec discountDetails si serverActivity est vide (fallback)
+    if (serverActivity.isEmpty && discountDetails.isNotEmpty) {
+      for (final discount in discountDetails) {
+        final server = ((discount['server'] as String?) ?? 'unknown').trim().toUpperCase();
+        if (server.isEmpty || server == 'UNKNOWN') continue;
+        final amount = (discount['amount'] as num?)?.toDouble() ?? 0.0;
+        if (amount > 0.01) {
+          serverActivity[server] = (serverActivity[server] ?? 0.0) + amount;
+        }
+      }
     }
 
     if (serverActivity.isEmpty) {
@@ -323,32 +341,16 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
         ),
       );
     }
-    
-    final paymentsByMode = (_reportData!['paymentsByMode'] as Map<String, dynamic>?) ?? {};
-    double totalPayments = 0.0;
-    paymentsByMode.forEach((mode, data) {
-      if (mode != 'NON PAYÉ') {
-        final total = (data['total'] as num?)?.toDouble() ?? 0.0;
-        totalPayments += total;
-      }
-    });
-    
-    if (totalPayments > totalWithDiscount && serverActivity.isNotEmpty && totalWithDiscount > 0) {
-      final remaining = totalPayments - totalWithDiscount;
-      final totalWithDiscountSum = serverActivity.values.fold(0.0, (sum, val) => sum + val);
-      if (totalWithDiscountSum > 0) {
-        final updatedActivity = <String, double>{};
-        serverActivity.forEach((server, amount) {
-          final proportion = amount / totalWithDiscountSum;
-          updatedActivity[server] = amount + (remaining * proportion);
-        });
-        serverActivity.clear();
-        serverActivity.addAll(updatedActivity);
-      }
-    }
 
+    // 🆕 CORRECTION : Trier par ordre alphabétique puis par montant décroissant pour un ordre cohérent
     final sortedServers = serverActivity.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
+      ..sort((a, b) {
+        // D'abord trier par montant décroissant
+        final amountComparison = b.value.compareTo(a.value);
+        if (amountComparison != 0) return amountComparison;
+        // En cas d'égalité, trier alphabétiquement par nom de serveur
+        return a.key.compareTo(b.key);
+      });
 
     return Card(
       child: Padding(
@@ -557,8 +559,14 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
                     // 🆕 Afficher les détails des paiements divisés si disponibles
                     if (hasSplitDetails) ...[
                       const SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 28),
+                      Container(
+                        margin: const EdgeInsets.only(left: 28, top: 4),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey.shade300, width: 1),
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: splitDetails.asMap().entries.map((detailEntry) {
@@ -574,10 +582,12 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
                                 : '${mode} #${index + 1}';
                             
                             return Padding(
-                              padding: const EdgeInsets.only(bottom: 4),
+                              padding: EdgeInsets.only(bottom: index < splitDetails.length - 1 ? 6 : 0),
                               child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Flexible(
+                                  Expanded(
                                     child: Text(
                                       displayLabel,
                                       style: TextStyle(
@@ -585,10 +595,11 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
                                         color: Colors.grey.shade700,
                                         fontWeight: FontWeight.w500,
                                       ),
+                                      maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 12),
                                   Text(
                                     _formatCurrency(detailAmount),
                                     style: TextStyle(
@@ -596,6 +607,7 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
                                       color: color,
                                       fontWeight: FontWeight.w600,
                                     ),
+                                    textAlign: TextAlign.right,
                                   ),
                                 ],
                               ),

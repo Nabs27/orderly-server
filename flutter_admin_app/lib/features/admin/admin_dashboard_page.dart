@@ -7,6 +7,7 @@ import 'admin_credit_page.dart';
 import 'admin_menu_editor_page.dart';
 import 'admin_servers_page.dart';
 import 'report_x_page.dart';
+import 'pages/diagnostic_page.dart';
 import 'widgets/admin_dashboard_kpi_section.dart';
 
 class AdminDashboardPage extends StatefulWidget {
@@ -247,42 +248,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     } else {
       content = CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8), // Plus d'espace en haut
-              child: Row(
-                children: [
-                  Container(
-                    width: 12, // Plus grand
-                    height: 12, // Plus grand
-                    decoration: const BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.green,
-                          blurRadius: 6,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'SERVICE EN DIRECT',
-                    style: TextStyle(
-                      color: Colors.green,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 15, // Plus grand
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
           SliverToBoxAdapter(child: AdminDashboardKpiSection(key: _kpiKey)),
-          // Section Restaurants supprimée pour ne laisser que les KPIs
+          SliverToBoxAdapter(child: _buildSectionTitle('Restaurants actifs')),
+          if (restaurants.isEmpty)
+            SliverToBoxAdapter(child: _buildEmptyState())
+          else
+            _buildRestaurantsGrid(isDesktop, isTablet),
           const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
         ],
       );
@@ -478,6 +449,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         subtitle: 'Suivi réglementaire',
         action: _openReportXPage,
       ),
+      _AdminShortcut(
+        icon: Icons.bug_report,
+        title: 'Diagnostic données',
+        subtitle: 'Comparer les sources de données',
+        action: _openDiagnosticPage,
+      ),
     ];
   }
 
@@ -593,6 +570,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Future<void> _openReportXPage() async {
     await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ReportXPage()));
   }
+
+  Future<void> _openDiagnosticPage() async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DiagnosticPage()));
+  }
 }
 
 class _ShortcutCard extends StatelessWidget {
@@ -682,7 +663,7 @@ class _RestaurantCard extends StatelessWidget {
                   ],
                 ),
               ),
-              // Bouton "Open" supprimé ici
+              IconButton(tooltip: 'Ouvrir l\'éditeur', onPressed: onEdit, icon: const Icon(Icons.open_in_new)),
             ],
           ),
           const SizedBox(height: 16),
@@ -697,7 +678,8 @@ class _RestaurantCard extends StatelessWidget {
           const Spacer(),
           Row(
             children: [
-              // Bouton "Editer" supprimé ici
+              Expanded(child: OutlinedButton.icon(onPressed: onEdit, icon: const Icon(Icons.edit), label: const Text('Éditer'))),
+              const SizedBox(width: 8),
               Expanded(child: OutlinedButton.icon(onPressed: onHidden, icon: const Icon(Icons.visibility_off), label: const Text('Masqués'))),
               const SizedBox(width: 8),
               Expanded(child: OutlinedButton.icon(onPressed: onUnavailable, icon: const Icon(Icons.warning), label: const Text('Indispo'))),
