@@ -533,10 +533,12 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		let actKey;
 		if (payment.isSplitPayment && payment.splitPaymentId) {
 			// Utiliser directement le splitPaymentId (format: split_TIMESTAMP) pour regrouper tous les modes
-			actKey = `${payment.table || 'N/A'}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
+			actKey = `${payment.table || 'N/A'}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount || false}`;
 		} else {
-			const timestampKey = payment.timestamp ? new Date(payment.timestamp).toISOString().slice(0, 19) : '';
-			actKey = `${payment.table || 'N/A'}_${timestampKey}_${payment.paymentMode || 'N/A'}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
+			// 🆕 Identifiant composite précis (sans timestamp selon .cursorrules)
+			const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
+			const noteId = payment.noteId || 'main';
+			actKey = `${payment.table || 'N/A'}_${payment.paymentMode}_${enteredAmount}_${payment.discount || 0}_${payment.isPercentDiscount || false}_${noteId}`;
 		}
 
 		if (!discountPaymentsByAct[actKey]) {
@@ -730,37 +732,43 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		// 🆕 CREDIT est maintenant inclus pour affichage dans l'historique
 	});
 
-	// 🆕 Regrouper les paiements par acte de paiement (même timestamp à la seconde, même table, mode, remise)
+	// 🆕 Regrouper les paiements par acte de paiement (même caractéristiques, même table, mode, remise)
 	// Cela permet de fusionner les paiements créés par payMultiOrders (1 paiement par commande) en un seul acte visible
 	// ⚠️ IMPORTANT : On inclut la table dans la clé pour éviter de regrouper des paiements de tables différentes
 	// 🆕 Pour les paiements divisés, utiliser splitPaymentId pour regrouper tous les modes ensemble
+	// 🆕 Pour les paiements normaux, utiliser un identifiant composite plus précis que le timestamp
 	const paymentsByAct = {};
 	for (const payment of filteredPaidPayments) {
-		let timestampKey;
+		let paymentKey;
 		try {
-			const roundedTimestamp = new Date(payment.timestamp).toISOString().substring(0, 19);
 			const tableKey = String(payment.table || 'N/A');
+			const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
 
 			// 🆕 Si c'est un paiement divisé, utiliser splitPaymentId directement pour regrouper tous les modes ensemble
 			if (payment.isSplitPayment && payment.splitPaymentId) {
 				// Utiliser directement le splitPaymentId (format: split_TIMESTAMP) pour regrouper tous les modes
-				timestampKey = `${tableKey}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount || false}`;
+				paymentKey = `${tableKey}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount || false}`;
 			} else {
-				// Paiement normal : regroupement par timestamp + mode + remise
-				timestampKey = `${tableKey}_${roundedTimestamp}_${payment.paymentMode}_${payment.discount || 0}_${payment.isPercentDiscount || false}`;
+				// 🆕 Paiement normal : identifiant composite précis (sans timestamp selon .cursorrules)
+				// table + mode + montant + remise + noteId (beaucoup plus précis que timestamp)
+				const noteId = payment.noteId || 'main';
+				paymentKey = `${tableKey}_${payment.paymentMode}_${enteredAmount}_${payment.discount || 0}_${payment.isPercentDiscount || false}_${noteId}`;
 			}
 		} catch (e) {
 			const tableKey = String(payment.table || 'N/A');
 			if (payment.isSplitPayment && payment.splitPaymentId) {
 				// Utiliser directement le splitPaymentId pour regrouper tous les modes
-				timestampKey = `${tableKey}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
+				paymentKey = `${tableKey}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
 			} else {
-				timestampKey = `${tableKey}_${payment.timestamp}_${payment.paymentMode}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
+				// Fallback avec timestamp si erreur (rétrocompatibilité)
+				const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
+				const noteId = payment.noteId || 'main';
+				paymentKey = `${tableKey}_${payment.paymentMode}_${enteredAmount}_${payment.discount || 0}_${payment.isPercentDiscount || false}_${noteId}`;
 			}
 		}
 
-		if (!paymentsByAct[timestampKey]) {
-			paymentsByAct[timestampKey] = {
+		if (!paymentsByAct[paymentKey]) {
+			paymentsByAct[paymentKey] = {
 				timestamp: payment.timestamp,
 				paymentMode: payment.paymentMode, // 🆕 Sera remplacé par "MIXTE" si plusieurs modes différents
 				discount: payment.discount || 0,
@@ -771,7 +779,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				payments: [],
 			};
 		}
-		paymentsByAct[timestampKey].payments.push(payment);
+		paymentsByAct[paymentKey].payments.push(payment);
 	}
 
 	// 🆕 Créer les paiements finaux (regroupés par acte)
@@ -1164,10 +1172,12 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		if (payment.ticket) {
 			let actKey;
 			if (payment.isSplitPayment && payment.splitPaymentId) {
-				actKey = `${payment.table || 'N/A'}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
+				actKey = `${payment.table || 'N/A'}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount || false}`;
 			} else {
-				const timestampKey = payment.timestamp ? new Date(payment.timestamp).toISOString().slice(0, 19) : '';
-				actKey = `${payment.table || 'N/A'}_${timestampKey}_${payment.paymentMode || 'N/A'}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
+				// 🆕 Identifiant composite précis (sans timestamp)
+				const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
+				const noteId = payment.noteId || 'main';
+				actKey = `${payment.table || 'N/A'}_${payment.paymentMode}_${enteredAmount}_${payment.discount || 0}_${payment.isPercentDiscount || false}_${noteId}`;
 			}
 			ticketByActKey[actKey] = payment.ticket;
 		}
@@ -1178,10 +1188,12 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	for (const discount of discountDetails) {
 		let actKey;
 		if (discount.isSplitPayment && discount.splitPaymentId) {
-			actKey = `${discount.table || 'N/A'}_${discount.splitPaymentId}_${discount.discount || 0}_${discount.isPercentDiscount ? 'PCT' : 'FIX'}`;
+			actKey = `${discount.table || 'N/A'}_${discount.splitPaymentId}_${discount.discount || 0}_${discount.isPercentDiscount || false}`;
 		} else {
-			const timestampKey = discount.timestamp ? new Date(discount.timestamp).toISOString().slice(0, 19) : '';
-			actKey = `${discount.table || 'N/A'}_${timestampKey}_${discount.paymentMode || 'N/A'}_${discount.discount || 0}_${discount.isPercentDiscount ? 'PCT' : 'FIX'}`;
+			// 🆕 Identifiant composite précis (sans timestamp)
+			const enteredAmount = discount.enteredAmount != null ? discount.enteredAmount : (discount.amount || 0);
+			const noteId = discount.noteId || 'main';
+			actKey = `${discount.table || 'N/A'}_${discount.paymentMode}_${enteredAmount}_${discount.discount || 0}_${discount.isPercentDiscount || false}_${noteId}`;
 		}
 
 		// Utiliser le ticket sauvegardé si disponible, sinon garder les items pour compatibilité
