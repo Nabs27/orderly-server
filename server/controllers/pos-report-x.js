@@ -786,6 +786,19 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		paymentsByAct[timestampKey].payments.push(payment);
 	}
 
+	console.log(`[DEBUG] Collected allPayments: ${allPayments.length} payments`);
+	for (const payment of allPayments.slice(0, 10)) { // Log first 10
+		console.log(`[DEBUG] Payment: table=${payment.table}, mode=${payment.paymentMode}, amount=${payment.enteredAmount || payment.amount}, isSplit=${payment.isSplitPayment}, splitId=${payment.splitPaymentId}`);
+	}
+
+	console.log(`[DEBUG] Created paymentsByAct: ${Object.keys(paymentsByAct).length} acts`);
+	for (const [key, act] of Object.entries(paymentsByAct).slice(0, 5)) { // Log first 5 acts
+		console.log(`[DEBUG] Act ${key}: ${act.payments.length} payments, isSplit=${act.isSplitPayment}, splitId=${act.splitPaymentId}`);
+		for (const payment of act.payments.slice(0, 3)) { // Log first 3 payments per act
+			console.log(`  - Payment: mode=${payment.paymentMode}, amount=${payment.enteredAmount || payment.amount}, splitId=${payment.splitPaymentId}`);
+		}
+	}
+
 	// 🆕 Créer les paiements finaux (regroupés par acte)
 	const paidPayments = [];
 	for (const act of Object.values(paymentsByAct)) {
@@ -1168,6 +1181,11 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		const dateB = new Date(b.timestamp || 0);
 		return dateB - dateA;
 	});
+
+	console.log(`[DEBUG] Final paidPayments: ${paidPayments.length} payments`);
+	for (const payment of paidPayments.slice(0, 5)) { // Log first 5
+		console.log(`[DEBUG] PaidPayment: id=${payment.id}, mode=${payment.paymentMode}, amount=${payment.amount}, isSplit=${payment.isSplitPayment}, splitId=${payment.splitPaymentId}, paymentDetails=${payment.ticket?.paymentDetails?.length || 0}`);
+	}
 
 	// 🆕 Créer un map pour retrouver les tickets par actKey (après construction de paidPayments)
 	// Cela garantit que le ticket de remise = ticket exact de l'acte (comme dans paidPayments)
