@@ -81,30 +81,8 @@ async function loadFromMongoDB() {
 	try {
 		console.log('[persistence] ☁️ Chargement des données depuis MongoDB...');
 
-		// 🆕 Identifier le serveur pour éviter les mélanges de données
-		const serverIdentifier = process.env.SERVER_IDENTIFIER || process.env.SERVER_ID || 'local-pos';
-		console.log(`[persistence] 🔍 Chargement pour serveur: ${serverIdentifier}`);
-
-		// Charger les commandes selon le type de serveur
-		let orders;
-		if (serverIdentifier.includes('cloud')) {
-			// Serveur cloud : charger TOUTES les données synchronisées (avec ou sans serverIdentifier)
-			orders = await dbManager.orders.find({
-				$or: [
-					{ serverIdentifier: { $exists: true } }, // Nouvelles données taggées
-					{ serverIdentifier: { $exists: false } } // Anciennes données non taggées (commandes client)
-				]
-			}).toArray();
-			console.log(`[persistence] ☁️ Serveur cloud : ${orders.length} commandes chargées depuis tous les serveurs`);
-		} else {
-			// Serveur local : charger seulement ses propres données + commandes client traitées
-			orders = await dbManager.orders.find({
-				$or: [
-					{ serverIdentifier: serverIdentifier }, // Ses propres données
-					{ serverIdentifier: { $exists: false }, processedByPos: true } // Commandes client traitées
-				]
-			}).toArray();
-		}
+		// Charger les commandes
+		const orders = await dbManager.orders.find({}).toArray();
 
 		// 🆕 SOLUTION : Identifier les commandes confirmées par leur originalTempId
 		const confirmedTempIds = new Set(
@@ -132,25 +110,8 @@ async function loadFromMongoDB() {
 		dataStore.orders.length = 0;
 		dataStore.orders.push(...filteredOrders);
 
-		// Charger les archives selon le type de serveur
-		let archived;
-		if (serverIdentifier.includes('cloud')) {
-			// Serveur cloud : charger TOUTES les archives synchronisées (avec ou sans serverIdentifier)
-			archived = await dbManager.archivedOrders.find({
-				$or: [
-					{ serverIdentifier: { $exists: true } }, // Nouvelles données taggées
-					{ serverIdentifier: { $exists: false } } // Anciennes données non taggées
-				]
-			}).toArray();
-		} else {
-			// Serveur local : charger seulement ses propres archives
-			archived = await dbManager.archivedOrders.find({
-				$or: [
-					{ serverIdentifier: serverIdentifier }, // Ses propres archives
-					{ serverIdentifier: { $exists: false } } // Archives de commandes client traitées
-				]
-			}).toArray();
-		}
+		// Charger les archives
+		const archived = await dbManager.archivedOrders.find({}).toArray();
 		dataStore.archivedOrders.length = 0;
 		dataStore.archivedOrders.push(...archived);
 		console.log(`[persistence] ☁️ ${dataStore.archivedOrders.length} commandes archivées chargées depuis MongoDB`);
@@ -422,9 +383,6 @@ async function saveToMongoDB() {
 			let syncedCount = 0;
 			let skippedCount = 0;
 
-			// 🆕 Identifier le serveur pour éviter les mélanges de données
-			const serverIdentifier = process.env.SERVER_IDENTIFIER || process.env.SERVER_ID || 'local-pos';
-
 			for (const order of activeOrders) {
 				// 🆕 DEBUG: Log chaque commande avant synchronisation
 				console.log(`[sync] 🔍 DEBUG: Commande id=${order.id || 'NULL'}, table=${order.table}, status=${order.status}, source=${order.source || 'undefined'}`);
@@ -436,24 +394,18 @@ async function saveToMongoDB() {
 					continue; // Ignorer les commandes sans ID (commandes client en attente)
 				}
 
-				// 🆕 CORRECTION : Supprimer _id MongoDB et ajouter serverIdentifier
-				const orderToSave = {
-					...order,
-					serverIdentifier: serverIdentifier,
-					lastSync: new Date().toISOString()
-				};
+				// 🆕 CORRECTION : Supprimer _id MongoDB avant replaceOne
+				const orderToSave = { ...order };
 				delete orderToSave._id;
 
 				try {
-					// 🆕 ANTI-DOUBLONS : updateOne avec upsert garantit UNE SEULE entrée par commande
-					// Même si envoyé 100 fois, MongoDB écrase l'ancienne version
-					const result = await dbManager.orders.updateOne(
-						{ id: order.id, serverIdentifier: serverIdentifier }, // Clé unique composée
-						{ $set: orderToSave }, // Met à jour ou définit
-						{ upsert: true } // UNE SEULE entrée garantie
+					const result = await dbManager.orders.replaceOne(
+						{ id: order.id },
+						orderToSave,
+						{ upsert: true }
 					);
 					syncedCount++;
-					console.log(`[sync] ✅ Commande ${order.id} (table ${order.table}) synchronisée: ${result.upsertedCount > 0 ? 'créée' : 'mise à jour'} [${serverIdentifier}]`);
+					console.log(`[sync] ✅ Commande ${order.id} (table ${order.table}) synchronisée: ${result.upsertedCount > 0 ? 'créée' : 'mise à jour'}`);
 				} catch (e) {
 					console.error(`[sync] ❌ Erreur synchronisation commande ${order.id} (table ${order.table}):`, e.message);
 					console.error(`[sync] ❌ Stack:`, e.stack);
@@ -475,27 +427,19 @@ async function saveToMongoDB() {
 		// Synchroniser les commandes archivées
 		if (dataStore.archivedOrders.length > 0) {
 			const archivedIds = [];
-			// 🆕 Identifier le serveur pour éviter les mélanges de données (même valeur que pour actives)
-			const serverIdentifier = process.env.SERVER_IDENTIFIER || process.env.SERVER_ID || 'local-pos';
-
 			for (const order of dataStore.archivedOrders) {
-				// 🆕 CORRECTION : Supprimer _id MongoDB et ajouter serverIdentifier
-				const orderToSave = {
-					...order,
-					serverIdentifier: serverIdentifier,
-					lastSync: new Date().toISOString()
-				};
+				// 🆕 CORRECTION : Supprimer _id MongoDB avant replaceOne
+				const orderToSave = { ...order };
 				delete orderToSave._id;
 
-				// 🆕 ANTI-DOUBLONS : updateOne avec upsert pour les archives aussi
-				await dbManager.archivedOrders.updateOne(
-					{ id: order.id, serverIdentifier: serverIdentifier },
-					{ $set: orderToSave },
+				await dbManager.archivedOrders.replaceOne(
+					{ id: order.id },
+					orderToSave,
 					{ upsert: true }
 				);
 				archivedIds.push(order.id);
 			}
-			console.log(`[sync] ☁️ ${dataStore.archivedOrders.length} commandes archivées synchronisées [${serverIdentifier}]`);
+			console.log(`[sync] ☁️ ${dataStore.archivedOrders.length} commandes archivées synchronisées`);
 
 			// 🆕 CORRECTION : SUPPRIMER les commandes archivées de la collection orders principale
 			// pour éviter qu'elles apparaissent comme actives dans le cloud

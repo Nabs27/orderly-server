@@ -388,29 +388,17 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	const dbManager = require('../utils/dbManager');
 	if (dbManager.isCloud && dbManager.db) {
 		try {
-			// 🆕 RAPPORTS CLOUD : Voir TOUTES les données synchronisées (pas de filtre)
-			// Les données sont taggées à la sauvegarde pour éviter les conflits,
-			// mais en lecture pour rapports, le cloud voit tout
-			console.log(`[report-x] ☁️ Rechargement complet des données pour rapports cloud`);
-
-			// Recharger TOUTES les commandes synchronisées (avec ou sans serverIdentifier pour compatibilité)
-			const archived = await dbManager.archivedOrders.find({
-				$or: [
-					{ serverIdentifier: { $exists: true } }, // Nouvelles données taggées
-					{ serverIdentifier: { $exists: false } } // Anciennes données non taggées (commandes client)
-				]
-			}).toArray();
+			// Recharger les commandes archivées
+			const archived = await dbManager.archivedOrders.find({}).toArray();
 			dataStore.archivedOrders.length = 0;
 			dataStore.archivedOrders.push(...archived);
 			console.log(`[report-x] ☁️ ${dataStore.archivedOrders.length} commandes archivées rechargées depuis MongoDB`);
 
-			// 🆕 Recharger TOUTES les commandes actives synchronisées (avec ou sans serverIdentifier)
-			const orders = await dbManager.orders.find({
-				$or: [
-					{ serverIdentifier: { $exists: true } }, // Nouvelles données taggées
-					{ serverIdentifier: { $exists: false } } // Anciennes données non taggées (commandes client)
-				]
-			}).toArray();
+			// 🆕 Recharger aussi les commandes actives (pour les tables non payées)
+			// ⚠️ IMPORTANT : Ne pas filtrer les commandes client confirmées ici
+			// Le filtrage des doublons est déjà fait dans loadFromMongoDB() au démarrage
+			// Ici, on veut juste recharger TOUTES les commandes actives pour avoir les données à jour
+			const orders = await dbManager.orders.find({}).toArray();
 
 			// 🆕 Filtrer uniquement les commandes avec status !== 'archived' (comme getAllOrders)
 			// Les commandes archivées sont dans archivedOrders, pas dans orders
@@ -786,7 +774,6 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		paymentsByAct[timestampKey].payments.push(payment);
 	}
 
-
 	// 🆕 Créer les paiements finaux (regroupés par acte)
 	const paidPayments = [];
 	for (const act of Object.values(paymentsByAct)) {
@@ -1013,21 +1000,15 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				// Dédupliquer par mode + enteredAmount pour éviter les doublons (chaque transaction apparaît N fois par commande)
 				splitPaymentModes: act.isSplitPayment ? [...new Set(payments.map(p => p.paymentMode))] : undefined,
 				splitPaymentAmounts: act.isSplitPayment ? (() => {
-					// 🆕 CORRECTION : Utiliser la même logique de déduplication que paymentDetails
-					// Clé : splitPaymentId + mode + enteredAmount (selon .cursorrules 3.1)
-					const processedPayments = new Set();
+					const processedTxs = new Set();
 					const uniqueAmounts = [];
-
 					for (const p of payments) {
-						if (p.paymentMode === 'CREDIT' && !p.hasCashInPayment) continue; // Exclure CREDIT pur
-
 						const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
-						// 🆕 Clé de déduplication identique à paymentDetails
-						const paymentKey = `${p.splitPaymentId || 'no-split'}_${p.paymentMode}_${enteredAmount.toFixed(3)}`;
-
-						if (!processedPayments.has(paymentKey)) {
-							processedPayments.add(paymentKey);
+						const txKey = `${p.paymentMode}_${enteredAmount.toFixed(3)}`;
+						if (!processedTxs.has(txKey)) {
+							processedTxs.add(txKey);
 							const detail = { mode: p.paymentMode, amount: enteredAmount };
+							// 🆕 Ajouter le nom du client pour les paiements CREDIT (comme dans l'historique)
 							if (p.paymentMode === 'CREDIT' && p.creditClientName) {
 								detail.clientName = p.creditClientName;
 							}
@@ -1089,30 +1070,13 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 						server: server,
 						// 🆕 Ajouter les détails des paiements et le montant total encaissé
 						// ⚠️ RÈGLE .cursorrules 3.1: Utiliser payment-processor.js comme source de vérité unique
-						// DÉDUPLICATION selon splitPaymentId + mode + enteredAmount
-						paymentDetails: (() => {
-							const processedPayments = new Set();
-							const uniquePayments = [];
-
-							for (const p of payments) {
-								if (p.paymentMode === 'CREDIT' && !p.hasCashInPayment) continue; // Exclure CREDIT pur
-
-								const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
-								// 🆕 Clé de déduplication selon .cursorrules 3.1
-								const paymentKey = `${p.splitPaymentId || 'no-split'}_${p.paymentMode}_${enteredAmount.toFixed(3)}`;
-
-								if (!processedPayments.has(paymentKey)) {
-									processedPayments.add(paymentKey);
-									uniquePayments.push({
-										mode: p.paymentMode || 'INCONNU',
-										amount: enteredAmount,
-										...(p.paymentMode === 'CREDIT' && p.creditClientName ? { clientName: p.creditClientName } : {})
-									});
-								}
-							}
-
-							return uniquePayments;
-						})(),
+						paymentDetails: act.isSplitPayment 
+							? paymentProcessor.getPaymentDetails(payments) // 🆕 Utiliser la fonction centralisée
+							: [{
+							mode: payments[0].paymentMode,
+							amount: payments[0].enteredAmount != null ? payments[0].enteredAmount : (payments[0].amount || 0),
+							...(payments[0].paymentMode === 'CREDIT' && payments[0].creditClientName ? { clientName: payments[0].creditClientName } : {})
+						}],
 						totalAmount: totalAmountEncaisse > 0.01 ? totalAmountEncaisse : undefined, // 🆕 Montant total encaissé (exclut CREDIT)
 						excessAmount: totalExcessAmount > 0.01 ? totalExcessAmount : undefined // 🆕 Pourboire
 					};
@@ -1192,7 +1156,6 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		const dateB = new Date(b.timestamp || 0);
 		return dateB - dateA;
 	});
-
 
 	// 🆕 Créer un map pour retrouver les tickets par actKey (après construction de paidPayments)
 	// Cela garantit que le ticket de remise = ticket exact de l'acte (comme dans paidPayments)
@@ -1465,11 +1428,11 @@ function groupPaymentsByMode(payments) {
 						let totalAllocated = 0;
 						for (const [key, transaction] of Object.entries(transactionsByKey)) {
 							totalEntered += transaction.enteredAmount;
-							// 🆕 CORRECTION : Le total allocatedAmount pour une transaction = somme de tous les allocatedAmounts
-							// Chaque commande a déjà son allocatedAmount proportionnel, donc on additionne simplement
-							// Ne PAS diviser par nbOrders car cela donnerait un montant incorrect
+							// Le total allocatedAmount pour une transaction = somme de tous les allocatedAmounts / nbOrders
+							// Car chaque commande a sa part proportionnelle
+							const nbOrders = new Set(groupPayments.map(p => p.orderId)).size;
 							const sumAllocated = transaction.allocatedAmounts.reduce((sum, a) => sum + a, 0);
-							totalAllocated += sumAllocated;
+							totalAllocated += nbOrders > 0 ? sumAllocated / nbOrders : sumAllocated;
 						}
 
 						const tipAmount = Math.max(0, totalEntered - totalAllocated);
