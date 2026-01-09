@@ -126,7 +126,23 @@ async function loadMenu(restaurantId) {
 			}
 		}
 
-		// 2. Charger depuis JSON local (toujours la source de vérité si le fichier existe)
+		// 2. 🆕 CORRECTION : Sur serveur Cloud, TOUJOURS charger depuis MongoDB (source de vérité)
+		// Le fichier JSON local peut être obsolète ou ne pas persister sur Railway
+		if (dbManager.isCloud && dbManager.db) {
+			const menuDoc = await dbManager.menus.findOne({ restaurantId });
+			if (menuDoc && menuDoc.menu) {
+				// Mettre à jour le cache
+				menuCache.set(restaurantId, {
+					menu: menuDoc.menu,
+					timestamp: Date.now(),
+					fileMTime: null // Pas de fichier sur serveur cloud
+				});
+				console.log(`[menu-sync] ☁️ Menu ${restaurantId} chargé depuis MongoDB`);
+				return menuDoc.menu;
+			}
+		}
+
+		// 3. Charger depuis JSON local (seulement pour serveur local)
 		if (fileExists) {
 			const content = await fsp.readFile(menuPath, 'utf8');
 			const menu = JSON.parse(content);
@@ -140,7 +156,7 @@ async function loadMenu(restaurantId) {
 			});
 
 			// Synchroniser vers MongoDB si configuré (asynchrone, non-bloquant)
-			if (dbManager.isCloud && dbManager.db) {
+			if (dbManager.db) {
 				dbManager.menus.replaceOne(
 					{ restaurantId },
 					{ restaurantId, menu, lastSynced: new Date().toISOString() },
@@ -151,7 +167,7 @@ async function loadMenu(restaurantId) {
 			return menu;
 		}
 
-		// 3. Si fichier local n'existe pas (Railway ou premier démarrage), charger depuis MongoDB
+		// 4. Si fichier local n'existe pas et pas de MongoDB, retourner null
 		if (dbManager.isCloud && dbManager.db) {
 			const menuDoc = await dbManager.menus.findOne({ restaurantId });
 			if (menuDoc && menuDoc.menu) {
