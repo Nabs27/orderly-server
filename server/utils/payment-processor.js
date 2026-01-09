@@ -630,17 +630,25 @@ function getPaymentDetails(payments) {
         txCounts[txKey].count++;
     }
     
-    // Calculer le nombre de commandes distinctes
-    const distinctOrderIds = new Set(payments.map(p => p.orderId || p.sessionId)).size;
-    const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
-    
     // Créer les paymentDetails avec index (CARTE #1, CARTE #2, etc.)
     const paymentDetails = [];
-    
+
     for (const txKey in txCounts) {
         const tx = txCounts[txKey];
-        // Nombre réel de transactions = occurrences / nombre de commandes
-        const nbTransactions = Math.round(tx.count / nbOrders);
+        // 🆕 CORRECTION: Ne diviser que pour les vrais paiements divisés (avec splitPaymentId)
+        // Pour les paiements simples, chaque occurrence = une transaction réelle
+        const hasSplitPayment = payments.some(p => p.splitPaymentId);
+        let nbTransactions;
+
+        if (hasSplitPayment) {
+            // Paiements divisés: dédupliquer selon le nombre de commandes
+            const distinctOrderIds = new Set(payments.map(p => p.orderId || p.sessionId)).size;
+            const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
+            nbTransactions = Math.round(tx.count / nbOrders);
+        } else {
+            // Paiements simples: chaque occurrence = une transaction
+            nbTransactions = tx.count;
+        }
         
         // Créer N entrées pour cette transaction
         for (let i = 0; i < nbTransactions; i++) {
