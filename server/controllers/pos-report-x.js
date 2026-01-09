@@ -386,7 +386,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	// Le serveur cloud charge les données uniquement au démarrage, donc il faut recharger
 	// les données à chaque génération de rapport pour avoir les données à jour (notamment pour les tables non payées)
 	const dbManager = require('../utils/dbManager');
-	if (dbManager.db) { // 🆕 Recharger aussi sur serveur local pour cohérence avec historique
+	if (dbManager.isCloud && dbManager.db) {
 		try {
 			// Recharger les commandes archivées
 			const archived = await dbManager.archivedOrders.find({}).toArray();
@@ -400,13 +400,15 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			// Ici, on veut juste recharger TOUTES les commandes actives pour avoir les données à jour
 			const orders = await dbManager.orders.find({}).toArray();
 
-			// 🆕 Filtrer les commandes actives (cohérent avec historique)
+			// 🆕 Filtrer uniquement les commandes avec status !== 'archived' (comme getAllOrders)
+			// Les commandes archivées sont dans archivedOrders, pas dans orders
 			const activeOrders = orders.filter(o => {
 				// Exclure les commandes archivées
 				if (o.status === 'archived') {
 					return false;
 				}
 				// Exclure les commandes client en attente (waitingForPos: true, pas encore confirmées)
+				// Ces commandes n'ont pas encore d'ID et ne sont pas encore actives
 				if (o.waitingForPos === true && (!o.id || o.id === null) && o.source === 'client') {
 					return false;
 				}
@@ -417,7 +419,9 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			dataStore.orders.push(...activeOrders);
 			console.log(`[report-x] ☁️ ${dataStore.orders.length} commandes actives rechargées depuis MongoDB (sur ${orders.length} total)`);
 
-			// 🆕 IMPORTANT : Recharger aussi les clients crédit
+			// 🆕 IMPORTANT : Recharger aussi les clients crédit, sinon le KPI crédit peut être faux sur cloud
+			// Les tickets montrent bien les paiements CREDIT car ils viennent de paymentHistory des commandes,
+			// mais le KPI "Crédit client" lit dataStore.clientCredits qui n'était pas rechargé depuis MongoDB
 			const clients = await dbManager.clientCredits.find({}).toArray();
 			dataStore.clientCredits.length = 0;
 			dataStore.clientCredits.push(...clients);
@@ -480,19 +484,11 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	// 🆕 Pour calculateTotals, on combine les deux listes de commandes
 	const allOrdersForTotals = [...filteredArchivedOrders, ...filteredActiveOrders];
 
-	// 🆕 COPIER EXACTEMENT LA LOGIQUE DE L'HISTORIQUE pour cohérence parfaite
-	// ⚠️ EXCEPTION .cursorrules: Ici c'est pour l'AFFICHAGE des tickets détaillés, pas la déduplication comptable
-	const historyProcessor = require('../utils/history-processor');
-	const simulatedSessions = [
-		...filteredArchivedOrders.map(order => ({ ...order, paymentHistory: order.paymentHistory || [] })),
-		...filteredActiveOrders.map(order => ({ ...order, paymentHistory: order.paymentHistory || [] }))
-	];
-
-	// Utiliser EXACTEMENT la même fonction que l'historique pour grouper les paiements
-	const groupedPayments = historyProcessor.groupPaymentsByTimestamp(simulatedSessions);
-
-	// Calculer les modes de paiement depuis les paiements groupés (cohérent avec historique)
-	const paymentsByMode = paymentProcessor.calculatePaymentsByMode(groupedPayments);
+	// 🆕 NOTE: totals et itemsByCategory seront créés APRÈS la création de paidPayments
+	// pour éviter de compter les articles plusieurs fois pour les paiements divisés
+	// ⚠️ CORRECTION: Utiliser le module commun payment-processor pour la déduplication
+	// Cela garantit que History, KPI et X Report utilisent la même logique
+	const paymentsByMode = paymentProcessor.calculatePaymentsByMode(allPayments);
 	// totals sera calculé après paidPayments
 	const unpaidTables = calculateUnpaidTables(server);
 
@@ -537,12 +533,10 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		let actKey;
 		if (payment.isSplitPayment && payment.splitPaymentId) {
 			// Utiliser directement le splitPaymentId (format: split_TIMESTAMP) pour regrouper tous les modes
-			actKey = `${payment.table || 'N/A'}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount || false}`;
+			actKey = `${payment.table || 'N/A'}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
 		} else {
-			// 🆕 Identifiant composite précis (sans timestamp selon .cursorrules)
-			const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
-			const noteId = payment.noteId || 'main';
-			actKey = `${payment.table || 'N/A'}_${payment.paymentMode}_${enteredAmount}_${payment.discount || 0}_${payment.isPercentDiscount || false}_${noteId}`;
+			const timestampKey = payment.timestamp ? new Date(payment.timestamp).toISOString().slice(0, 19) : '';
+			actKey = `${payment.table || 'N/A'}_${timestampKey}_${payment.paymentMode || 'N/A'}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
 		}
 
 		if (!discountPaymentsByAct[actKey]) {
@@ -736,43 +730,43 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		// 🆕 CREDIT est maintenant inclus pour affichage dans l'historique
 	});
 
-	// 🆕 Regrouper les paiements par acte de paiement (même caractéristiques, même table, mode, remise)
+	// 🆕 Regrouper les paiements par acte de paiement (même timestamp à la seconde, même table, mode, remise)
 	// Cela permet de fusionner les paiements créés par payMultiOrders (1 paiement par commande) en un seul acte visible
 	// ⚠️ IMPORTANT : On inclut la table dans la clé pour éviter de regrouper des paiements de tables différentes
 	// 🆕 Pour les paiements divisés, utiliser splitPaymentId pour regrouper tous les modes ensemble
-	// 🆕 Pour les paiements normaux, utiliser un identifiant composite plus précis que le timestamp
 	const paymentsByAct = {};
 	for (const payment of filteredPaidPayments) {
-		let paymentKey;
+		let timestampKey;
 		try {
+			const roundedTimestamp = new Date(payment.timestamp).toISOString().substring(0, 19);
 			const tableKey = String(payment.table || 'N/A');
-			const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
 
 			// 🆕 Si c'est un paiement divisé, utiliser splitPaymentId directement pour regrouper tous les modes ensemble
 			if (payment.isSplitPayment && payment.splitPaymentId) {
 				// Utiliser directement le splitPaymentId (format: split_TIMESTAMP) pour regrouper tous les modes
-				paymentKey = `${tableKey}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount || false}`;
+				timestampKey = `${tableKey}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount || false}`;
 			} else {
-				// 🆕 Paiement normal : identifiant composite précis (sans timestamp selon .cursorrules)
-				// table + mode + montant + remise + noteId (beaucoup plus précis que timestamp)
+				// 🆕 CORRECTION .cursorrules 3.2: Utiliser un identifiant composite au lieu du timestamp
+				// Clé: table + mode + montant + noteId + remise (plus précis et déterministe)
+				const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
 				const noteId = payment.noteId || 'main';
-				paymentKey = `${tableKey}_${payment.paymentMode}_${enteredAmount}_${payment.discount || 0}_${payment.isPercentDiscount || false}_${noteId}`;
+				timestampKey = `${tableKey}_${payment.paymentMode}_${enteredAmount.toFixed(3)}_${noteId}_${payment.discount || 0}_${payment.isPercentDiscount || false}`;
 			}
 		} catch (e) {
 			const tableKey = String(payment.table || 'N/A');
 			if (payment.isSplitPayment && payment.splitPaymentId) {
 				// Utiliser directement le splitPaymentId pour regrouper tous les modes
-				paymentKey = `${tableKey}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
+				timestampKey = `${tableKey}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
 			} else {
-				// Fallback avec timestamp si erreur (rétrocompatibilité)
+				// 🆕 CORRECTION .cursorrules 3.2: Utiliser un identifiant composite au lieu du timestamp
 				const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
 				const noteId = payment.noteId || 'main';
-				paymentKey = `${tableKey}_${payment.paymentMode}_${enteredAmount}_${payment.discount || 0}_${payment.isPercentDiscount || false}_${noteId}`;
+				timestampKey = `${tableKey}_${payment.paymentMode}_${enteredAmount.toFixed(3)}_${noteId}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
 			}
 		}
 
-		if (!paymentsByAct[paymentKey]) {
-			paymentsByAct[paymentKey] = {
+		if (!paymentsByAct[timestampKey]) {
+			paymentsByAct[timestampKey] = {
 				timestamp: payment.timestamp,
 				paymentMode: payment.paymentMode, // 🆕 Sera remplacé par "MIXTE" si plusieurs modes différents
 				discount: payment.discount || 0,
@@ -783,7 +777,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				payments: [],
 			};
 		}
-		paymentsByAct[paymentKey].payments.push(payment);
+		paymentsByAct[timestampKey].payments.push(payment);
 	}
 
 	// 🆕 Créer les paiements finaux (regroupés par acte)
@@ -1009,26 +1003,11 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				covers: covers,
 				orderIds: orderIds.length > 0 ? orderIds : undefined, // 🆕 IDs des commandes regroupées (si plusieurs)
 				// 🆕 Informations sur le paiement divisé (pour traçabilité)
-				// Dédupliquer par mode + enteredAmount pour éviter les doublons (chaque transaction apparaît N fois par commande)
+				// ⚠️ RÈGLE .cursorrules 3.1: Utiliser payment-processor.js comme source de vérité unique
 				splitPaymentModes: act.isSplitPayment ? [...new Set(payments.map(p => p.paymentMode))] : undefined,
-				splitPaymentAmounts: act.isSplitPayment ? (() => {
-					const processedTxs = new Set();
-					const uniqueAmounts = [];
-					for (const p of payments) {
-						const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
-						const txKey = `${p.paymentMode}_${enteredAmount.toFixed(3)}`;
-						if (!processedTxs.has(txKey)) {
-							processedTxs.add(txKey);
-							const detail = { mode: p.paymentMode, amount: enteredAmount };
-							// 🆕 Ajouter le nom du client pour les paiements CREDIT (comme dans l'historique)
-							if (p.paymentMode === 'CREDIT' && p.creditClientName) {
-								detail.clientName = p.creditClientName;
-							}
-							uniqueAmounts.push(detail);
-						}
-					}
-					return uniqueAmounts;
-				})() : undefined,
+				splitPaymentAmounts: act.isSplitPayment 
+					? paymentProcessor.getPaymentDetails(payments) // 🆕 SOURCE DE VÉRITÉ UNIQUE
+					: undefined,
 				// 🆕 Ticket encaissé (format ticket de caisse)
 				ticket: (() => {
 					// 🆕 Calculer le montant total encaissé (exclut CREDIT car c'est une dette différée)
@@ -1176,12 +1155,10 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		if (payment.ticket) {
 			let actKey;
 			if (payment.isSplitPayment && payment.splitPaymentId) {
-				actKey = `${payment.table || 'N/A'}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount || false}`;
+				actKey = `${payment.table || 'N/A'}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
 			} else {
-				// 🆕 Identifiant composite précis (sans timestamp)
-				const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
-				const noteId = payment.noteId || 'main';
-				actKey = `${payment.table || 'N/A'}_${payment.paymentMode}_${enteredAmount}_${payment.discount || 0}_${payment.isPercentDiscount || false}_${noteId}`;
+				const timestampKey = payment.timestamp ? new Date(payment.timestamp).toISOString().slice(0, 19) : '';
+				actKey = `${payment.table || 'N/A'}_${timestampKey}_${payment.paymentMode || 'N/A'}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
 			}
 			ticketByActKey[actKey] = payment.ticket;
 		}
@@ -1192,12 +1169,10 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	for (const discount of discountDetails) {
 		let actKey;
 		if (discount.isSplitPayment && discount.splitPaymentId) {
-			actKey = `${discount.table || 'N/A'}_${discount.splitPaymentId}_${discount.discount || 0}_${discount.isPercentDiscount || false}`;
+			actKey = `${discount.table || 'N/A'}_${discount.splitPaymentId}_${discount.discount || 0}_${discount.isPercentDiscount ? 'PCT' : 'FIX'}`;
 		} else {
-			// 🆕 Identifiant composite précis (sans timestamp)
-			const enteredAmount = discount.enteredAmount != null ? discount.enteredAmount : (discount.amount || 0);
-			const noteId = discount.noteId || 'main';
-			actKey = `${discount.table || 'N/A'}_${discount.paymentMode}_${enteredAmount}_${discount.discount || 0}_${discount.isPercentDiscount || false}_${noteId}`;
+			const timestampKey = discount.timestamp ? new Date(discount.timestamp).toISOString().slice(0, 19) : '';
+			actKey = `${discount.table || 'N/A'}_${timestampKey}_${discount.paymentMode || 'N/A'}_${discount.discount || 0}_${discount.isPercentDiscount ? 'PCT' : 'FIX'}`;
 		}
 
 		// Utiliser le ticket sauvegardé si disponible, sinon garder les items pour compatibilité
