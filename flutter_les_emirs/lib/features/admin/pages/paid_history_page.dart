@@ -453,8 +453,8 @@ class _ServiceDetailPage extends StatelessWidget {
         : null;
     
     // 🆕 DEBUG: Vérifier ce qui est reçu du backend
-    if (isSplitPayment) {
-      print('🔍 [DEBUG POS] Table $tableNumber - Paiement divisé:');
+    if (isSplitPayment && tableNumber == '2') {
+      print('🔍 [DEBUG] Table 2 - Paiement divisé:');
       print('  - payments.length: ${payments.length}');
       print('  - payments.first[isSplitPayment]: ${payments.first['isSplitPayment']}');
       print('  - payments.first[ticket]: ${payments.first['ticket'] != null ? 'PRÉSENT' : 'ABSENT'}');
@@ -462,101 +462,154 @@ class _ServiceDetailPage extends StatelessWidget {
         print('  - backendTicket[excessAmount]: ${backendTicket['excessAmount']}');
         print('  - backendTicket[totalAmount]: ${backendTicket['totalAmount']}');
         print('  - backendTicket[paymentDetails]: ${backendTicket['paymentDetails']}');
-        print('  - backendTicket[paymentDetails].length: ${(backendTicket['paymentDetails'] as List?)?.length ?? 0}');
       }
     }
     
-    // Si le backend a fourni un ticket, l'utiliser directement
-    final mainTicket = backendTicket != null && isSplitPayment
-        ? backendTicket // ✅ Utiliser le ticket du backend tel quel (déjà calculé correctement)
-        : (() {
-            // Fallback : reconstruire seulement pour les paiements simples ou si le backend n'a pas fourni de ticket
-    final totalAmount = payments.fold<double>(
-      0.0,
-      (sum, p) {
-                // Exclure CREDIT du montant encaissé
-                if (p['paymentMode']?.toString() == 'CREDIT') return sum;
-        final enteredAmount = (p['enteredAmount'] as num?)?.toDouble();
-        final amount = (p['amount'] as num?)?.toDouble() ?? 0.0;
-        return sum + (enteredAmount ?? amount);
-      },
-    );
-
-    final allItems = <Map<String, dynamic>>[];
-    double totalSubtotal = 0.0;
-    double totalDiscountAmount = 0.0;
-    
+    // 🆕 CORRECTION : Construire un ticket principal consolidé qui agrège TOUS les paiements
+    // Pour les paiements divisés, utiliser le ticket du backend qui contient déjà paymentDetails
+    // Pour les paiements simples, construire depuis les données
+    // Ensuite, agréger tous les paymentDetails pour avoir une vue complète
+    final mainTicket = (() {
+      // 🆕 ÉTAPE 1: Collecter tous les articles de tous les paiements
+      final allItems = <Map<String, dynamic>>[];
+      double totalSubtotal = 0.0;
+      double totalDiscountAmount = 0.0;
+      double totalExcessAmount = 0.0;
+      
       for (final payment in payments) {
-        final items = (payment['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-        for (final item in items) {
-          final existingIndex = allItems.indexWhere(
-            (i) => i['id'] == item['id'] && i['name'] == item['name'],
-          );
-          if (existingIndex != -1) {
-            allItems[existingIndex]['quantity'] = (allItems[existingIndex]['quantity'] as int) + (item['quantity'] as int? ?? 0);
-          } else {
-            allItems.add(Map<String, dynamic>.from(item));
+        // Pour les paiements divisés, utiliser les items du ticket du backend
+        if (payment['isSplitPayment'] == true && payment['ticket'] != null) {
+          final ticket = payment['ticket'] as Map<String, dynamic>?;
+          if (ticket != null && ticket['items'] != null) {
+            final ticketItems = (ticket['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+            for (final item in ticketItems) {
+              final existingIndex = allItems.indexWhere(
+                (i) => i['id'] == item['id'] && i['name'] == item['name'],
+              );
+              if (existingIndex != -1) {
+                allItems[existingIndex]['quantity'] = (allItems[existingIndex]['quantity'] as int) + (item['quantity'] as int? ?? 0);
+              } else {
+                allItems.add(Map<String, dynamic>.from(item));
+              }
+            }
+            // Utiliser le discountAmount du ticket (déjà calculé correctement)
+            final ticketDiscount = (ticket['discountAmount'] as num?)?.toDouble() ?? 0.0;
+            if (ticketDiscount > 0.01) {
+              totalDiscountAmount += ticketDiscount;
+            }
+            // Utiliser l'excessAmount du ticket (pourboire)
+            final ticketExcess = (ticket['excessAmount'] as num?)?.toDouble() ?? 0.0;
+            if (ticketExcess > 0.01) {
+              totalExcessAmount += ticketExcess;
+            }
+          }
+        } else {
+          // Pour les paiements simples, utiliser les items du paiement
+          final items = (payment['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+          for (final item in items) {
+            final existingIndex = allItems.indexWhere(
+              (i) => i['id'] == item['id'] && i['name'] == item['name'],
+            );
+            if (existingIndex != -1) {
+              allItems[existingIndex]['quantity'] = (allItems[existingIndex]['quantity'] as int) + (item['quantity'] as int? ?? 0);
+            } else {
+              allItems.add(Map<String, dynamic>.from(item));
+            }
+          }
+          final paymentDiscountAmount = (payment['discountAmount'] as num?)?.toDouble() ?? 0.0;
+          if (paymentDiscountAmount > 0.01) {
+            totalDiscountAmount += paymentDiscountAmount;
+          }
+          final paymentExcess = (payment['excessAmount'] as num?)?.toDouble() ?? 0.0;
+          if (paymentExcess > 0.01) {
+            totalExcessAmount += paymentExcess;
           }
         }
       }
+      
+      // Calculer le subtotal depuis les articles consolidés
       totalSubtotal = allItems.fold<double>(0.0, (sum, item) {
         final price = (item['price'] as num?)?.toDouble() ?? 0.0;
         final quantity = (item['quantity'] as num?)?.toInt() ?? 0;
         return sum + (price * quantity);
       });
-      if (payments.isNotEmpty) {
-        double sumDiscountAmounts = 0.0;
-        for (final payment in payments) {
-          final paymentDiscountAmount = (payment['discountAmount'] as num?)?.toDouble() ?? 0.0;
-          if (paymentDiscountAmount > 0.01) {
-            sumDiscountAmounts += paymentDiscountAmount;
+      
+      final ticketTotal = totalSubtotal - totalDiscountAmount;
+      
+      // Calculer le montant total encaissé (exclut CREDIT)
+      final totalAmount = payments.fold<double>(
+        0.0,
+        (sum, p) {
+          // Pour les paiements divisés, utiliser totalAmount du ticket
+          if (p['isSplitPayment'] == true && p['ticket'] != null) {
+            final ticket = p['ticket'] as Map<String, dynamic>?;
+            final ticketTotalAmount = (ticket?['totalAmount'] as num?)?.toDouble();
+            if (ticketTotalAmount != null && ticketTotalAmount > 0.01) {
+              return sum + ticketTotalAmount;
+            }
           }
-        }
-        totalDiscountAmount = sumDiscountAmounts;
-    }
-    
-    final ticketTotal = totalSubtotal - totalDiscountAmount;
-    
-    double discountRate = 0.0;
-    bool isPercentDiscount = false;
-    if (totalDiscountAmount > 0.01 && totalSubtotal > 0.01) {
-      discountRate = (totalDiscountAmount / totalSubtotal) * 100;
-      isPercentDiscount = true;
-    }
-    
-    final paymentDetails = <Map<String, dynamic>>[];
-      for (final payment in payments) {
-        final enteredAmount = (payment['enteredAmount'] as num?)?.toDouble() ?? 
-            ((payment['amount'] as num?)?.toDouble() ?? 0.0);
-        final paymentMode = payment['paymentMode']?.toString() ?? '';
-              final detail = {
+          // Exclure CREDIT du montant encaissé
+          if (p['paymentMode']?.toString() == 'CREDIT') return sum;
+          final enteredAmount = (p['enteredAmount'] as num?)?.toDouble();
+          final amount = (p['amount'] as num?)?.toDouble() ?? 0.0;
+          return sum + (enteredAmount ?? amount);
+        },
+      );
+      
+      // 🆕 ÉTAPE 2: Utiliser DIRECTEMENT les paymentDetails du backend (maintenant dédupliqués)
+      final consolidatedPaymentDetails = <Map<String, dynamic>>[];
+
+      // 🆕 LOGIC SIMPLIFIÉE : Le backend fait maintenant la déduplication correcte
+      // On prend simplement les paymentDetails du premier paiement (ils sont maintenant corrects)
+      if (payments.isNotEmpty) {
+        final firstPayment = payments.first;
+        if (firstPayment['ticket'] != null && firstPayment['ticket']['paymentDetails'] != null) {
+          // Pour les paiements avec ticket (divisés ou non), utiliser paymentDetails du ticket
+          final ticket = firstPayment['ticket'] as Map<String, dynamic>;
+          final ticketPaymentDetails = (ticket['paymentDetails'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+          consolidatedPaymentDetails.addAll(ticketPaymentDetails.map((detail) => Map<String, dynamic>.from(detail)));
+        } else {
+          // Pour les paiements simples sans ticket, construire depuis les données du paiement
+          final enteredAmount = (firstPayment['enteredAmount'] as num?)?.toDouble() ??
+              ((firstPayment['amount'] as num?)?.toDouble() ?? 0.0);
+          final paymentMode = firstPayment['paymentMode']?.toString() ?? '';
+          final detail = {
             'mode': paymentMode,
             'amount': enteredAmount,
-              };
-              if (paymentMode == 'CREDIT' && payment['creditClientName'] != null) {
-                detail['clientName'] = payment['creditClientName'].toString();
-              }
-              paymentDetails.add(detail);
+          };
+          if (paymentMode == 'CREDIT' && firstPayment['creditClientName'] != null) {
+            detail['clientName'] = firstPayment['creditClientName'].toString();
+          }
+          consolidatedPaymentDetails.add(detail);
+        }
       }
-            
-            return {
-      'table': tableNumber,
-      'date': payments.first['timestamp']?.toString() ?? DateTime.now().toIso8601String(),
-      'items': allItems,
-      'subtotal': totalSubtotal,
-      'discount': discountRate,
-      'isPercentDiscount': isPercentDiscount,
-      'discountAmount': totalDiscountAmount,
-      'total': ticketTotal,
-              'excessAmount': payments.first['excessAmount'] != null ? (payments.first['excessAmount'] as num?)?.toDouble() : null,
-      'covers': payments.first['covers'] ?? 1,
-      'server': payments.first['server'] ?? 'unknown',
-              'paymentMode': payments.first['paymentMode']?.toString() ?? 'N/A',
-              'isSplitPayment': false,
-      'paymentDetails': paymentDetails,
-      'totalAmount': totalAmount,
-    };
-          })();
+      
+      // Calculer le taux de remise global
+      double discountRate = 0.0;
+      bool isPercentDiscount = false;
+      if (totalDiscountAmount > 0.01 && totalSubtotal > 0.01) {
+        discountRate = (totalDiscountAmount / totalSubtotal) * 100;
+        isPercentDiscount = true;
+      }
+      
+      return {
+        'table': tableNumber,
+        'date': payments.first['timestamp']?.toString() ?? DateTime.now().toIso8601String(),
+        'items': allItems,
+        'subtotal': totalSubtotal,
+        'discount': discountRate,
+        'isPercentDiscount': isPercentDiscount,
+        'discountAmount': totalDiscountAmount,
+        'total': ticketTotal,
+        'excessAmount': totalExcessAmount > 0.01 ? totalExcessAmount : null,
+        'covers': payments.first['covers'] ?? 1,
+        'server': payments.first['server'] ?? 'unknown',
+        'paymentMode': payments.length == 1 ? (payments.first['paymentMode']?.toString() ?? 'N/A') : 'MIXTE',
+        'isSplitPayment': payments.any((p) => p['isSplitPayment'] == true),
+        'paymentDetails': consolidatedPaymentDetails, // 🆕 Tous les paymentDetails agrégés
+        'totalAmount': totalAmount,
+      };
+    })();
     
     // Extraire les valeurs du ticket (qu'il vienne du backend ou du fallback)
     final ticketTotal = (mainTicket['total'] as num?)?.toDouble() ?? 0.0;
@@ -606,6 +659,91 @@ class _ServiceDetailPage extends StatelessWidget {
                         color: Colors.green.shade700,
                       ),
                     ),
+                    // 🆕 Afficher le crédit client si présent dans paymentDetails
+                    ...(() {
+                      // 🆕 DEBUG: Vérifier ce qui est dans mainTicket
+                      if (tableNumber == '1') {
+                        print('🔍 [DEBUG] Table 1 - Ticket principal:');
+                        print('  - mainTicket[paymentDetails]: ${mainTicket['paymentDetails'] != null ? 'PRÉSENT' : 'ABSENT'}');
+                        print('  - mainTicket[splitPaymentAmounts]: ${mainTicket['splitPaymentAmounts'] != null ? 'PRÉSENT' : 'ABSENT'}');
+                        if (mainTicket['paymentDetails'] != null) {
+                          print('  - paymentDetails: ${mainTicket['paymentDetails']}');
+                        }
+                        if (payments.isNotEmpty && payments.first['splitPaymentAmounts'] != null) {
+                          print('  - payments.first[splitPaymentAmounts]: ${payments.first['splitPaymentAmounts']}');
+                        }
+                      }
+                      
+                      // 🆕 Essayer d'abord paymentDetails du ticket, sinon splitPaymentAmounts du paiement
+                      List<Map<String, dynamic>> paymentDetails = [];
+                      if (mainTicket['paymentDetails'] != null) {
+                        paymentDetails = (mainTicket['paymentDetails'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+                      } else if (payments.isNotEmpty && payments.first['splitPaymentAmounts'] != null) {
+                        // Fallback: utiliser splitPaymentAmounts du paiement
+                        paymentDetails = (payments.first['splitPaymentAmounts'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+                      }
+                      
+                      final creditDetails = paymentDetails.where((d) => d['mode']?.toString() == 'CREDIT').toList();
+                      
+                      if (creditDetails.isEmpty) return <Widget>[];
+                      
+                      return [
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.orange.shade300, width: 1),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Crédit client (non encaissé):',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange.shade800,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              ...creditDetails.map((credit) {
+                                final clientName = credit['clientName']?.toString() ?? 'Client inconnu';
+                                final amount = (credit['amount'] as num?)?.toDouble() ?? 0.0;
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          clientName,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontStyle: FontStyle.italic,
+                                            color: Colors.orange.shade700,
+                                          ),
+                                        ),
+                                      ),
+                                      Text(
+                                        _formatCurrency(amount),
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.orange.shade700,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ],
+                          ),
+                        ),
+                      ];
+                    })(),
                     if (totalExcessAmount != null && totalExcessAmount > 0.01) ...[
                       const SizedBox(height: 4),
                       Text(
@@ -627,6 +765,31 @@ class _ServiceDetailPage extends StatelessWidget {
                           color: Colors.green.shade800,
                         ),
                       ),
+                      // 🆕 Expliquer pourquoi le montant encaissé est différent du total
+                      ...(() {
+                        // 🆕 Essayer d'abord paymentDetails du ticket, sinon splitPaymentAmounts du paiement
+                        List<Map<String, dynamic>> paymentDetails = [];
+                        if (mainTicket['paymentDetails'] != null) {
+                          paymentDetails = (mainTicket['paymentDetails'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+                        } else if (payments.isNotEmpty && payments.first['splitPaymentAmounts'] != null) {
+                          // Fallback: utiliser splitPaymentAmounts du paiement
+                          paymentDetails = (payments.first['splitPaymentAmounts'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+                        }
+                        
+                        final hasCredit = paymentDetails.any((d) => d['mode']?.toString() == 'CREDIT');
+                        if (!hasCredit || (ticketTotal - totalAmount).abs() <= 0.01) return <Widget>[];
+                        return [
+                          const SizedBox(height: 4),
+                          Text(
+                            '(Le montant encaissé exclut le crédit client)',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ];
+                      })(),
                     ],
                     const SizedBox(height: 12),
                     ElevatedButton.icon(
@@ -730,8 +893,48 @@ class _ServiceDetailPage extends StatelessWidget {
                       ],
                     ],
                   ),
-                  subtitle: Text(_formatDate(payment['timestamp']?.toString())),
-                  trailing: Row(
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(_formatDate(payment['timestamp']?.toString())),
+                      if (isSplitPayment && payment['splitPaymentAmounts'] != null) ...[
+                        const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 4,
+                          runSpacing: 4,
+                          children: ((payment['splitPaymentAmounts'] as List<dynamic>?) ?? [])
+                              .take(3)
+                              .map((split) {
+                            final splitMode = (split['mode'] as String?) ?? '';
+                            final splitAmount = (split['amount'] as num?)?.toDouble() ?? 0.0;
+                            final splitClientName = split['clientName'] as String?;
+                            final displayText = paymentMode == 'CREDIT' && splitClientName != null
+                                ? '$splitMode ($splitClientName)'
+                                : splitMode;
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade200,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                '$displayText ${_formatCurrency(splitAmount)}',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey.shade700,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ],
+                  ),
+                  trailing: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
@@ -740,11 +943,14 @@ class _ServiceDetailPage extends StatelessWidget {
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
+                        textAlign: TextAlign.right,
                       ),
-                      const SizedBox(width: 8),
-                      if (effectiveTicket != null)
+                      if (effectiveTicket != null) ...[
+                        const SizedBox(height: 4),
                         IconButton(
-                          icon: const Icon(Icons.receipt_long),
+                          icon: const Icon(Icons.receipt_long, size: 20),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
                           onPressed: () {
                             showDialog(
                               context: context,
@@ -753,6 +959,7 @@ class _ServiceDetailPage extends StatelessWidget {
                           },
                           tooltip: 'Voir le ticket',
                         ),
+                      ],
                     ],
                   ),
                 ),

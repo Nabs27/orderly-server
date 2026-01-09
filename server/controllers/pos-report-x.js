@@ -1013,15 +1013,21 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				// Dédupliquer par mode + enteredAmount pour éviter les doublons (chaque transaction apparaît N fois par commande)
 				splitPaymentModes: act.isSplitPayment ? [...new Set(payments.map(p => p.paymentMode))] : undefined,
 				splitPaymentAmounts: act.isSplitPayment ? (() => {
-					const processedTxs = new Set();
+					// 🆕 CORRECTION : Utiliser la même logique de déduplication que paymentDetails
+					// Clé : splitPaymentId + mode + enteredAmount (selon .cursorrules 3.1)
+					const processedPayments = new Set();
 					const uniqueAmounts = [];
+
 					for (const p of payments) {
+						if (p.paymentMode === 'CREDIT' && !p.hasCashInPayment) continue; // Exclure CREDIT pur
+
 						const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
-						const txKey = `${p.paymentMode}_${enteredAmount.toFixed(3)}`;
-						if (!processedTxs.has(txKey)) {
-							processedTxs.add(txKey);
+						// 🆕 Clé de déduplication identique à paymentDetails
+						const paymentKey = `${p.splitPaymentId || 'no-split'}_${p.paymentMode}_${enteredAmount.toFixed(3)}`;
+
+						if (!processedPayments.has(paymentKey)) {
+							processedPayments.add(paymentKey);
 							const detail = { mode: p.paymentMode, amount: enteredAmount };
-							// 🆕 Ajouter le nom du client pour les paiements CREDIT (comme dans l'historique)
 							if (p.paymentMode === 'CREDIT' && p.creditClientName) {
 								detail.clientName = p.creditClientName;
 							}

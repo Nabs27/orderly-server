@@ -556,56 +556,31 @@ class _ServiceDetailPage extends StatelessWidget {
         },
       );
       
-      // 🆕 ÉTAPE 2: Agréger tous les paymentDetails de tous les paiements
+      // 🆕 ÉTAPE 2: Utiliser DIRECTEMENT les paymentDetails du backend (maintenant dédupliqués)
       final consolidatedPaymentDetails = <Map<String, dynamic>>[];
-      final processedDetails = <String>{}; // Pour dédupliquer les paiements divisés
-      
-      for (final payment in payments) {
-        // Pour les paiements divisés, utiliser paymentDetails du ticket du backend
-        if (payment['isSplitPayment'] == true && payment['ticket'] != null) {
-          final ticket = payment['ticket'] as Map<String, dynamic>?;
-          if (ticket != null && ticket['paymentDetails'] != null) {
-            final ticketPaymentDetails = (ticket['paymentDetails'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-            for (final detail in ticketPaymentDetails) {
-              // Dédupliquer par mode + amount + clientName
-              final detailKey = '${detail['mode']}_${detail['amount']}_${detail['clientName'] ?? ''}';
-              if (!processedDetails.contains(detailKey)) {
-                processedDetails.add(detailKey);
-                consolidatedPaymentDetails.add(Map<String, dynamic>.from(detail));
-              }
-            }
-          } else if (payment['splitPaymentAmounts'] != null) {
-            // Fallback: utiliser splitPaymentAmounts du paiement
-            final splitAmounts = (payment['splitPaymentAmounts'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-            for (final detail in splitAmounts) {
-              final detailKey = '${detail['mode']}_${detail['amount']}_${detail['clientName'] ?? ''}';
-              if (!processedDetails.contains(detailKey)) {
-                processedDetails.add(detailKey);
-                consolidatedPaymentDetails.add({
-                  'mode': detail['mode']?.toString() ?? 'N/A',
-                  'amount': (detail['amount'] as num?)?.toDouble() ?? 0.0,
-                  if (detail['clientName'] != null) 'clientName': detail['clientName'].toString(),
-                });
-              }
-            }
-          }
+
+      // 🆕 LOGIC SIMPLIFIÉE : Le backend fait maintenant la déduplication correcte
+      // On prend simplement les paymentDetails du premier paiement (ils sont maintenant corrects)
+      if (payments.isNotEmpty) {
+        final firstPayment = payments.first;
+        if (firstPayment['ticket'] != null && firstPayment['ticket']['paymentDetails'] != null) {
+          // Pour les paiements avec ticket (divisés ou non), utiliser paymentDetails du ticket
+          final ticket = firstPayment['ticket'] as Map<String, dynamic>;
+          final ticketPaymentDetails = (ticket['paymentDetails'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+          consolidatedPaymentDetails.addAll(ticketPaymentDetails.map((detail) => Map<String, dynamic>.from(detail)));
         } else {
-          // Pour les paiements simples, construire le détail
-          final enteredAmount = (payment['enteredAmount'] as num?)?.toDouble() ?? 
-              ((payment['amount'] as num?)?.toDouble() ?? 0.0);
-          final paymentMode = payment['paymentMode']?.toString() ?? '';
-          final detailKey = '${paymentMode}_${enteredAmount}_${payment['creditClientName'] ?? ''}';
-          if (!processedDetails.contains(detailKey)) {
-            processedDetails.add(detailKey);
-            final detail = {
-              'mode': paymentMode,
-              'amount': enteredAmount,
-            };
-            if (paymentMode == 'CREDIT' && payment['creditClientName'] != null) {
-              detail['clientName'] = payment['creditClientName'].toString();
-            }
-            consolidatedPaymentDetails.add(detail);
+          // Pour les paiements simples sans ticket, construire depuis les données du paiement
+          final enteredAmount = (firstPayment['enteredAmount'] as num?)?.toDouble() ??
+              ((firstPayment['amount'] as num?)?.toDouble() ?? 0.0);
+          final paymentMode = firstPayment['paymentMode']?.toString() ?? '';
+          final detail = {
+            'mode': paymentMode,
+            'amount': enteredAmount,
+          };
+          if (paymentMode == 'CREDIT' && firstPayment['creditClientName'] != null) {
+            detail['clientName'] = firstPayment['creditClientName'].toString();
           }
+          consolidatedPaymentDetails.add(detail);
         }
       }
       
