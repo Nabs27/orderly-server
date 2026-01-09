@@ -1083,54 +1083,13 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 						server: server,
 						// 🆕 Ajouter les détails des paiements et le montant total encaissé
 						// ⚠️ RÈGLE .cursorrules 3.1: Utiliser payment-processor.js comme source de vérité unique
-						paymentDetails: (() => {
-							// Pour les paiements divisés, dédupliquer les transactions identiques
-							// car chaque paiement apparaît N fois (une par commande)
-							const txCounts = {};
-							const distinctOrderIds = new Set(payments.map(p => p.orderId || p.sessionId));
-							const nbOrders = distinctOrderIds.size > 0 ? distinctOrderIds.size : 1;
-
-							// Compter les occurrences de chaque mode + montant
-							for (const p of payments) {
-								if (p.paymentMode === 'CREDIT' && !p.hasCashInPayment) continue; // Exclure CREDIT pur
-
-								const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
-								const mode = p.paymentMode || 'INCONNU';
-								const txKey = `${mode}_${enteredAmount.toFixed(3)}`;
-
-								if (!txCounts[txKey]) {
-									txCounts[txKey] = {
-										mode: mode,
-										amount: enteredAmount,
-										count: 0,
-										payment: p // Pour clientName
-									};
-								}
-								txCounts[txKey].count++;
-							}
-
-							// Créer les paymentDetails dédupliqués
-							const paymentDetails = [];
-							for (const txKey in txCounts) {
-								const tx = txCounts[txKey];
-								const nbTransactions = Math.round(tx.count / nbOrders);
-
-								for (let i = 0; i < nbTransactions; i++) {
-									const detail = {
-										mode: tx.mode,
-										amount: tx.amount
-									};
-
-									if (tx.mode === 'CREDIT' && tx.payment.creditClientName) {
-										detail.clientName = tx.payment.creditClientName;
-									}
-
-									paymentDetails.push(detail);
-								}
-							}
-
-							return paymentDetails;
-						})(),
+						paymentDetails: payments
+							.filter(p => p.paymentMode !== 'CREDIT' || p.hasCashInPayment) // Exclure CREDIT pur (non comptabilisé)
+							.map((p) => ({
+								mode: p.paymentMode || 'INCONNU',
+								amount: p.enteredAmount != null ? p.enteredAmount : (p.amount || 0),
+								...(p.paymentMode === 'CREDIT' && p.creditClientName ? { clientName: p.creditClientName } : {})
+							})),
 						totalAmount: totalAmountEncaisse > 0.01 ? totalAmountEncaisse : undefined, // 🆕 Montant total encaissé (exclut CREDIT)
 						excessAmount: totalExcessAmount > 0.01 ? totalExcessAmount : undefined // 🆕 Pourboire
 					};
