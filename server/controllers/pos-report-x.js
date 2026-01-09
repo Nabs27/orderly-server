@@ -730,53 +730,76 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		// 🆕 CREDIT est maintenant inclus pour affichage dans l'historique
 	});
 
-	// 🆕 Regrouper les paiements par acte de paiement (même timestamp à la seconde, même table, mode, remise)
-	// Cela permet de fusionner les paiements créés par payMultiOrders (1 paiement par commande) en un seul acte visible
-	// ⚠️ IMPORTANT : On inclut la table dans la clé pour éviter de regrouper des paiements de tables différentes
-	// 🆕 Pour les paiements divisés, utiliser splitPaymentId pour regrouper tous les modes ensemble
-	const paymentsByAct = {};
+	// 🆕 CORRECTION : Aligner avec history-processor.js
+	// ÉTAPE 1: Séparer les paiements divisés (split) des paiements réguliers
+	// Cela évite les confusions de regroupement entre les deux types
+	const splitPayments = [];
+	const regularPayments = [];
+	
 	for (const payment of filteredPaidPayments) {
-		let timestampKey;
-		try {
-			const roundedTimestamp = new Date(payment.timestamp).toISOString().substring(0, 19);
-			const tableKey = String(payment.table || 'N/A');
-
-			// 🆕 Si c'est un paiement divisé, utiliser splitPaymentId directement pour regrouper tous les modes ensemble
-			if (payment.isSplitPayment && payment.splitPaymentId) {
-				// Utiliser directement le splitPaymentId (format: split_TIMESTAMP) pour regrouper tous les modes
-				timestampKey = `${tableKey}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount || false}`;
-			} else {
-				// 🆕 CORRECTION : Aligner avec history-processor.js
-				// ⚠️ RÈGLE .cursorrules 2.1: Pour les paiements multi-commandes, chaque commande a son propre paymentRecord
-				// avec un montant proportionnel. On regroupe par timestamp + mode + remise (SANS le montant)
-				// pour fusionner les paiements multi-commandes en un seul acte visible.
-				timestampKey = `${tableKey}_${roundedTimestamp}_${payment.paymentMode}_${payment.discount || 0}_${payment.isPercentDiscount || false}`;
-			}
-		} catch (e) {
-			const tableKey = String(payment.table || 'N/A');
-			if (payment.isSplitPayment && payment.splitPaymentId) {
-				// Utiliser directement le splitPaymentId pour regrouper tous les modes
-				timestampKey = `${tableKey}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
-			} else {
-				// 🆕 CORRECTION : Aligner avec history-processor.js (sans le montant)
-				timestampKey = `${tableKey}_${payment.timestamp}_${payment.paymentMode}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
-			}
+		if (payment.isSplitPayment && payment.splitPaymentId) {
+			splitPayments.push(payment);
+		} else {
+			regularPayments.push(payment);
 		}
+	}
+	
+	console.log(`[report-x] 📊 Paiements: ${splitPayments.length} split, ${regularPayments.length} réguliers`);
 
-		if (!paymentsByAct[timestampKey]) {
-			paymentsByAct[timestampKey] = {
+	// ÉTAPE 2: Regrouper les paiements divisés par splitPaymentId (comme history-processor.js)
+	const splitPaymentsBySplitId = {};
+	for (const payment of splitPayments) {
+		const tableKey = String(payment.table || 'N/A');
+		const splitKey = `${tableKey}_${payment.splitPaymentId}`;
+		
+		if (!splitPaymentsBySplitId[splitKey]) {
+			splitPaymentsBySplitId[splitKey] = {
 				timestamp: payment.timestamp,
-				paymentMode: payment.paymentMode, // 🆕 Sera remplacé par "MIXTE" si plusieurs modes différents
+				paymentMode: payment.paymentMode,
 				discount: payment.discount || 0,
 				isPercentDiscount: payment.isPercentDiscount || false,
 				hasDiscount: payment.hasDiscount || false,
-				isSplitPayment: payment.isSplitPayment || false, // 🆕 Ajouter le flag
-				splitPaymentId: payment.splitPaymentId || null, // 🆕 Ajouter l'ID
+				isSplitPayment: true,
+				splitPaymentId: payment.splitPaymentId,
 				payments: [],
 			};
 		}
-		paymentsByAct[timestampKey].payments.push(payment);
+		splitPaymentsBySplitId[splitKey].payments.push(payment);
 	}
+
+	// ÉTAPE 3: Regrouper les paiements réguliers par timestamp + mode + discount (comme history-processor.js)
+	const regularPaymentsByAct = {};
+	for (const payment of regularPayments) {
+		const tableKey = String(payment.table || 'N/A');
+		let timestampKey;
+		try {
+			const roundedTimestamp = new Date(payment.timestamp).toISOString().substring(0, 19);
+			// ⚠️ RÈGLE .cursorrules 2.1: Pour les paiements multi-commandes, on regroupe par 
+			// timestamp + mode + remise (SANS le montant) pour fusionner les paiements multi-commandes
+			timestampKey = `${tableKey}_${roundedTimestamp}_${payment.paymentMode}_${payment.discount || 0}_${payment.isPercentDiscount || false}`;
+		} catch (e) {
+			timestampKey = `${tableKey}_${payment.timestamp}_${payment.paymentMode}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
+		}
+
+		if (!regularPaymentsByAct[timestampKey]) {
+			regularPaymentsByAct[timestampKey] = {
+				timestamp: payment.timestamp,
+				paymentMode: payment.paymentMode,
+				discount: payment.discount || 0,
+				isPercentDiscount: payment.isPercentDiscount || false,
+				hasDiscount: payment.hasDiscount || false,
+				isSplitPayment: false,
+				splitPaymentId: null,
+				payments: [],
+			};
+		}
+		regularPaymentsByAct[timestampKey].payments.push(payment);
+	}
+
+	// ÉTAPE 4: Fusionner les deux maps en une seule (comme history-processor.js ligne 439-441)
+	const paymentsByAct = { ...splitPaymentsBySplitId, ...regularPaymentsByAct };
+	
+	console.log(`[report-x] 📊 Groupes: ${Object.keys(splitPaymentsBySplitId).length} split, ${Object.keys(regularPaymentsByAct).length} réguliers, ${Object.keys(paymentsByAct).length} total`);
 
 	// 🆕 Créer les paiements finaux (regroupés par acte)
 	const paidPayments = [];
@@ -1059,11 +1082,16 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 						server: server,
 						// 🆕 Ajouter les détails des paiements et le montant total encaissé
 						// ⚠️ RÈGLE .cursorrules 3.1: Utiliser payment-processor.js comme source de vérité unique
+						// ⚠️ CORRECTION : Pour les paiements NON-split regroupés (multi-commandes), sommer TOUS les enteredAmount
 						paymentDetails: act.isSplitPayment 
 							? paymentProcessor.getPaymentDetails(payments) // 🆕 Utiliser la fonction centralisée
 							: [{
 							mode: payments[0].paymentMode,
-							amount: payments[0].enteredAmount != null ? payments[0].enteredAmount : (payments[0].amount || 0),
+							// 🆕 CORRECTION : Sommer les enteredAmount de TOUTES les commandes (pas seulement payments[0])
+							amount: payments.reduce((sum, p) => {
+								const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
+								return sum + enteredAmount;
+							}, 0),
 							...(payments[0].paymentMode === 'CREDIT' && payments[0].creditClientName ? { clientName: payments[0].creditClientName } : {})
 						}],
 						totalAmount: totalAmountEncaisse > 0.01 ? totalAmountEncaisse : undefined, // 🆕 Montant total encaissé (exclut CREDIT)
