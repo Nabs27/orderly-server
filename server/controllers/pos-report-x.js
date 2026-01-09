@@ -786,18 +786,6 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		paymentsByAct[timestampKey].payments.push(payment);
 	}
 
-	console.log(`[DEBUG] Collected allPayments: ${allPayments.length} payments`);
-	for (const payment of allPayments.slice(0, 10)) { // Log first 10
-		console.log(`[DEBUG] Payment: table=${payment.table}, mode=${payment.paymentMode}, amount=${payment.enteredAmount || payment.amount}, isSplit=${payment.isSplitPayment}, splitId=${payment.splitPaymentId}`);
-	}
-
-	console.log(`[DEBUG] Created paymentsByAct: ${Object.keys(paymentsByAct).length} acts`);
-	for (const [key, act] of Object.entries(paymentsByAct).slice(0, 5)) { // Log first 5 acts
-		console.log(`[DEBUG] Act ${key}: ${act.payments.length} payments, isSplit=${act.isSplitPayment}, splitId=${act.splitPaymentId}`);
-		for (const payment of act.payments.slice(0, 3)) { // Log first 3 payments per act
-			console.log(`  - Payment: mode=${payment.paymentMode}, amount=${payment.enteredAmount || payment.amount}, splitId=${payment.splitPaymentId}`);
-		}
-	}
 
 	// 🆕 Créer les paiements finaux (regroupés par acte)
 	const paidPayments = [];
@@ -1095,13 +1083,54 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 						server: server,
 						// 🆕 Ajouter les détails des paiements et le montant total encaissé
 						// ⚠️ RÈGLE .cursorrules 3.1: Utiliser payment-processor.js comme source de vérité unique
-						paymentDetails: payments
-							.filter(p => p.paymentMode !== 'CREDIT' || p.hasCashInPayment) // Exclure CREDIT pur (non comptabilisé)
-							.map((p) => ({
-								mode: p.paymentMode || 'INCONNU',
-								amount: p.enteredAmount != null ? p.enteredAmount : (p.amount || 0),
-								...(p.paymentMode === 'CREDIT' && p.creditClientName ? { clientName: p.creditClientName } : {})
-							})),
+						paymentDetails: (() => {
+							// Pour les paiements divisés, dédupliquer les transactions identiques
+							// car chaque paiement apparaît N fois (une par commande)
+							const txCounts = {};
+							const distinctOrderIds = new Set(payments.map(p => p.orderId || p.sessionId));
+							const nbOrders = distinctOrderIds.size > 0 ? distinctOrderIds.size : 1;
+
+							// Compter les occurrences de chaque mode + montant
+							for (const p of payments) {
+								if (p.paymentMode === 'CREDIT' && !p.hasCashInPayment) continue; // Exclure CREDIT pur
+
+								const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
+								const mode = p.paymentMode || 'INCONNU';
+								const txKey = `${mode}_${enteredAmount.toFixed(3)}`;
+
+								if (!txCounts[txKey]) {
+									txCounts[txKey] = {
+										mode: mode,
+										amount: enteredAmount,
+										count: 0,
+										payment: p // Pour clientName
+									};
+								}
+								txCounts[txKey].count++;
+							}
+
+							// Créer les paymentDetails dédupliqués
+							const paymentDetails = [];
+							for (const txKey in txCounts) {
+								const tx = txCounts[txKey];
+								const nbTransactions = Math.round(tx.count / nbOrders);
+
+								for (let i = 0; i < nbTransactions; i++) {
+									const detail = {
+										mode: tx.mode,
+										amount: tx.amount
+									};
+
+									if (tx.mode === 'CREDIT' && tx.payment.creditClientName) {
+										detail.clientName = tx.payment.creditClientName;
+									}
+
+									paymentDetails.push(detail);
+								}
+							}
+
+							return paymentDetails;
+						})(),
 						totalAmount: totalAmountEncaisse > 0.01 ? totalAmountEncaisse : undefined, // 🆕 Montant total encaissé (exclut CREDIT)
 						excessAmount: totalExcessAmount > 0.01 ? totalExcessAmount : undefined // 🆕 Pourboire
 					};
@@ -1182,10 +1211,6 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		return dateB - dateA;
 	});
 
-	console.log(`[DEBUG] Final paidPayments: ${paidPayments.length} payments`);
-	for (const payment of paidPayments.slice(0, 5)) { // Log first 5
-		console.log(`[DEBUG] PaidPayment: id=${payment.id}, mode=${payment.paymentMode}, amount=${payment.amount}, isSplit=${payment.isSplitPayment}, splitId=${payment.splitPaymentId}, paymentDetails=${payment.ticket?.paymentDetails?.length || 0}`);
-	}
 
 	// 🆕 Créer un map pour retrouver les tickets par actKey (après construction de paidPayments)
 	// Cela garantit que le ticket de remise = ticket exact de l'acte (comme dans paidPayments)
