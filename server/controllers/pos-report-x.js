@@ -746,11 +746,11 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				// Utiliser directement le splitPaymentId (format: split_TIMESTAMP) pour regrouper tous les modes
 				timestampKey = `${tableKey}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount || false}`;
 			} else {
-				// 🆕 CORRECTION .cursorrules 3.2: Utiliser un identifiant composite au lieu du timestamp
-				// Clé: table + mode + montant + noteId + remise (plus précis et déterministe)
-				const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
-				const noteId = payment.noteId || 'main';
-				timestampKey = `${tableKey}_${payment.paymentMode}_${enteredAmount.toFixed(3)}_${noteId}_${payment.discount || 0}_${payment.isPercentDiscount || false}`;
+				// 🆕 CORRECTION : Aligner avec history-processor.js
+				// ⚠️ RÈGLE .cursorrules 2.1: Pour les paiements multi-commandes, chaque commande a son propre paymentRecord
+				// avec un montant proportionnel. On regroupe par timestamp + mode + remise (SANS le montant)
+				// pour fusionner les paiements multi-commandes en un seul acte visible.
+				timestampKey = `${tableKey}_${roundedTimestamp}_${payment.paymentMode}_${payment.discount || 0}_${payment.isPercentDiscount || false}`;
 			}
 		} catch (e) {
 			const tableKey = String(payment.table || 'N/A');
@@ -758,10 +758,8 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				// Utiliser directement le splitPaymentId pour regrouper tous les modes
 				timestampKey = `${tableKey}_${payment.splitPaymentId}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
 			} else {
-				// 🆕 CORRECTION .cursorrules 3.2: Utiliser un identifiant composite au lieu du timestamp
-				const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
-				const noteId = payment.noteId || 'main';
-				timestampKey = `${tableKey}_${payment.paymentMode}_${enteredAmount.toFixed(3)}_${noteId}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
+				// 🆕 CORRECTION : Aligner avec history-processor.js (sans le montant)
+				timestampKey = `${tableKey}_${payment.timestamp}_${payment.paymentMode}_${payment.discount || 0}_${payment.isPercentDiscount ? 'PCT' : 'FIX'}`;
 			}
 		}
 
