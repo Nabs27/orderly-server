@@ -487,8 +487,22 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	// 🆕 NOTE: totals et itemsByCategory seront créés APRÈS la création de paidPayments
 	// pour éviter de compter les articles plusieurs fois pour les paiements divisés
 	// ⚠️ CORRECTION: Utiliser le module commun payment-processor pour la déduplication
-	// Cela garantit que History, KPI et X Report utilisent la même logique
-	const paymentsByMode = paymentProcessor.calculatePaymentsByMode(allPayments);
+	// Harmoniser avec l'historique : pré-grouper les paiements par actes comme history-processor
+	const historyProcessor = require('../utils/history-processor');
+	const groupedPayments = historyProcessor.groupPaymentsByTimestamp([
+		// Simuler des sessions avec paymentHistory pour chaque commande
+		...filteredArchivedOrders.map(order => ({
+			...order,
+			paymentHistory: order.paymentHistory || []
+		})),
+		...filteredActiveOrders.map(order => ({
+			...order,
+			paymentHistory: order.paymentHistory || []
+		}))
+	]);
+
+	// Maintenant utiliser calculatePaymentsByMode sur les paiements groupés (cohérent avec historique)
+	const paymentsByMode = paymentProcessor.calculatePaymentsByMode(groupedPayments);
 	// totals sera calculé après paidPayments
 	const unpaidTables = calculateUnpaidTables(server);
 
