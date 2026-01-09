@@ -386,7 +386,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	// Le serveur cloud charge les données uniquement au démarrage, donc il faut recharger
 	// les données à chaque génération de rapport pour avoir les données à jour (notamment pour les tables non payées)
 	const dbManager = require('../utils/dbManager');
-	if (dbManager.isCloud && dbManager.db) {
+	if (dbManager.db) { // 🆕 Recharger aussi sur serveur local pour cohérence avec historique
 		try {
 			// Recharger les commandes archivées
 			const archived = await dbManager.archivedOrders.find({}).toArray();
@@ -400,15 +400,13 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			// Ici, on veut juste recharger TOUTES les commandes actives pour avoir les données à jour
 			const orders = await dbManager.orders.find({}).toArray();
 
-			// 🆕 Filtrer uniquement les commandes avec status !== 'archived' (comme getAllOrders)
-			// Les commandes archivées sont dans archivedOrders, pas dans orders
+			// 🆕 Filtrer les commandes actives (cohérent avec historique)
 			const activeOrders = orders.filter(o => {
 				// Exclure les commandes archivées
 				if (o.status === 'archived') {
 					return false;
 				}
 				// Exclure les commandes client en attente (waitingForPos: true, pas encore confirmées)
-				// Ces commandes n'ont pas encore d'ID et ne sont pas encore actives
 				if (o.waitingForPos === true && (!o.id || o.id === null) && o.source === 'client') {
 					return false;
 				}
@@ -419,9 +417,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			dataStore.orders.push(...activeOrders);
 			console.log(`[report-x] ☁️ ${dataStore.orders.length} commandes actives rechargées depuis MongoDB (sur ${orders.length} total)`);
 
-			// 🆕 IMPORTANT : Recharger aussi les clients crédit, sinon le KPI crédit peut être faux sur cloud
-			// Les tickets montrent bien les paiements CREDIT car ils viennent de paymentHistory des commandes,
-			// mais le KPI "Crédit client" lit dataStore.clientCredits qui n'était pas rechargé depuis MongoDB
+			// 🆕 IMPORTANT : Recharger aussi les clients crédit
 			const clients = await dbManager.clientCredits.find({}).toArray();
 			dataStore.clientCredits.length = 0;
 			dataStore.clientCredits.push(...clients);
@@ -487,22 +483,10 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	// 🆕 NOTE: totals et itemsByCategory seront créés APRÈS la création de paidPayments
 	// pour éviter de compter les articles plusieurs fois pour les paiements divisés
 	// ⚠️ CORRECTION: Utiliser le module commun payment-processor pour la déduplication
-	// Harmoniser avec l'historique : pré-grouper les paiements par actes comme history-processor
-	const historyProcessor = require('../utils/history-processor');
-	const groupedPayments = historyProcessor.groupPaymentsByTimestamp([
-		// Simuler des sessions avec paymentHistory pour chaque commande
-		...filteredArchivedOrders.map(order => ({
-			...order,
-			paymentHistory: order.paymentHistory || []
-		})),
-		...filteredActiveOrders.map(order => ({
-			...order,
-			paymentHistory: order.paymentHistory || []
-		}))
-	]);
-
-	// Maintenant utiliser calculatePaymentsByMode sur les paiements groupés (cohérent avec historique)
-	const paymentsByMode = paymentProcessor.calculatePaymentsByMode(groupedPayments);
+	// Cela garantit que History, KPI et X Report utilisent la même logique
+	// ⚠️ IMPORTANT: NE PAS utiliser groupPaymentsByTimestamp() car cela viole .cursorrules 3.2
+	// (interdiction d'utiliser timestamp pour déduplication/regroupement)
+	const paymentsByMode = paymentProcessor.calculatePaymentsByMode(allPayments);
 	// totals sera calculé après paidPayments
 	const unpaidTables = calculateUnpaidTables(server);
 
