@@ -1082,13 +1082,13 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 						server: server,
 						// 🆕 Ajouter les détails des paiements et le montant total encaissé
 						// ⚠️ RÈGLE .cursorrules 3.1: Utiliser payment-processor.js comme source de vérité unique
-						paymentDetails: act.isSplitPayment 
-							? paymentProcessor.getPaymentDetails(payments) // 🆕 Utiliser la fonction centralisée
-							: [{
-							mode: payments[0].paymentMode,
-							amount: payments[0].enteredAmount != null ? payments[0].enteredAmount : (payments[0].amount || 0),
-							...(payments[0].paymentMode === 'CREDIT' && payments[0].creditClientName ? { clientName: payments[0].creditClientName } : {})
-						}],
+						paymentDetails: payments
+							.filter(p => p.paymentMode !== 'CREDIT' || p.hasCashInPayment) // Exclure CREDIT pur (non comptabilisé)
+							.map((p, index) => ({
+								mode: p.paymentMode || 'INCONNU',
+								amount: p.enteredAmount != null ? p.enteredAmount : (p.amount || 0),
+								...(p.paymentMode === 'CREDIT' && p.creditClientName ? { clientName: p.creditClientName } : {})
+							})),
 						totalAmount: totalAmountEncaisse > 0.01 ? totalAmountEncaisse : undefined, // 🆕 Montant total encaissé (exclut CREDIT)
 						excessAmount: totalExcessAmount > 0.01 ? totalExcessAmount : undefined // 🆕 Pourboire
 					};
