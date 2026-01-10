@@ -1092,7 +1092,18 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 								const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
 								return sum + enteredAmount;
 							}, 0),
-							...(payments[0].paymentMode === 'CREDIT' && payments[0].creditClientName ? { clientName: payments[0].creditClientName } : {})
+							...(payments.some(p => p.paymentMode === 'CREDIT') ? {
+								clientName: (() => {
+									// 🆕 Chercher d'abord avec creditClientId (nouveau), sinon avec creditClientName (ancien)
+									const creditPayment = payments.find(p => p.paymentMode === 'CREDIT');
+									if (creditPayment?.creditClientId) {
+										// Utiliser l'ID pour récupérer le nom actuel depuis dataStore.clientCredits
+										return dataStore.clientCredits.find(c => c.id === creditPayment.creditClientId)?.name || creditPayment.creditClientName || 'Client inconnu';
+									}
+									// Fallback vers l'ancien système (pour compatibilité)
+									return creditPayment?.creditClientName || 'Client inconnu';
+								})()
+							} : {})
 						}],
 						totalAmount: totalAmountEncaisse > 0.01 ? totalAmountEncaisse : undefined, // 🆕 Montant total encaissé (exclut CREDIT)
 						excessAmount: totalExcessAmount > 0.01 ? totalExcessAmount : undefined // 🆕 Pourboire
@@ -1157,7 +1168,16 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 						paymentDetails: [{
 							mode: payment.paymentMode,
 							amount: payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0),
-							...(payment.paymentMode === 'CREDIT' && payment.creditClientName ? { clientName: payment.creditClientName } : {})
+							...(payment.paymentMode === 'CREDIT' ? {
+								clientName: (() => {
+									if (payment.creditClientId) {
+										// 🆕 Utiliser l'ID pour récupérer le nom actuel depuis dataStore.clientCredits
+										return dataStore.clientCredits.find(c => c.id === payment.creditClientId)?.name || payment.creditClientName || 'Client inconnu';
+									}
+									// Fallback vers l'ancien système
+									return payment.creditClientName || 'Client inconnu';
+								})()
+							} : {})
 						}],
 						totalAmount: totalAmountEncaisse > 0.01 ? totalAmountEncaisse : undefined, // 🆕 Montant total encaissé (exclut CREDIT)
 						excessAmount: payment.excessAmount != null && payment.excessAmount > 0.01 ? payment.excessAmount : undefined // 🆕 Pourboire
