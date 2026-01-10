@@ -999,6 +999,39 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				? (totalEnteredAmount - totalAllocatedAmount)
 				: 0;
 
+			// 🆕 Récupérer le nom du client CREDIT (chercher dans les paiements)
+			const creditClientName = (() => {
+				const creditPayment = payments.find(p => p.paymentMode === 'CREDIT');
+				if (!creditPayment) return null;
+				
+				// 1. Essayer creditClientId
+				if (creditPayment.creditClientId) {
+					const client = dataStore.clientCredits.find(c => c.id === creditPayment.creditClientId);
+					if (client?.name) return client.name;
+				}
+				// 2. Essayer creditClientName stocké
+				if (creditPayment.creditClientName) {
+					return creditPayment.creditClientName;
+				}
+				// 3. Chercher dans les transactions de crédit
+				const paymentAmount = creditPayment.amount || creditPayment.allocatedAmount || 0;
+				const paymentTimestamp = creditPayment.timestamp ? new Date(creditPayment.timestamp).getTime() : 0;
+				
+				for (const client of (dataStore.clientCredits || [])) {
+					if (!client.transactions) continue;
+					for (const tx of client.transactions) {
+						if (tx.type !== 'DEBIT') continue;
+						const txAmount = Math.abs(tx.amount || 0);
+						const txTimestamp = tx.date ? new Date(tx.date).getTime() : 0;
+						if (Math.abs(txAmount - paymentAmount) < 0.01 && 
+							Math.abs(txTimestamp - paymentTimestamp) < 5 * 60 * 1000) {
+							if (client.name) return client.name;
+						}
+					}
+				}
+				return null;
+			})();
+
 			paidPayments.push({
 				id: `payment_act_${act.timestamp}_${Math.random().toString(36).substr(2, 9)}`,
 				timestamp: act.timestamp,
@@ -1023,6 +1056,8 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				items: allItems,
 				covers: covers,
 				orderIds: orderIds.length > 0 ? orderIds : undefined, // 🆕 IDs des commandes regroupées (si plusieurs)
+				// 🆕 Nom du client pour paiement CREDIT (le frontend lit ce champ)
+				creditClientName: creditClientName,
 				// 🆕 Informations sur le paiement divisé (pour traçabilité)
 				// ⚠️ RÈGLE .cursorrules 3.1: Utiliser payment-processor.js comme source de vérité unique
 				splitPaymentModes: act.isSplitPayment ? [...new Set(payments.map(p => p.paymentMode))] : undefined,
@@ -1134,6 +1169,39 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		} else {
 			// Un seul paiement
 			const payment = payments[0];
+			
+			// 🆕 Récupérer le nom du client CREDIT
+			const creditClientName = (() => {
+				if (payment.paymentMode !== 'CREDIT') return null;
+				
+				// 1. Essayer creditClientId
+				if (payment.creditClientId) {
+					const client = dataStore.clientCredits.find(c => c.id === payment.creditClientId);
+					if (client?.name) return client.name;
+				}
+				// 2. Essayer creditClientName stocké
+				if (payment.creditClientName) {
+					return payment.creditClientName;
+				}
+				// 3. Chercher dans les transactions de crédit
+				const paymentAmount = payment.amount || payment.allocatedAmount || 0;
+				const paymentTimestamp = payment.timestamp ? new Date(payment.timestamp).getTime() : 0;
+				
+				for (const client of (dataStore.clientCredits || [])) {
+					if (!client.transactions) continue;
+					for (const tx of client.transactions) {
+						if (tx.type !== 'DEBIT') continue;
+						const txAmount = Math.abs(tx.amount || 0);
+						const txTimestamp = tx.date ? new Date(tx.date).getTime() : 0;
+						if (Math.abs(txAmount - paymentAmount) < 0.01 && 
+							Math.abs(txTimestamp - paymentTimestamp) < 5 * 60 * 1000) {
+							if (client.name) return client.name;
+						}
+					}
+				}
+				return null;
+			})();
+			
 			paidPayments.push({
 				id: payment.id || `payment_${Date.now()}_${Math.random()}`,
 				timestamp: payment.timestamp,
@@ -1162,6 +1230,8 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 					quantity: Number(item.quantity) || 0
 				})),
 				covers: payment.covers || 1,
+				// 🆕 Nom du client pour paiement CREDIT (le frontend lit ce champ)
+				creditClientName: creditClientName,
 				// 🆕 Ticket encaissé (format ticket de caisse)
 				ticket: (() => {
 					// 🆕 Calculer le montant total encaissé (exclut CREDIT car c'est une dette différée)
