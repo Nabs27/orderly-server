@@ -637,6 +637,14 @@ function getPaymentDetails(payments) {
     // Créer les paymentDetails avec index (CARTE #1, CARTE #2, etc.)
     const paymentDetails = [];
     
+    // Accéder à dataStore pour chercher les clients crédit (fallback)
+    let dataStore = null;
+    try {
+        dataStore = require('../data.js');
+    } catch (e) {
+        // Ignorer si dataStore n'est pas disponible
+    }
+    
     for (const txKey in txCounts) {
         const tx = txCounts[txKey];
         // Nombre réel de transactions = occurrences / nombre de commandes
@@ -651,8 +659,45 @@ function getPaymentDetails(payments) {
             };
             
             // Ajouter le nom du client pour les paiements CREDIT
-            if (tx.mode === 'CREDIT' && tx.payment.creditClientName) {
-                detail.clientName = tx.payment.creditClientName;
+            if (tx.mode === 'CREDIT') {
+                let clientName = null;
+                
+                // 1. Essayer creditClientId (nouveau système)
+                if (tx.payment.creditClientId && dataStore?.clientCredits) {
+                    const client = dataStore.clientCredits.find(c => c.id === tx.payment.creditClientId);
+                    if (client?.name) clientName = client.name;
+                }
+                
+                // 2. Essayer creditClientName (ancien système)
+                if (!clientName && tx.payment.creditClientName) {
+                    clientName = tx.payment.creditClientName;
+                }
+                
+                // 3. Dernier recours : chercher dans les transactions de crédit par montant
+                if (!clientName && dataStore?.clientCredits) {
+                    const paymentAmount = tx.payment.amount || tx.payment.allocatedAmount || tx.amount || 0;
+                    const paymentTimestamp = tx.payment.timestamp ? new Date(tx.payment.timestamp).getTime() : 0;
+                    
+                    for (const client of (dataStore.clientCredits || [])) {
+                        if (!client.transactions) continue;
+                        for (const txCredit of client.transactions) {
+                            if (txCredit.type !== 'DEBIT') continue;
+                            const txAmount = Math.abs(txCredit.amount || 0);
+                            const txTimestamp = txCredit.date ? new Date(txCredit.date).getTime() : 0;
+                            // Correspondance : même montant et timestamp proche (5 min)
+                            if (Math.abs(txAmount - paymentAmount) < 0.01 && 
+                                Math.abs(txTimestamp - paymentTimestamp) < 5 * 60 * 1000) {
+                                if (client.name) {
+                                    clientName = client.name;
+                                    break;
+                                }
+                            }
+                        }
+                        if (clientName) break;
+                    }
+                }
+                
+                detail.clientName = clientName || 'Client inconnu';
             }
             
             paymentDetails.push(detail);

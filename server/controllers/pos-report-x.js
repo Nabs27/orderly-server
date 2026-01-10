@@ -1094,14 +1094,35 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 							}, 0),
 							...(payments.some(p => p.paymentMode === 'CREDIT') ? {
 								clientName: (() => {
-									// 🆕 Chercher d'abord avec creditClientId (nouveau), sinon avec creditClientName (ancien)
 									const creditPayment = payments.find(p => p.paymentMode === 'CREDIT');
+									// 1. Essayer creditClientId (nouveau système)
 									if (creditPayment?.creditClientId) {
-										// Utiliser l'ID pour récupérer le nom actuel depuis dataStore.clientCredits
-										return dataStore.clientCredits.find(c => c.id === creditPayment.creditClientId)?.name || creditPayment.creditClientName || 'Client inconnu';
+										const client = dataStore.clientCredits.find(c => c.id === creditPayment.creditClientId);
+										if (client?.name) return client.name;
 									}
-									// Fallback vers l'ancien système (pour compatibilité)
-									return creditPayment?.creditClientName || 'Client inconnu';
+									// 2. Essayer creditClientName (ancien système)
+									if (creditPayment?.creditClientName) {
+										return creditPayment.creditClientName;
+									}
+									// 3. Dernier recours : chercher dans les transactions de crédit par montant et table
+									const paymentAmount = creditPayment?.amount || creditPayment?.allocatedAmount || 0;
+									const paymentTable = creditPayment?.table || table;
+									const paymentTimestamp = creditPayment?.timestamp ? new Date(creditPayment.timestamp).getTime() : 0;
+									
+									for (const client of (dataStore.clientCredits || [])) {
+										if (!client.transactions) continue;
+										for (const tx of client.transactions) {
+											if (tx.type !== 'DEBIT') continue;
+											const txAmount = Math.abs(tx.amount || 0);
+											const txTimestamp = tx.date ? new Date(tx.date).getTime() : 0;
+											// Correspondance : même montant et timestamp proche (5 min)
+											if (Math.abs(txAmount - paymentAmount) < 0.01 && 
+												Math.abs(txTimestamp - paymentTimestamp) < 5 * 60 * 1000) {
+												if (client.name) return client.name;
+											}
+										}
+									}
+									return 'Client inconnu';
 								})()
 							} : {})
 						}],
@@ -1170,12 +1191,33 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 							amount: payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0),
 							...(payment.paymentMode === 'CREDIT' ? {
 								clientName: (() => {
+									// 1. Essayer creditClientId (nouveau système)
 									if (payment.creditClientId) {
-										// 🆕 Utiliser l'ID pour récupérer le nom actuel depuis dataStore.clientCredits
-										return dataStore.clientCredits.find(c => c.id === payment.creditClientId)?.name || payment.creditClientName || 'Client inconnu';
+										const client = dataStore.clientCredits.find(c => c.id === payment.creditClientId);
+										if (client?.name) return client.name;
 									}
-									// Fallback vers l'ancien système
-									return payment.creditClientName || 'Client inconnu';
+									// 2. Essayer creditClientName (ancien système)
+									if (payment.creditClientName) {
+										return payment.creditClientName;
+									}
+									// 3. Dernier recours : chercher dans les transactions de crédit par montant et timestamp
+									const paymentAmount = payment.amount || payment.allocatedAmount || 0;
+									const paymentTimestamp = payment.timestamp ? new Date(payment.timestamp).getTime() : 0;
+									
+									for (const client of (dataStore.clientCredits || [])) {
+										if (!client.transactions) continue;
+										for (const tx of client.transactions) {
+											if (tx.type !== 'DEBIT') continue;
+											const txAmount = Math.abs(tx.amount || 0);
+											const txTimestamp = tx.date ? new Date(tx.date).getTime() : 0;
+											// Correspondance : même montant et timestamp proche (5 min)
+											if (Math.abs(txAmount - paymentAmount) < 0.01 && 
+												Math.abs(txTimestamp - paymentTimestamp) < 5 * 60 * 1000) {
+												if (client.name) return client.name;
+											}
+										}
+									}
+									return 'Client inconnu';
 								})()
 							} : {})
 						}],
