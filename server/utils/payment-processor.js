@@ -483,7 +483,10 @@ function calculatePaymentsByMode(payments) {
         }
     }
 
-    // ÉTAPE 2: Traiter les paiements simples (non-split)
+    // ÉTAPE 2: Traiter les paiements simples (non-split) avec déduplication
+    const simplePaymentGroups = {};
+
+    // Grouper les paiements simples par transaction unique
     for (const payment of payments) {
         if (payment.type === 'refund') continue;
         if (payment.paymentMode === 'CREDIT') continue;
@@ -491,16 +494,49 @@ function calculatePaymentsByMode(payments) {
 
         const mode = payment.paymentMode || 'INCONNU';
         const enteredAmount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
+        const timestamp = payment.timestamp || payment.date || 0;
 
-        if (!result[mode]) {
-            result[mode] = { total: 0, count: 0, payers: [] };
+        // Clé unique pour dédupliquer : mode + montant + timestamp (même logique que split payments)
+        const txKey = `${mode}_${enteredAmount.toFixed(3)}_${timestamp}`;
+
+        if (!simplePaymentGroups[txKey]) {
+            simplePaymentGroups[txKey] = {
+                payments: [],
+                mode: mode,
+                enteredAmount: enteredAmount,
+                noteNames: new Set()
+            };
         }
 
-        result[mode].total += enteredAmount;
-        result[mode].count += 1;
+        simplePaymentGroups[txKey].payments.push(payment);
+        if (payment.noteName) {
+            simplePaymentGroups[txKey].noteNames.add(payment.noteName);
+        }
+    }
 
-        if (payment.noteName && !result[mode].payers.includes(payment.noteName)) {
-            result[mode].payers.push(payment.noteName);
+    // Traiter chaque groupe de paiements simples dédupliqués
+    for (const txKey in simplePaymentGroups) {
+        const group = simplePaymentGroups[txKey];
+
+        // Compter le nombre de commandes distinctes impliquées
+        const distinctOrderIds = new Set(group.payments.map(p => p.orderId || p.sessionId)).size;
+        const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
+
+        // Nombre de transactions réelles = nombre total d'occurrences / nombre de commandes
+        const numTransactions = Math.round(group.payments.length / nbOrders);
+
+        if (!result[group.mode]) {
+            result[group.mode] = { total: 0, count: 0, payers: [] };
+        }
+
+        result[group.mode].total += group.enteredAmount * numTransactions;
+        result[group.mode].count += numTransactions;
+
+        // Ajouter les noms des tables (sans doublons)
+        for (const noteName of group.noteNames) {
+            if (!result[group.mode].payers.includes(noteName)) {
+                result[group.mode].payers.push(noteName);
+            }
         }
     }
 
