@@ -498,6 +498,12 @@ async function payMultiOrders(req, res) {
 			// ⚠️ IMPORTANT: Pour paiement scriptural simple, utiliser enteredAmount du body si disponible
 			// Sinon, utiliser actualTotalPaid (pour rétrocompatibilité avec anciens paiements)
 			// ⚠️ CORRECTION: Pour paiement multi-commandes, répartir enteredAmount proportionnellement
+
+			// 🎯 CORRECTION: Pour paiement simple multi-commandes, créer un splitPaymentId partagé
+			// Comme pour les split payments, pour compter comme 1 seule transaction
+			const isMultiOrderPayment = ordersToPay.length > 1;
+			const splitPaymentBaseId = isMultiOrderPayment ? `split_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` : null;
+
 			const totalEnteredAmount = (paymentMode === 'TPE' || paymentMode === 'CHEQUE' || paymentMode === 'CARTE') && bodyEnteredAmount != null
 				? Number(bodyEnteredAmount)
 				: actualTotalPaid;
@@ -541,6 +547,8 @@ async function payMultiOrders(req, res) {
 				isPercentDiscount: isPercentDiscount,
 				discountAmount: orderDiscountAmount,
 				discountClientName: discountClientName, // 🆕 Nom du client pour justifier la remise
+				isSplitPayment: isMultiOrderPayment, // 🎯 CORRECTION: true si paiement multi-commandes
+				splitPaymentId: splitPaymentBaseId, // 🎯 CORRECTION: ID partagé pour multi-commandes
 				server: serverName,
 				table: table,
 				noteId: orderInfo.paidItems[0]?.noteId || 'main',
