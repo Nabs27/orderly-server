@@ -985,8 +985,8 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				// Calculer les totaux en tenant compte du nombre réel de transactions
 				for (const txKey in txCounts) {
 					const tx = txCounts[txKey];
-					// ⚠️ FIX: Force à 1 pour éviter les erreurs de calcul si nbOrders est incorrect
-					const numTransactions = 1;
+					// ⚠️ FIX: Revenir à la division par nbOrders
+					const numTransactions = Math.round(tx.count / nbOrders);
 					totalEnteredAmount += tx.enteredAmount * numTransactions;
 					totalAllocatedAmount += tx.allocatedSum; // allocatedSum est déjà la somme de toutes les commandes
 				}
@@ -1093,8 +1093,8 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 						let total = 0;
 						for (const txKey in txCounts) {
 							const tx = txCounts[txKey];
-							// ⚠️ FIX: Force à 1 pour éviter les erreurs de calcul si nbOrders est incorrect
-							const numTransactions = 1;
+							// ⚠️ FIX: Revenir à la division par nbOrders
+							const numTransactions = Math.round(tx.count / nbOrders);
 							total += tx.enteredAmount * numTransactions;
 						}
 						return total;

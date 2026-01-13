@@ -101,10 +101,8 @@ function deduplicateAndCalculate(payments) {
         for (const txKey in txCounts) {
             const tx = txCounts[txKey];
             // Nombre réel de transactions = occurrences / nombre de commandes
-            // ⚠️ FIX: Utiliser une vraie déduplication par splitPaymentId
-            // On considère que pour un splitPaymentId donné, chaque couple (mode + montant) est unique
-            // Cela corrige le cas où nbOrders est mal calculé (ex: 1 au lieu de 3)
-            const numTransactions = 1;
+            // ⚠️ FIX: Revenir à la division par nbOrders pour permettre les paiements multiples de même montant
+            const numTransactions = Math.round(tx.count / nbOrders);
 
             // Ajouter au chiffre d'affaire (somme des allocatedAmount)
             totals.chiffreAffaire += tx.allocatedSum;
@@ -568,7 +566,7 @@ function calculatePaymentsByMode(payments) {
 
         for (const key in txCounts) {
             const tx = txCounts[key];
-            const numTransactions = 1; // ⚠️ FIX: Force à 1 pour éviter erreur si nbOrders incorrect
+            const numTransactions = Math.round(tx.count / nbOrders); // ⚠️ FIX: Revenir à la division par nbOrders
             totalEntered += tx.enteredAmount * numTransactions;
             totalAllocated += tx.allocatedSum;
         }
@@ -664,11 +662,12 @@ function getPaymentDetails(payments) {
     for (const txKey in txCounts) {
         const tx = txCounts[txKey];
         // Nombre réel de transactions = occurrences / nombre de commandes
-        // ⚠️ FIX: Force à 1 pour éviter les erreurs de calcul si nbOrders est incorrect
-        const nbTransactions = 1;
+        // Ex: 8 occurences / 4 commandes = 2 transactions réelles
+        // Ex: 4 occurences / 4 commandes = 1 transaction réelle
+        const nbTransactions = Math.round(tx.count / nbOrders);
 
-        if (tx.count > 1) {
-            console.log(`[payment-processor] ⚠️ Fix forcing nbTransactions=1 for ${tx.mode} (count=${tx.count}, nbOrders=${nbOrders}). Value should be 1.`);
+        if (nbTransactions > 1) {
+            console.log(`[payment-processor] ℹ️ Multiple transactions detected for ${tx.mode}: ${tx.count} records / ${nbOrders} orders = ${nbTransactions} transactions`);
         }
 
         // Créer N entrées pour cette transaction
