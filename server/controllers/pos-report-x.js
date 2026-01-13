@@ -735,7 +735,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	// Cela évite les confusions de regroupement entre les deux types
 	const splitPayments = [];
 	const regularPayments = [];
-	
+
 	for (const payment of filteredPaidPayments) {
 		if (payment.isSplitPayment && payment.splitPaymentId) {
 			splitPayments.push(payment);
@@ -743,7 +743,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			regularPayments.push(payment);
 		}
 	}
-	
+
 	console.log(`[report-x] 📊 Paiements: ${splitPayments.length} split, ${regularPayments.length} réguliers`);
 
 	// ÉTAPE 2: Regrouper les paiements divisés par splitPaymentId (comme history-processor.js)
@@ -751,7 +751,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	for (const payment of splitPayments) {
 		const tableKey = String(payment.table || 'N/A');
 		const splitKey = `${tableKey}_${payment.splitPaymentId}`;
-		
+
 		if (!splitPaymentsBySplitId[splitKey]) {
 			splitPaymentsBySplitId[splitKey] = {
 				timestamp: payment.timestamp,
@@ -798,7 +798,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 
 	// ÉTAPE 4: Fusionner les deux maps en une seule (comme history-processor.js ligne 439-441)
 	const paymentsByAct = { ...splitPaymentsBySplitId, ...regularPaymentsByAct };
-	
+
 	console.log(`[report-x] 📊 Groupes: ${Object.keys(splitPaymentsBySplitId).length} split, ${Object.keys(regularPaymentsByAct).length} réguliers, ${Object.keys(paymentsByAct).length} total`);
 
 	// 🆕 Créer les paiements finaux (regroupés par acte)
@@ -963,14 +963,14 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				// Compter les occurrences de chaque mode + enteredAmount, puis diviser par nbOrders
 				const distinctOrderIds = new Set(payments.map(p => p.orderId || p.sessionId)).size;
 				const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
-				
+
 				// Compter les occurrences de chaque transaction
 				const txCounts = {};
 				for (const p of payments) {
 					const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
 					const allocatedAmount = p.allocatedAmount != null ? p.allocatedAmount : (p.amount || 0);
 					const txKey = `${p.paymentMode}_${enteredAmount.toFixed(3)}`;
-					
+
 					if (!txCounts[txKey]) {
 						txCounts[txKey] = {
 							count: 0,
@@ -981,11 +981,12 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 					txCounts[txKey].count++;
 					txCounts[txKey].allocatedSum += allocatedAmount;
 				}
-				
+
 				// Calculer les totaux en tenant compte du nombre réel de transactions
 				for (const txKey in txCounts) {
 					const tx = txCounts[txKey];
-					const numTransactions = Math.round(tx.count / nbOrders);
+					// ⚠️ FIX: Force à 1 pour éviter les erreurs de calcul si nbOrders est incorrect
+					const numTransactions = 1;
 					totalEnteredAmount += tx.enteredAmount * numTransactions;
 					totalAllocatedAmount += tx.allocatedSum; // allocatedSum est déjà la somme de toutes les commandes
 				}
@@ -1003,7 +1004,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			const creditClientName = (() => {
 				const creditPayment = payments.find(p => p.paymentMode === 'CREDIT');
 				if (!creditPayment) return null;
-				
+
 				// 1. Essayer creditClientId
 				if (creditPayment.creditClientId) {
 					const client = dataStore.clientCredits.find(c => c.id === creditPayment.creditClientId);
@@ -1016,14 +1017,14 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				// 3. Chercher dans les transactions de crédit
 				const paymentAmount = creditPayment.amount || creditPayment.allocatedAmount || 0;
 				const paymentTimestamp = creditPayment.timestamp ? new Date(creditPayment.timestamp).getTime() : 0;
-				
+
 				for (const client of (dataStore.clientCredits || [])) {
 					if (!client.transactions) continue;
 					for (const tx of client.transactions) {
 						if (tx.type !== 'DEBIT') continue;
 						const txAmount = Math.abs(tx.amount || 0);
 						const txTimestamp = tx.date ? new Date(tx.date).getTime() : 0;
-						if (Math.abs(txAmount - paymentAmount) < 0.01 && 
+						if (Math.abs(txAmount - paymentAmount) < 0.01 &&
 							Math.abs(txTimestamp - paymentTimestamp) < 5 * 60 * 1000) {
 							if (client.name) return client.name;
 						}
@@ -1061,7 +1062,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				// 🆕 Informations sur le paiement divisé (pour traçabilité)
 				// ⚠️ RÈGLE .cursorrules 3.1: Utiliser payment-processor.js comme source de vérité unique
 				splitPaymentModes: act.isSplitPayment ? [...new Set(payments.map(p => p.paymentMode))] : undefined,
-				splitPaymentAmounts: act.isSplitPayment 
+				splitPaymentAmounts: act.isSplitPayment
 					? paymentProcessor.getPaymentDetails(payments) // 🆕 SOURCE DE VÉRITÉ UNIQUE
 					: undefined,
 				// 🆕 Ticket encaissé (format ticket de caisse)
@@ -1072,14 +1073,14 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 						// Utiliser la même logique que pour totalEnteredAmount (dédupliquer correctement)
 						const distinctOrderIds = new Set(payments.map(p => p.orderId || p.sessionId)).size;
 						const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
-						
+
 						const txCounts = {};
 						for (const p of payments) {
 							// Exclure CREDIT du montant encaissé
 							if (p.paymentMode === 'CREDIT') continue;
 							const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
 							const txKey = `${p.paymentMode}_${enteredAmount.toFixed(3)}`;
-							
+
 							if (!txCounts[txKey]) {
 								txCounts[txKey] = {
 									count: 0,
@@ -1088,11 +1089,12 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 							}
 							txCounts[txKey].count++;
 						}
-						
+
 						let total = 0;
 						for (const txKey in txCounts) {
 							const tx = txCounts[txKey];
-							const numTransactions = Math.round(tx.count / nbOrders);
+							// ⚠️ FIX: Force à 1 pour éviter les erreurs de calcul si nbOrders est incorrect
+							const numTransactions = 1;
 							total += tx.enteredAmount * numTransactions;
 						}
 						return total;
@@ -1118,49 +1120,49 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 						// 🆕 Ajouter les détails des paiements et le montant total encaissé
 						// ⚠️ RÈGLE .cursorrules 3.1: Utiliser payment-processor.js comme source de vérité unique
 						// ⚠️ CORRECTION : Pour les paiements NON-split regroupés (multi-commandes), sommer TOUS les enteredAmount
-						paymentDetails: act.isSplitPayment 
+						paymentDetails: act.isSplitPayment
 							? paymentProcessor.getPaymentDetails(payments) // 🆕 Utiliser la fonction centralisée
 							: [{
-							mode: payments[0].paymentMode,
-							// 🆕 CORRECTION : Sommer les enteredAmount de TOUTES les commandes (pas seulement payments[0])
-							amount: payments.reduce((sum, p) => {
-								const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
-								return sum + enteredAmount;
-							}, 0),
-							...(payments.some(p => p.paymentMode === 'CREDIT') ? {
-								clientName: (() => {
-									const creditPayment = payments.find(p => p.paymentMode === 'CREDIT');
-									// 1. Essayer creditClientId (nouveau système)
-									if (creditPayment?.creditClientId) {
-										const client = dataStore.clientCredits.find(c => c.id === creditPayment.creditClientId);
-										if (client?.name) return client.name;
-									}
-									// 2. Essayer creditClientName (ancien système)
-									if (creditPayment?.creditClientName) {
-										return creditPayment.creditClientName;
-									}
-									// 3. Dernier recours : chercher dans les transactions de crédit par montant et table
-									const paymentAmount = creditPayment?.amount || creditPayment?.allocatedAmount || 0;
-									const paymentTable = creditPayment?.table || table;
-									const paymentTimestamp = creditPayment?.timestamp ? new Date(creditPayment.timestamp).getTime() : 0;
-									
-									for (const client of (dataStore.clientCredits || [])) {
-										if (!client.transactions) continue;
-										for (const tx of client.transactions) {
-											if (tx.type !== 'DEBIT') continue;
-											const txAmount = Math.abs(tx.amount || 0);
-											const txTimestamp = tx.date ? new Date(tx.date).getTime() : 0;
-											// Correspondance : même montant et timestamp proche (5 min)
-											if (Math.abs(txAmount - paymentAmount) < 0.01 && 
-												Math.abs(txTimestamp - paymentTimestamp) < 5 * 60 * 1000) {
-												if (client.name) return client.name;
+								mode: payments[0].paymentMode,
+								// 🆕 CORRECTION : Sommer les enteredAmount de TOUTES les commandes (pas seulement payments[0])
+								amount: payments.reduce((sum, p) => {
+									const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
+									return sum + enteredAmount;
+								}, 0),
+								...(payments.some(p => p.paymentMode === 'CREDIT') ? {
+									clientName: (() => {
+										const creditPayment = payments.find(p => p.paymentMode === 'CREDIT');
+										// 1. Essayer creditClientId (nouveau système)
+										if (creditPayment?.creditClientId) {
+											const client = dataStore.clientCredits.find(c => c.id === creditPayment.creditClientId);
+											if (client?.name) return client.name;
+										}
+										// 2. Essayer creditClientName (ancien système)
+										if (creditPayment?.creditClientName) {
+											return creditPayment.creditClientName;
+										}
+										// 3. Dernier recours : chercher dans les transactions de crédit par montant et table
+										const paymentAmount = creditPayment?.amount || creditPayment?.allocatedAmount || 0;
+										const paymentTable = creditPayment?.table || table;
+										const paymentTimestamp = creditPayment?.timestamp ? new Date(creditPayment.timestamp).getTime() : 0;
+
+										for (const client of (dataStore.clientCredits || [])) {
+											if (!client.transactions) continue;
+											for (const tx of client.transactions) {
+												if (tx.type !== 'DEBIT') continue;
+												const txAmount = Math.abs(tx.amount || 0);
+												const txTimestamp = tx.date ? new Date(tx.date).getTime() : 0;
+												// Correspondance : même montant et timestamp proche (5 min)
+												if (Math.abs(txAmount - paymentAmount) < 0.01 &&
+													Math.abs(txTimestamp - paymentTimestamp) < 5 * 60 * 1000) {
+													if (client.name) return client.name;
+												}
 											}
 										}
-									}
-									return 'Client inconnu';
-								})()
-							} : {})
-						}],
+										return 'Client inconnu';
+									})()
+								} : {})
+							}],
 						totalAmount: totalAmountEncaisse > 0.01 ? totalAmountEncaisse : undefined, // 🆕 Montant total encaissé (exclut CREDIT)
 						excessAmount: totalExcessAmount > 0.01 ? totalExcessAmount : undefined // 🆕 Pourboire
 					};
@@ -1169,11 +1171,11 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		} else {
 			// Un seul paiement
 			const payment = payments[0];
-			
+
 			// 🆕 Récupérer le nom du client CREDIT
 			const creditClientName = (() => {
 				if (payment.paymentMode !== 'CREDIT') return null;
-				
+
 				// 1. Essayer creditClientId
 				if (payment.creditClientId) {
 					const client = dataStore.clientCredits.find(c => c.id === payment.creditClientId);
@@ -1186,14 +1188,14 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				// 3. Chercher dans les transactions de crédit
 				const paymentAmount = payment.amount || payment.allocatedAmount || 0;
 				const paymentTimestamp = payment.timestamp ? new Date(payment.timestamp).getTime() : 0;
-				
+
 				for (const client of (dataStore.clientCredits || [])) {
 					if (!client.transactions) continue;
 					for (const tx of client.transactions) {
 						if (tx.type !== 'DEBIT') continue;
 						const txAmount = Math.abs(tx.amount || 0);
 						const txTimestamp = tx.date ? new Date(tx.date).getTime() : 0;
-						if (Math.abs(txAmount - paymentAmount) < 0.01 && 
+						if (Math.abs(txAmount - paymentAmount) < 0.01 &&
 							Math.abs(txTimestamp - paymentTimestamp) < 5 * 60 * 1000) {
 							if (client.name) return client.name;
 						}
@@ -1201,7 +1203,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				}
 				return null;
 			})();
-			
+
 			paidPayments.push({
 				id: payment.id || `payment_${Date.now()}_${Math.random()}`,
 				timestamp: payment.timestamp,
@@ -1273,7 +1275,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 									// 3. Dernier recours : chercher dans les transactions de crédit par montant et timestamp
 									const paymentAmount = payment.amount || payment.allocatedAmount || 0;
 									const paymentTimestamp = payment.timestamp ? new Date(payment.timestamp).getTime() : 0;
-									
+
 									for (const client of (dataStore.clientCredits || [])) {
 										if (!client.transactions) continue;
 										for (const tx of client.transactions) {
@@ -1281,7 +1283,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 											const txAmount = Math.abs(tx.amount || 0);
 											const txTimestamp = tx.date ? new Date(tx.date).getTime() : 0;
 											// Correspondance : même montant et timestamp proche (5 min)
-											if (Math.abs(txAmount - paymentAmount) < 0.01 && 
+											if (Math.abs(txAmount - paymentAmount) < 0.01 &&
 												Math.abs(txTimestamp - paymentTimestamp) < 5 * 60 * 1000) {
 												if (client.name) return client.name;
 											}
