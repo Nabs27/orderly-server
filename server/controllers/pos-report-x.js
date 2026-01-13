@@ -1320,24 +1320,38 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	paymentsByMode = {};
 
 	for (const payment of paidPayments) {
-		const details = payment.paymentDetails || [];
+		// 🆕 FIX: Les split payments utilisent `splitPaymentAmounts`, les simples utilisent `paymentDetails`
+		const details = payment.splitPaymentAmounts || payment.paymentDetails || [];
 
-		for (const detail of details) {
-			const mode = detail.mode;
-			const amount = detail.amount || 0;
+		if (details.length === 0) {
+			// Fallback: si aucun detail, utiliser paymentMode et enteredAmount directement
+			const mode = payment.paymentMode;
+			const amount = payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0);
 
-			if (!paymentsByMode[mode]) {
-				paymentsByMode[mode] = { total: 0, count: 0, payers: [] };
+			if (mode && mode !== 'NON PAYÉ') {
+				if (!paymentsByMode[mode]) {
+					paymentsByMode[mode] = { total: 0, count: 0, payers: [] };
+				}
+				paymentsByMode[mode].total += amount;
+				paymentsByMode[mode].count += 1;
 			}
+		} else {
+			for (const detail of details) {
+				const mode = detail.mode;
+				const amount = detail.amount || 0;
 
-			paymentsByMode[mode].total += amount;
-			// 🆕 Pour le count, on compte chaque transaction réelle (detail)
-			paymentsByMode[mode].count += 1;
+				if (!paymentsByMode[mode]) {
+					paymentsByMode[mode] = { total: 0, count: 0, payers: [] };
+				}
 
-			// Ajouter le nom du payeur si disponible
-			// Pour les paiements regroupés, on pourrait avoir plusieurs payeurs, mais ici on simplifie
-			if (payment.noteName && !paymentsByMode[mode].payers.includes(payment.noteName)) {
-				paymentsByMode[mode].payers.push(payment.noteName);
+				paymentsByMode[mode].total += amount;
+				// 🆕 Pour le count, on compte chaque transaction réelle (detail)
+				paymentsByMode[mode].count += 1;
+
+				// Ajouter le nom du payeur si disponible
+				if (payment.noteName && !paymentsByMode[mode].payers.includes(payment.noteName)) {
+					paymentsByMode[mode].payers.push(payment.noteName);
+				}
 			}
 		}
 	}
