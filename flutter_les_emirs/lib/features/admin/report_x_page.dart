@@ -267,7 +267,7 @@ class _ReportXPageState extends State<ReportXPage> {
               color: Colors.grey.shade100,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -375,7 +375,7 @@ class _ReportXPageState extends State<ReportXPage> {
                           children: [
                             Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
                             const SizedBox(height: 16),
-                            Text('Erreur: $error', style: TextStyle(color: Colors.red.shade700)),
+                            Text('Erreur: $error', style: TextStyle(color: Colors.red.withValues(alpha: 0.7))),
                             const SizedBox(height: 16),
                             ElevatedButton(
                               onPressed: _loadReport,
@@ -489,7 +489,7 @@ class _ReportXPageState extends State<ReportXPage> {
                     Icons.local_offer,
                     size: 20,
                     color: ((summary['totalRemises'] as num?)?.toDouble() ?? 0.0) > 0 
-                      ? Colors.red.shade700 
+                      ? Colors.red.withValues(alpha: 0.7) 
                       : Colors.grey.shade600,
                   ),
                   title: const Text(
@@ -505,8 +505,8 @@ class _ReportXPageState extends State<ReportXPage> {
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                           color: ((summary['totalRemises'] as num?)?.toDouble() ?? 0.0) > 0 
-                            ? Colors.red.shade700 
-                            : Colors.grey.shade700,
+                            ? Colors.red.withValues(alpha: 0.7) 
+                            : Colors.grey.withValues(alpha: 0.7),
                         ),
                       ),
                       if (((summary['nombreRemises'] as num?)?.toInt() ?? 0) > 0) ...[
@@ -514,7 +514,7 @@ class _ReportXPageState extends State<ReportXPage> {
                         Icon(
                           Icons.expand_more,
                           color: ((summary['totalRemises'] as num?)?.toDouble() ?? 0.0) > 0 
-                            ? Colors.red.shade700 
+                            ? Colors.red.withValues(alpha: 0.7) 
                             : Colors.grey.shade600,
                         ),
                       ],
@@ -582,19 +582,19 @@ class _ReportXPageState extends State<ReportXPage> {
                               if (isSubNote && noteName != null) {
                                 paymentTitle = 'Sous-note: $noteName';
                                 paymentTypeIcon = Icons.person;
-                                paymentTypeColor = Colors.purple.shade700;
+                                paymentTypeColor = Colors.purple.withValues(alpha: 0.7);
                               } else if (isPartial && isMainNote) {
                                 paymentTitle = 'Paiement partiel - Note principale';
                                 paymentTypeIcon = Icons.payment;
-                                paymentTypeColor = Colors.orange.shade700;
+                                paymentTypeColor = Colors.orange.withValues(alpha: 0.7);
                               } else if (isMainNote) {
                                 paymentTitle = 'Note principale';
                                 paymentTypeIcon = Icons.receipt;
-                                paymentTypeColor = Colors.blue.shade700;
+                                paymentTypeColor = Colors.blue.withValues(alpha: 0.7);
                               } else {
                                 paymentTitle = 'Ticket';
                                 paymentTypeIcon = Icons.receipt;
-                                paymentTypeColor = Colors.grey.shade700;
+                                paymentTypeColor = Colors.grey.withValues(alpha: 0.7);
                               }
                               
                               // Formater la date
@@ -662,7 +662,7 @@ class _ReportXPageState extends State<ReportXPage> {
                                           style: TextStyle(
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
-                                            color: Colors.red.shade700,
+                                            color: Colors.red.withValues(alpha: 0.7),
                                           ),
                                         ),
                                       ],
@@ -699,7 +699,7 @@ class _ReportXPageState extends State<ReportXPage> {
                                           'Avant remise: ${_formatNumber(subtotal)} TND',
                                           style: TextStyle(
                                             fontSize: 11,
-                                            color: Colors.grey.shade700,
+                                            color: Colors.grey.withValues(alpha: 0.7),
                                           ),
                                         ),
                                         const SizedBox(width: 8),
@@ -714,7 +714,7 @@ class _ReportXPageState extends State<ReportXPage> {
                                             : 'Remise: ${_formatNumber(discountValue)} TND',
                                           style: TextStyle(
                                             fontSize: 11,
-                                            color: Colors.grey.shade700,
+                                            color: Colors.grey.withValues(alpha: 0.7),
                                           ),
                                         ),
                                       ],
@@ -727,7 +727,7 @@ class _ReportXPageState extends State<ReportXPage> {
                                           style: TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.w500,
-                                            color: Colors.green.shade700,
+                                            color: Colors.green.withValues(alpha: 0.7),
                                           ),
                                         ),
                                         const SizedBox(width: 8),
@@ -856,7 +856,7 @@ class _ReportXPageState extends State<ReportXPage> {
                         Icons.cancel,
                         size: 20,
                         color: nombreAnnulations > 0 
-                          ? Colors.orange.shade700 
+                          ? Colors.orange.withValues(alpha: 0.7) 
                           : Colors.grey.shade600,
                       ),
                       title: const Text(
@@ -872,15 +872,15 @@ class _ReportXPageState extends State<ReportXPage> {
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: nombreAnnulations > 0 
-                                ? Colors.orange.shade700 
-                                : Colors.grey.shade700,
+                                ? Colors.orange.withValues(alpha: 0.7) 
+                                : Colors.grey.withValues(alpha: 0.7),
                             ),
                           ),
                           if (nombreAnnulations > 0) ...[
                             const SizedBox(width: 8),
                             Icon(
                               Icons.expand_more,
-                              color: Colors.orange.shade700,
+                              color: Colors.orange.withValues(alpha: 0.7),
                             ),
                           ],
                         ],
@@ -896,14 +896,14 @@ class _ReportXPageState extends State<ReportXPage> {
                                   'Nombre d\'annulations:',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
-                                    color: Colors.orange.shade700,
+                                    color: Colors.orange.withValues(alpha: 0.7),
                                   ),
                                 ),
                                 Text(
                                   nombreAnnulations.toString(),
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.orange.shade700,
+                                    color: Colors.orange.withValues(alpha: 0.7),
                                   ),
                                 ),
                               ],
@@ -919,14 +919,14 @@ class _ReportXPageState extends State<ReportXPage> {
                                     'Montant total remboursé:',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w500,
-                                      color: Colors.red.shade700,
+                                      color: Colors.red.withValues(alpha: 0.7),
                                     ),
                                   ),
                                   Text(
                                     '${_formatNumber(montantTotalRembourse)} TND',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.red.shade700,
+                                      color: Colors.red.withValues(alpha: 0.7),
                                     ),
                                   ),
                                 ],
@@ -942,14 +942,14 @@ class _ReportXPageState extends State<ReportXPage> {
                                     'Coût total des pertes:',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w500,
-                                      color: Colors.orange.shade700,
+                                      color: Colors.orange.withValues(alpha: 0.7),
                                     ),
                                   ),
                                   Text(
                                     '${_formatNumber(coutTotalPertes)} TND',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.orange.shade700,
+                                      color: Colors.orange.withValues(alpha: 0.7),
                                     ),
                                   ),
                                 ],
@@ -965,14 +965,14 @@ class _ReportXPageState extends State<ReportXPage> {
                                     'Nombre de réaffectations:',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w500,
-                                      color: Colors.green.shade700,
+                                      color: Colors.green.withValues(alpha: 0.7),
                                     ),
                                   ),
                                   Text(
                                     nombreReaffectations.toString(),
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.green.shade700,
+                                      color: Colors.green.withValues(alpha: 0.7),
                                     ),
                                   ),
                                 ],
@@ -988,14 +988,14 @@ class _ReportXPageState extends State<ReportXPage> {
                                     'Nombre de plats refaits:',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w500,
-                                      color: Colors.blue.shade700,
+                                      color: Colors.blue.withValues(alpha: 0.7),
                                     ),
                                   ),
                                   Text(
                                     nombreRemakes.toString(),
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.blue.shade700,
+                                      color: Colors.blue.withValues(alpha: 0.7),
                                     ),
                                   ),
                                 ],
@@ -1061,7 +1061,7 @@ class _ReportXPageState extends State<ReportXPage> {
                                       Icon(
                                         Icons.cancel_outlined,
                                         size: 18,
-                                        color: Colors.orange.shade700,
+                                        color: Colors.orange.withValues(alpha: 0.7),
                                       ),
                                       const SizedBox(width: 8),
                                       Expanded(
@@ -1070,7 +1070,7 @@ class _ReportXPageState extends State<ReportXPage> {
                                           style: TextStyle(
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
-                                            color: Colors.orange.shade700,
+                                            color: Colors.orange.withValues(alpha: 0.7),
                                           ),
                                         ),
                                       ),
@@ -1085,7 +1085,7 @@ class _ReportXPageState extends State<ReportXPage> {
                                           style: TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.bold,
-                                            color: Colors.orange.shade700,
+                                            color: Colors.orange.withValues(alpha: 0.7),
                                           ),
                                         ),
                                       ),
@@ -1119,7 +1119,7 @@ class _ReportXPageState extends State<ReportXPage> {
                                         'Annulé: ${_formatDate(timestamp)}',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: Colors.orange.shade700,
+                                          color: Colors.orange.withValues(alpha: 0.7),
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -1184,7 +1184,7 @@ class _ReportXPageState extends State<ReportXPage> {
                                           style: const TextStyle(fontSize: 10),
                                         ),
                                         backgroundColor: Colors.blue.shade50,
-                                        labelStyle: TextStyle(color: Colors.blue.shade700),
+                                        labelStyle: TextStyle(color: Colors.blue.withValues(alpha: 0.7)),
                                       ),
                                       const SizedBox(width: 4),
                                       Chip(
@@ -1193,7 +1193,7 @@ class _ReportXPageState extends State<ReportXPage> {
                                           style: const TextStyle(fontSize: 10),
                                         ),
                                         backgroundColor: Colors.grey.shade100,
-                                        labelStyle: TextStyle(color: Colors.grey.shade700),
+                                        labelStyle: TextStyle(color: Colors.grey.withValues(alpha: 0.7)),
                                       ),
                                       const SizedBox(width: 4),
                                       Chip(
@@ -1202,7 +1202,7 @@ class _ReportXPageState extends State<ReportXPage> {
                                           style: const TextStyle(fontSize: 10),
                                         ),
                                         backgroundColor: Colors.green.shade50,
-                                        labelStyle: TextStyle(color: Colors.green.shade700),
+                                        labelStyle: TextStyle(color: Colors.green.withValues(alpha: 0.7)),
                                       ),
                                     ],
                                   ),
@@ -1212,7 +1212,7 @@ class _ReportXPageState extends State<ReportXPage> {
                                       'Description: $description',
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: Colors.grey.shade700,
+                                        color: Colors.grey.withValues(alpha: 0.7),
                                         fontStyle: FontStyle.italic,
                                       ),
                                     ),
@@ -1224,7 +1224,7 @@ class _ReportXPageState extends State<ReportXPage> {
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.red.shade700,
+                                        color: Colors.red.withValues(alpha: 0.7),
                                       ),
                                     ),
                                   ],
@@ -1235,7 +1235,7 @@ class _ReportXPageState extends State<ReportXPage> {
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.orange.shade700,
+                                        color: Colors.orange.withValues(alpha: 0.7),
                                       ),
                                     ),
                                   ],
@@ -1243,14 +1243,14 @@ class _ReportXPageState extends State<ReportXPage> {
                                     const SizedBox(height: 4),
                                     Row(
                                       children: [
-                                        Icon(Icons.swap_horiz, size: 14, color: Colors.green.shade700),
+                                        Icon(Icons.swap_horiz, size: 14, color: Colors.green.withValues(alpha: 0.7)),
                                         const SizedBox(width: 4),
                                         Text(
                                           'Réaffecté vers table ${reassignment['toTable']}',
                                           style: TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.bold,
-                                            color: Colors.green.shade700,
+                                            color: Colors.green.withValues(alpha: 0.7),
                                           ),
                                         ),
                                       ],
@@ -1320,7 +1320,7 @@ class _ReportXPageState extends State<ReportXPage> {
                             '$label:',
                             style: TextStyle(
                               fontSize: 12,
-                              color: isUnpaid ? Colors.orange.shade700 : null,
+                              color: isUnpaid ? Colors.orange.withValues(alpha: 0.7) : null,
                               fontWeight: isUnpaid ? FontWeight.bold : FontWeight.normal,
                             ),
                           ),
@@ -1329,7 +1329,7 @@ class _ReportXPageState extends State<ReportXPage> {
                           '${_formatNumber(total)} TND',
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
-                            color: isUnpaid ? Colors.orange.shade700 : null,
+                            color: isUnpaid ? Colors.orange.withValues(alpha: 0.7) : null,
                           ),
                         ),
                       ],
@@ -1648,7 +1648,7 @@ class _ReportXPageState extends State<ReportXPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.withValues(alpha: 0.7))),
           const SizedBox(height: 4),
           Text(
             value,
@@ -1673,14 +1673,14 @@ class _ReportXPageState extends State<ReportXPage> {
             '$label:',
             style: TextStyle(
               fontWeight: FontWeight.w500,
-              color: isDiscount ? Colors.red.shade700 : null,
+              color: isDiscount ? Colors.red.withValues(alpha: 0.7) : null,
             ),
           ),
           Text(
             displayValue,
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: isDiscount ? Colors.red.shade700 : null,
+              color: isDiscount ? Colors.red.withValues(alpha: 0.7) : null,
             ),
           ),
         ],

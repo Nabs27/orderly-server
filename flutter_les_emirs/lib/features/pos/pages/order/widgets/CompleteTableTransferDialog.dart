@@ -73,7 +73,7 @@ class _CompleteTableTransferDialogState extends State<CompleteTableTransferDialo
                         ),
                         child: Column(
                           children: [
-                            Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700, size: 48),
+                            Icon(Icons.warning_amber_rounded, color: Colors.orange.withValues(alpha: 0.7), size: 48),
                             const SizedBox(height: 12),
                             Text(
                               'Transfert complet de la Table ${widget.currentTableNumber}',
@@ -87,7 +87,7 @@ class _CompleteTableTransferDialogState extends State<CompleteTableTransferDialo
                             const SizedBox(height: 8),
                             Text(
                               'Note Principale + ${widget.subNotesCount} sous-note(s)',
-                              style: TextStyle(fontSize: 14, color: Colors.orange.shade700),
+                              style: TextStyle(fontSize: 14, color: Colors.orange.withValues(alpha: 0.7)),
                             ),
                             const SizedBox(height: 8),
                             Text(

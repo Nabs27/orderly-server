@@ -221,8 +221,8 @@ class _CreditClientDialogState extends State<CreditClientDialog> {
                             size: 28,
                           ),
                           color: searchKeyboardType == VirtualKeyboardType.phone
-                              ? Colors.blue.shade700
-                              : Colors.green.shade700,
+                              ? Colors.blue.withValues(alpha: 0.7)
+                              : Colors.green.withValues(alpha: 0.7),
                           style: IconButton.styleFrom(
                             backgroundColor: searchKeyboardType == VirtualKeyboardType.phone
                                 ? Colors.blue.shade50
@@ -360,7 +360,7 @@ class _CreditClientDialogState extends State<CreditClientDialog> {
                                 ? 'Tapez pour rechercher un client (nom ou téléphone)'
                                 : 'Résultats pour "${searchController.text.trim()}"',
                             style: TextStyle(
-                              color: Colors.blue.shade700,
+                              color: Colors.blue.withValues(alpha: 0.7),
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),

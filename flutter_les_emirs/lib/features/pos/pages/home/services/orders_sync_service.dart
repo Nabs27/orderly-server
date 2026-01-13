@@ -99,6 +99,7 @@ class OrdersSyncService {
           final tableNumber = table['number'] as String;
           final tableOrders = ordersByTableAndServer[tableNumber]?[serverName] ?? [];
           if (tableOrders.isNotEmpty) {
+            // 🆕 CORRECTION : Calculer le total depuis les quantités non payées (déclaratif)
             double total = 0.0;
             for (final order in tableOrders) {
               // 🆕 Log pour debug
@@ -111,25 +112,48 @@ class OrdersSyncService {
               
               if (order.containsKey('mainNote') && order['mainNote'] != null) {
                 final mainNote = order['mainNote'] as Map<String, dynamic>;
-                final mainTotal = (mainNote['total'] as num?)?.toDouble() ?? 0.0;
+                final mainItems = (mainNote['items'] as List?) ?? [];
                 final mainPaid = (mainNote['paid'] as bool?) ?? false;
                 
-                // 🆕 Inclure la note principale seulement si elle n'est pas payée
-                // Les commandes en attente ont mainNote.paid = false, donc elles seront incluses
-                if (!mainPaid && mainTotal > 0) {
-                  total += mainTotal;
-                  print('[SYNC] ✅ Ajouté mainNote total: $mainTotal (commande $orderId, source=$orderSource)');
+                // 🆕 CORRECTION : Calculer depuis les quantités non payées (déclaratif)
+                if (!mainPaid) {
+                  double unpaidMainTotal = 0.0;
+                  for (final item in mainItems) {
+                    final totalQty = (item['quantity'] as num?)?.toInt() ?? 0;
+                    final paidQty = (item['paidQuantity'] as num?)?.toInt() ?? 0;
+                    final unpaidQty = totalQty - paidQty;
+                    final price = (item['price'] as num?)?.toDouble() ?? 0.0;
+                    unpaidMainTotal += price * unpaidQty;
+                  }
+                  if (unpaidMainTotal > 0) {
+                    total += unpaidMainTotal;
+                    print('[SYNC] ✅ Ajouté mainNote total (non payé): $unpaidMainTotal (commande $orderId, source=$orderSource)');
+                  } else {
+                    print('[SYNC] ⏭️ MainNote ignorée: tout payé (commande $orderId)');
+                  }
                 } else {
-                  print('[SYNC] ⏭️ MainNote ignorée: paid=$mainPaid, total=$mainTotal (commande $orderId)');
+                  print('[SYNC] ⏭️ MainNote ignorée: paid=true (commande $orderId)');
                 }
                 
+                // 🆕 CORRECTION : Même logique pour les sous-notes
                 final subNotes = (order['subNotes'] as List?) ?? [];
                 for (final subNote in subNotes) {
-                  final subTotal = (subNote['total'] as num?)?.toDouble() ?? 0.0;
+                  final subItems = (subNote['items'] as List?) ?? [];
                   final isPaid = (subNote['paid'] as bool?) ?? false;
-                  if (!isPaid && subTotal > 0) {
-                    total += subTotal;
-                    print('[SYNC] ✅ Ajouté sous-note total: $subTotal (commande $orderId)');
+                  
+                  if (!isPaid) {
+                    double unpaidSubTotal = 0.0;
+                    for (final item in subItems) {
+                      final totalQty = (item['quantity'] as num?)?.toInt() ?? 0;
+                      final paidQty = (item['paidQuantity'] as num?)?.toInt() ?? 0;
+                      final unpaidQty = totalQty - paidQty;
+                      final price = (item['price'] as num?)?.toDouble() ?? 0.0;
+                      unpaidSubTotal += price * unpaidQty;
+                    }
+                    if (unpaidSubTotal > 0) {
+                      total += unpaidSubTotal;
+                      print('[SYNC] ✅ Ajouté sous-note total (non payé): $unpaidSubTotal (commande $orderId)');
+                    }
                   }
                 }
               } else {
@@ -266,30 +290,66 @@ class OrdersSyncService {
                 final mainTotal = (mainNote['total'] as num?)?.toDouble() ?? 0.0;
                 final mainPaid = (mainNote['paid'] as bool?) ?? false;
                 
-                // Compter la note principale une seule fois si elle a des articles non payés
-                if (!mainNoteCounted && mainTotal > 0 && !mainPaid && mainItems.isNotEmpty) {
+                // 🆕 CORRECTION : Filtrer les articles selon paidQuantity (déclaratif)
+                bool hasUnpaidMainItems = false;
+                for (final item in mainItems) {
+                  final totalQty = (item['quantity'] as num?)?.toInt() ?? 0;
+                  final paidQty = (item['paidQuantity'] as num?)?.toInt() ?? 0;
+                  final unpaidQty = totalQty - paidQty;
+                  
+                  if (unpaidQty > 0) {
+                    hasUnpaidMainItems = true;
+                    // 🆕 Ajouter seulement les articles non payés avec leur quantité restante
+                    allItems.add({
+                      'id': item['id'],
+                      'name': item['name'],
+                      'price': item['price'],
+                      'quantity': unpaidQty, // 🆕 Quantité non payée seulement
+                      'orderId': order['id'],
+                      'noteId': 'main',
+                    });
+                  }
+                }
+                
+                // Compter la note principale seulement si elle a des articles non payés
+                if (!mainNoteCounted && hasUnpaidMainItems && !mainPaid) {
                   activeNotesCount++;
                   mainNoteCounted = true;
                 }
                 
-                allItems.addAll(mainItems.cast<Map<String, dynamic>>());
+                // 🆕 CORRECTION : Même logique pour les sous-notes
                 final subNotes = (order['subNotes'] as List?) ?? [];
-                
-                // Compter les sous-notes actives
                 for (final subNote in subNotes) {
                   final subNoteId = subNote['id'] as String? ?? '';
                   final subItems = (subNote['items'] as List?) ?? [];
                   final subTotal = (subNote['total'] as num?)?.toDouble() ?? 0.0;
                   final isPaid = (subNote['paid'] as bool?) ?? false;
                   
-                  // Compter chaque sous-note une seule fois si elle est active
-                  if (!countedSubNoteIds.contains(subNoteId) && !isPaid && subTotal > 0 && subItems.isNotEmpty) {
-                    activeNotesCount++;
-                    countedSubNoteIds.add(subNoteId);
+                  // 🆕 CORRECTION : Filtrer les articles selon paidQuantity
+                  bool hasUnpaidSubItems = false;
+                  for (final item in subItems) {
+                    final totalQty = (item['quantity'] as num?)?.toInt() ?? 0;
+                    final paidQty = (item['paidQuantity'] as num?)?.toInt() ?? 0;
+                    final unpaidQty = totalQty - paidQty;
+                    
+                    if (unpaidQty > 0) {
+                      hasUnpaidSubItems = true;
+                      // 🆕 Ajouter seulement les articles non payés avec leur quantité restante
+                      allItems.add({
+                        'id': item['id'],
+                        'name': item['name'],
+                        'price': item['price'],
+                        'quantity': unpaidQty, // 🆕 Quantité non payée seulement
+                        'orderId': order['id'],
+                        'noteId': subNoteId,
+                      });
+                    }
                   }
                   
-                  if (!isPaid && subTotal > 0 && subItems.isNotEmpty) {
-                    allItems.addAll(subItems.cast<Map<String, dynamic>>());
+                  // Compter chaque sous-note seulement si elle a des articles non payés
+                  if (!countedSubNoteIds.contains(subNoteId) && hasUnpaidSubItems && !isPaid) {
+                    activeNotesCount++;
+                    countedSubNoteIds.add(subNoteId);
                   }
                 }
               } else {

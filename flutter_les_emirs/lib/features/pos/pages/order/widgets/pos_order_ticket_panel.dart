@@ -130,7 +130,7 @@ class _PosOrderTicketPanelState extends State<PosOrderTicketPanel> {
                 color: Colors.orange.shade600,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -196,14 +196,14 @@ class _PosOrderTicketPanelState extends State<PosOrderTicketPanel> {
                     padding: const EdgeInsets.only(bottom: 6),
                     child: Row(
                       children: [
-                        Icon(Icons.receipt_long, size: 16, color: Colors.grey.shade700),
+                        Icon(Icons.receipt_long, size: 16, color: Colors.grey.withValues(alpha: 0.7)),
                         const SizedBox(width: 4),
                         Text(
                           'NOTE ACTIVE',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade700,
+                            color: Colors.grey.withValues(alpha: 0.7),
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -253,14 +253,14 @@ class _PosOrderTicketPanelState extends State<PosOrderTicketPanel> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.add, size: 18, color: Colors.grey.shade700),
+                                Icon(Icons.add, size: 18, color: Colors.grey.withValues(alpha: 0.7)),
                                 const SizedBox(width: 4),
                                 Text(
                                   'Nouvelle note',
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.grey.shade700,
+                                    color: Colors.grey.withValues(alpha: 0.7),
                                   ),
                                 ),
                               ],
@@ -390,7 +390,7 @@ class _PosOrderTicketPanelState extends State<PosOrderTicketPanel> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.add_shopping_cart, color: Colors.blue.shade700, size: 20),
+                                Icon(Icons.add_shopping_cart, color: Colors.blue.withValues(alpha: 0.7), size: 20),
                                 const SizedBox(width: 8),
                                 Text(
                                   'Quantité en attente: ${widget.pendingQuantity}',
@@ -435,7 +435,7 @@ class _PosOrderTicketPanelState extends State<PosOrderTicketPanel> {
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: Colors.green.shade700,
+                                        color: Colors.green.withValues(alpha: 0.7),
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       child: Text(
@@ -465,7 +465,7 @@ class _PosOrderTicketPanelState extends State<PosOrderTicketPanel> {
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 14,
-                                      color: isNewlyAdded ? Colors.green.shade700 : Colors.black87,
+                                      color: isNewlyAdded ? Colors.green.withValues(alpha: 0.7) : Colors.black87,
                                     ),
                                   ),
                                 ),
@@ -476,7 +476,7 @@ class _PosOrderTicketPanelState extends State<PosOrderTicketPanel> {
                                     textAlign: TextAlign.right,
                                     style: TextStyle(
                                       fontSize: 14,
-                                      color: isNewlyAdded ? Colors.green.shade700 : Colors.black87,
+                                      color: isNewlyAdded ? Colors.green.withValues(alpha: 0.7) : Colors.black87,
                                     ),
                                   ),
                                 ),
@@ -488,7 +488,7 @@ class _PosOrderTicketPanelState extends State<PosOrderTicketPanel> {
                                     style: TextStyle(
                                       fontSize: 14, 
                                       fontWeight: FontWeight.bold,
-                                      color: isNewlyAdded ? Colors.green.shade700 : Colors.black87,
+                                      color: isNewlyAdded ? Colors.green.withValues(alpha: 0.7) : Colors.black87,
                                     ),
                                   ),
                                 ),
@@ -523,7 +523,7 @@ class _PosOrderTicketPanelState extends State<PosOrderTicketPanel> {
           boxShadow: isActive
               ? [
                   BoxShadow(
-                    color: color.withOpacity(0.3),
+                    color: color.withValues(alpha: 0.3),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -538,7 +538,7 @@ class _PosOrderTicketPanelState extends State<PosOrderTicketPanel> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
-                color: isActive ? Colors.white : Colors.grey.shade700,
+                color: isActive ? Colors.white : Colors.grey.withValues(alpha: 0.7),
               ),
             ),
             if (isActive && itemCount > 0) ...[
@@ -546,7 +546,7 @@ class _PosOrderTicketPanelState extends State<PosOrderTicketPanel> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(

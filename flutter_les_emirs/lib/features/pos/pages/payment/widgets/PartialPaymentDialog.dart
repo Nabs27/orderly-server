@@ -73,13 +73,13 @@ class _PartialPaymentDialogState extends State<PartialPaymentDialog> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info, color: Colors.blue.shade700, size: 24),
+                    Icon(Icons.info, color: Colors.blue.withValues(alpha: 0.7), size: 24),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Sélectionnez les articles que le client souhaite payer maintenant.\nArticles organisés par catégories : Boissons → Entrées → Plats → Desserts',
                         style: TextStyle(
-                          color: Colors.blue.shade700,
+                          color: Colors.blue.withValues(alpha: 0.7),
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
@@ -153,7 +153,7 @@ class _PartialPaymentDialogState extends State<PartialPaymentDialog> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: isSelected ? Colors.blue.shade700 : Colors.grey.shade600,
+                                  color: isSelected ? Colors.blue.withValues(alpha: 0.7) : Colors.grey.shade600,
                                 ),
                               ),
                             ),
@@ -211,7 +211,7 @@ class _PartialPaymentDialogState extends State<PartialPaymentDialog> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.green.shade700,
+                          color: Colors.green.withValues(alpha: 0.7),
                         ),
                       ),
                     ],

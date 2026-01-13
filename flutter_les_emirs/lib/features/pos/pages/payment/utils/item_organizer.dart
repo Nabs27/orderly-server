@@ -163,6 +163,16 @@ class ItemOrganizer {
   
   /// Organise les articles par catégories (sans regroupement)
   static List<Map<String, dynamic>> _organizeByCategories(List<Map<String, dynamic>> items) {
+    // 🆕 CORRECTION CRITIQUE : Créer un Set pour tracker les articles déjà ajoutés AVANT de commencer
+    // Utiliser une clé basée sur id-name-price pour une identification unique
+    String _getItemKey(Map<String, dynamic> item) {
+      final id = item['id']?.toString() ?? '';
+      final name = item['name']?.toString() ?? '';
+      final price = (item['price'] as num?)?.toDouble() ?? 0.0;
+      return '$id-$name-${price.toStringAsFixed(2)}';
+    }
+    
+    final Set<String> addedKeys = {}; // Track des articles déjà ajoutés
     final List<Map<String, dynamic>> organizedItems = [];
 
     bool _isName(Map<String, dynamic> item, List<String> tokens) {
@@ -174,7 +184,17 @@ class ItemOrganizer {
     }
 
     List<Map<String, dynamic>> _pick(List<String> tokens) {
-      final list = items.where((it) => _isName(it, tokens)).toList();
+      final list = items.where((it) {
+        final key = _getItemKey(it);
+        // 🆕 Vérifier si l'article correspond aux tokens ET n'a pas déjà été ajouté
+        return _isName(it, tokens) && !addedKeys.contains(key);
+      }).toList();
+      
+      // 🆕 Marquer les articles comme ajoutés AVANT de les ajouter à organizedItems
+      for (final item in list) {
+        addedKeys.add(_getItemKey(item));
+      }
+      
       list.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
       return list;
     }
@@ -189,8 +209,10 @@ class ItemOrganizer {
     organizedItems.addAll(_pick(['tiramisu', 'chocolate', 'dessert', 'moelleux']));
 
     // 5. Autres non classés
-    final picked = organizedItems.toSet();
-    final others = items.where((it) => !picked.contains(it)).toList();
+    final others = items.where((it) {
+      final key = _getItemKey(it);
+      return !addedKeys.contains(key); // 🆕 Vérifier si pas déjà ajouté
+    }).toList();
     others.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
     organizedItems.addAll(others);
 

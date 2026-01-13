@@ -73,8 +73,8 @@ class _DiscountSectionState extends State<DiscountSection> {
           foregroundColor: isSelected 
               ? Colors.white 
               : isNoDiscount 
-                  ? Colors.grey.shade700 
-                  : Colors.orange.shade700,
+                  ? Colors.grey.withValues(alpha: 0.7) 
+                  : Colors.orange.withValues(alpha: 0.7),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           elevation: isSelected ? 4 : 1,
             side: isSelected
@@ -153,7 +153,7 @@ class _DiscountSectionState extends State<DiscountSection> {
                           Icon(
                             Icons.warning_amber_rounded,
                             size: 14,
-                            color: Colors.red.shade700,
+                            color: Colors.red.withValues(alpha: 0.7),
                           ),
                         if (widget.discount > 20) const SizedBox(width: 4),
                         Text(
@@ -162,8 +162,8 @@ class _DiscountSectionState extends State<DiscountSection> {
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                             color: widget.discount > 20
-                                ? Colors.red.shade700
-                                : Colors.orange.shade700,
+                                ? Colors.red.withValues(alpha: 0.7)
+                                : Colors.orange.withValues(alpha: 0.7),
                           ),
                         ),
                       ],
@@ -223,7 +223,7 @@ class _DiscountSectionState extends State<DiscountSection> {
                       ? Icons.person
                       : Icons.person_outline,
                   color: widget.initialClientName != null && widget.initialClientName!.isNotEmpty
-                      ? Colors.orange.shade700
+                      ? Colors.orange.withValues(alpha: 0.7)
                       : Colors.grey.shade600,
                 ),
                 label: Text(
@@ -232,8 +232,8 @@ class _DiscountSectionState extends State<DiscountSection> {
                       : 'Modifier le nom du client',
                   style: TextStyle(
                     color: widget.initialClientName != null && widget.initialClientName!.isNotEmpty
-                        ? Colors.orange.shade700
-                        : Colors.grey.shade700,
+                        ? Colors.orange.withValues(alpha: 0.7)
+                        : Colors.grey.withValues(alpha: 0.7),
                     fontWeight: widget.initialClientName != null && widget.initialClientName!.isNotEmpty
                         ? FontWeight.w600
                         : FontWeight.normal,

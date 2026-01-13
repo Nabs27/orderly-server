@@ -370,7 +370,7 @@ class _PosMenuGridState extends State<PosMenuGrid> {
             style: ElevatedButton.styleFrom(
               backgroundColor: isActive 
                   ? const Color(0xFF3498DB)
-                  : Colors.grey.shade700,
+                  : Colors.grey.withValues(alpha: 0.7),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -408,7 +408,7 @@ class _PosMenuGridState extends State<PosMenuGrid> {
             style: ElevatedButton.styleFrom(
               backgroundColor: isActive 
                   ? const Color(0xFF3498DB) // Bleu pour actif (comme dans la photo)
-                  : Colors.grey.shade700, // Gris pour inactif
+                  : Colors.grey.withValues(alpha: 0.7), // Gris pour inactif
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -492,7 +492,7 @@ class _PosMenuGridState extends State<PosMenuGrid> {
               borderRadius: BorderRadius.circular(8),
               boxShadow: [
                 BoxShadow(
-                  color: isSelected ? Colors.green.withOpacity(0.5) : Colors.black26, 
+                  color: isSelected ? Colors.green.withValues(alpha: 0.5) : Colors.black26, 
                   blurRadius: isSelected ? 8 : 4, 
                   offset: const Offset(0, 2)
                 ),

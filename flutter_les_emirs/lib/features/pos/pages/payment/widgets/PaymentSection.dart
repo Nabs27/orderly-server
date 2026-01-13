@@ -138,7 +138,7 @@ class PaymentSection extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.orange.shade700, size: 20),
+                      Icon(Icons.info_outline, color: Colors.orange.withValues(alpha: 0.7), size: 20),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -175,7 +175,7 @@ class PaymentSection extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: isPaymentValid ? Colors.white : Colors.grey.shade700,
+                      color: isPaymentValid ? Colors.white : Colors.grey.withValues(alpha: 0.7),
                     ),
                   ),
                 ),

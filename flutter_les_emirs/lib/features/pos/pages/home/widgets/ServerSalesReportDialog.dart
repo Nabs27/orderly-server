@@ -222,7 +222,7 @@ class ServerSalesReportDialog extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.6)),
+        border: Border.all(color: color.withValues(alpha: 0.6)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,7 +238,7 @@ class ServerSalesReportDialog extends StatelessWidget {
           ),
           Text(
             '$title • $subtitle',
-            style: TextStyle(color: Colors.grey.shade700),
+            style: TextStyle(color: Colors.grey.withValues(alpha: 0.7)),
           ),
         ],
       ),
@@ -281,7 +281,7 @@ class ServerSalesReportDialog extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             message,
-            style: TextStyle(color: Colors.grey.shade700),
+            style: TextStyle(color: Colors.grey.withValues(alpha: 0.7)),
           ),
         ],
       ),

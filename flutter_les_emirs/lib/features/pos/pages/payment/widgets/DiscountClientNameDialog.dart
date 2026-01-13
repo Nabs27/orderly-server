@@ -141,7 +141,7 @@ class _DiscountClientNameDialogState extends State<DiscountClientNameDialog> {
                         Navigator.of(context).pop(name.isEmpty ? null : name);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green.shade700,
+                        backgroundColor: Colors.green.withValues(alpha: 0.7),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       ),

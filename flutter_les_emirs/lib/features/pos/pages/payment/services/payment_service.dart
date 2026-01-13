@@ -262,6 +262,7 @@ class PaymentService {
     List<Map<String, dynamic>>? splitPaymentTransactions, // 🆕 Liste de transactions (nouveau format)
     String? serverName, // 🆕 CORRECTION : Ajouter le serveur pour les détails des remises KPI
     double? scripturalEnteredAmount, // 🆕 Montant réellement saisi pour paiement scriptural simple (CARTE/TPE/CHEQUE)
+    int? clientId, // 🆕 ID du client pour paiements CREDIT simples
   }) async {
     try {
       print('[PAYMENT-BASTA] Envoi du sac d\'articles pour la table $tableNumber');
@@ -309,6 +310,9 @@ class PaymentService {
         paymentData['paymentMode'] = paymentMode ?? 'ESPECE';
         if (paymentMode == 'CARTE' || paymentMode == 'CHEQUE' || paymentMode == 'TPE') {
           paymentData['enteredAmount'] = scripturalEnteredAmount; // 🆕 Envoyer le montant réel
+        }
+        if (paymentMode == 'CREDIT' && clientId != null) {
+          paymentData['clientId'] = clientId; // 🆕 Passer l'ID du client pour paiements CREDIT simples
         }
       }
       

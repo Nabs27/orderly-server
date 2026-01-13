@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import '../../../core/api_client.dart';
-import '../../../core/auth_service.dart';
 
 /// Service de diagnostic pour comparer les données entre différentes sources
 /// Permet de diagnostiquer les incohérences entre :
@@ -18,22 +17,17 @@ class DiagnosticService {
     final start = DateTime(now.year, now.month, now.day);
     final end = start.add(const Duration(days: 1));
     
-    final diagnosticData = {
+    // 🆕 CORRECTION WEB : Utiliser Map<String, dynamic> explicitement pour éviter LinkedMap
+    final diagnosticData = <String, dynamic>{
       'table': tableNumber,
       'timestamp': now.toIso8601String(),
       'dateFrom': start.toIso8601String(),
       'dateTo': end.toIso8601String(),
-      'sources': {},
+      'sources': <String, dynamic>{},
     };
     
     // Source 1 : Report-X (KPI)
     try {
-      // Récupérer le token depuis AuthService
-      final token = await AuthService.getToken();
-      if (token == null) {
-        throw Exception('Non authentifié. Veuillez vous reconnecter.');
-      }
-      
       final response = await ApiClient.dio.get(
         '/api/admin/report-x',
         queryParameters: {
@@ -42,25 +36,22 @@ class DiagnosticService {
           'period': 'ALL',
         },
         options: Options(
-          headers: {'x-admin-token': token},
+          headers: {'x-admin-token': 'admin123'},
         ),
       );
       
-      // 🆕 CORRECTION WEB : Convertir response.data avec Map.from() pour Flutter Web
-      dynamic responseDataRaw = response.data;
-      Map<String, dynamic> reportData;
-      
-      if (responseDataRaw is Map) {
-        reportData = Map<String, dynamic>.from(responseDataRaw);
-      } else {
-        throw Exception('Format de réponse invalide: response.data n\'est pas un Map');
-      }
-      
+      // 🆕 CORRECTION : Convertir Map<dynamic, dynamic> en Map<String, dynamic>
+      final reportDataRaw = response.data;
+      final reportData = reportDataRaw is Map
+          ? Map<String, dynamic>.from(reportDataRaw as Map)
+          : <String, dynamic>{};
       final paidPayments = (reportData['paidPayments'] as List<dynamic>?) ?? [];
       
       // Filtrer pour la table spécifique
       final tablePayments = paidPayments.where((p) {
-        final table = p['table']?.toString() ?? '?';
+        // 🆕 CORRECTION WEB : Convertir p en Map<String, dynamic> pour éviter LinkedMap
+        final pMap = p is Map ? Map<String, dynamic>.from(p as Map) : <String, dynamic>{};
+        final table = pMap['table']?.toString() ?? '?';
         return table == tableNumber;
       }).toList();
       
@@ -100,16 +91,11 @@ class DiagnosticService {
         },
       );
       
-      // 🆕 CORRECTION WEB : Convertir response.data avec Map.from() pour Flutter Web
-      dynamic responseDataRaw = response.data;
-      Map<String, dynamic> historyData;
-      
-      if (responseDataRaw is Map) {
-        historyData = Map<String, dynamic>.from(responseDataRaw);
-      } else {
-        throw Exception('Format de réponse invalide: response.data n\'est pas un Map');
-      }
-      
+      // 🆕 CORRECTION : Convertir Map<dynamic, dynamic> en Map<String, dynamic>
+      final historyDataRaw = response.data;
+      final historyData = historyDataRaw is Map
+          ? Map<String, dynamic>.from(historyDataRaw as Map)
+          : <String, dynamic>{};
       final ordersRaw = historyData['orders'];
       final orders = ordersRaw is List ? List<dynamic>.from(ordersRaw) : <dynamic>[];
       final processedTablesRaw = historyData['processedTables'];
@@ -119,7 +105,9 @@ class DiagnosticService {
       
       // Filtrer pour la table spécifique
       final tableOrders = orders.where((o) {
-        final table = o['table']?.toString() ?? '?';
+        // 🆕 CORRECTION WEB : Convertir o en Map<String, dynamic> pour éviter LinkedMap
+        final oMap = o is Map ? Map<String, dynamic>.from(o as Map) : <String, dynamic>{};
+        final table = oMap['table']?.toString() ?? '?';
         return table == tableNumber;
       }).toList();
       
@@ -183,28 +171,47 @@ class DiagnosticService {
   /// Extraire les détails des paiements
   static List<Map<String, dynamic>> _extractPaymentDetails(List<dynamic> payments) {
     return payments.map((p) {
-      final ticketRaw = p['ticket'];
-      final ticket = ticketRaw is Map ? Map<String, dynamic>.from(ticketRaw as Map) : null;
-      final paymentDetails = ticket?['paymentDetails'] as List<dynamic>?;
+      // 🆕 CORRECTION WEB : Convertir p en Map<String, dynamic> pour éviter LinkedMap
+      final pMap = p is Map ? Map<String, dynamic>.from(p as Map) : <String, dynamic>{};
       
-      return {
-        'orderId': p['orderId'],
-        'orderIds': (p['orderIds'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
-        'timestamp': p['timestamp']?.toString() ?? '?',
-        'paymentMode': p['paymentMode']?.toString() ?? '?',
-        'isSplitPayment': p['isSplitPayment'] == true,
-        'splitPaymentId': p['splitPaymentId']?.toString(),
-        'amount': (p['amount'] as num?)?.toDouble() ?? 0.0,
-        'subtotal': (p['subtotal'] as num?)?.toDouble() ?? 0.0,
-        'discountAmount': (p['discountAmount'] as num?)?.toDouble() ?? 0.0,
-        'enteredAmount': (p['enteredAmount'] as num?)?.toDouble(),
-        'allocatedAmount': (p['allocatedAmount'] as num?)?.toDouble(),
-        'excessAmount': (p['excessAmount'] as num?)?.toDouble(),
-        'hasCashInPayment': p['hasCashInPayment'] == true,
-        'server': p['server']?.toString() ?? '?',
-        'covers': p['covers'] ?? 1,
-        'items_count': (p['items'] as List<dynamic>?)?.length ?? 0,
-        'ticket': ticket != null ? {
+      final ticketRaw = pMap['ticket'];
+      final ticket = ticketRaw is Map ? Map<String, dynamic>.from(ticketRaw as Map) : null;
+      final paymentDetailsRaw = ticket?['paymentDetails'];
+      final paymentDetails = paymentDetailsRaw is List ? List<dynamic>.from(paymentDetailsRaw) : null;
+      
+      final orderIdsRaw = pMap['orderIds'];
+      final orderIds = orderIdsRaw is List ? (orderIdsRaw as List).map((e) => e.toString()).toList() : null;
+      
+      final splitPaymentAmountsRaw = pMap['splitPaymentAmounts'];
+      final splitPaymentAmounts = splitPaymentAmountsRaw is List
+          ? (splitPaymentAmountsRaw as List).map((s) {
+              final sMap = s is Map ? Map<String, dynamic>.from(s as Map) : <String, dynamic>{};
+              return <String, dynamic>{
+                'mode': sMap['mode']?.toString() ?? '?',
+                'amount': (sMap['amount'] as num?)?.toDouble() ?? 0.0,
+                'clientName': sMap['clientName']?.toString(),
+              };
+            }).toList()
+          : null;
+      
+      return <String, dynamic>{
+        'orderId': pMap['orderId'],
+        'orderIds': orderIds,
+        'timestamp': pMap['timestamp']?.toString() ?? '?',
+        'paymentMode': pMap['paymentMode']?.toString() ?? '?',
+        'isSplitPayment': pMap['isSplitPayment'] == true,
+        'splitPaymentId': pMap['splitPaymentId']?.toString(),
+        'amount': (pMap['amount'] as num?)?.toDouble() ?? 0.0,
+        'subtotal': (pMap['subtotal'] as num?)?.toDouble() ?? 0.0,
+        'discountAmount': (pMap['discountAmount'] as num?)?.toDouble() ?? 0.0,
+        'enteredAmount': (pMap['enteredAmount'] as num?)?.toDouble(),
+        'allocatedAmount': (pMap['allocatedAmount'] as num?)?.toDouble(),
+        'excessAmount': (pMap['excessAmount'] as num?)?.toDouble(),
+        'hasCashInPayment': pMap['hasCashInPayment'] == true,
+        'server': pMap['server']?.toString() ?? '?',
+        'covers': pMap['covers'] ?? 1,
+        'items_count': (pMap['items'] as List<dynamic>?)?.length ?? 0,
+        'ticket': ticket != null ? <String, dynamic>{
           'total': (ticket['total'] as num?)?.toDouble() ?? 0.0,
           'subtotal': (ticket['subtotal'] as num?)?.toDouble() ?? 0.0,
           'discountAmount': (ticket['discountAmount'] as num?)?.toDouble() ?? 0.0,
@@ -213,13 +220,7 @@ class DiagnosticService {
           'paymentDetails': paymentDetails,
           'items_count': (ticket['items'] as List<dynamic>?)?.length ?? 0,
         } : null,
-        'splitPaymentAmounts': (p['splitPaymentAmounts'] as List<dynamic>?)?.map((s) {
-          return {
-          'mode': s['mode']?.toString() ?? '?',
-          'amount': (s['amount'] as num?)?.toDouble() ?? 0.0,
-          'clientName': s['clientName']?.toString(),
-          };
-        }).toList(),
+        'splitPaymentAmounts': splitPaymentAmounts,
       };
     }).toList();
   }
@@ -236,22 +237,26 @@ class DiagnosticService {
     final orderIds = <String>{};
     
     for (final p in payments) {
-      totalAmount += (p['amount'] as num?)?.toDouble() ?? 0.0;
-      totalSubtotal += (p['subtotal'] as num?)?.toDouble() ?? 0.0;
-      totalDiscount += (p['discountAmount'] as num?)?.toDouble() ?? 0.0;
+      // 🆕 CORRECTION WEB : Convertir p en Map<String, dynamic> pour éviter LinkedMap
+      final pMap = p is Map ? Map<String, dynamic>.from(p as Map) : <String, dynamic>{};
       
-      final entered = (p['enteredAmount'] as num?)?.toDouble();
+      totalAmount += (pMap['amount'] as num?)?.toDouble() ?? 0.0;
+      totalSubtotal += (pMap['subtotal'] as num?)?.toDouble() ?? 0.0;
+      totalDiscount += (pMap['discountAmount'] as num?)?.toDouble() ?? 0.0;
+      
+      final entered = (pMap['enteredAmount'] as num?)?.toDouble();
       if (entered != null) totalEntered += entered;
       
-      final excess = (p['excessAmount'] as num?)?.toDouble();
+      final excess = (pMap['excessAmount'] as num?)?.toDouble();
       if (excess != null && excess > 0.01) totalExcess += excess;
       
-      if (p['isSplitPayment'] == true) splitPaymentsCount++;
+      if (pMap['isSplitPayment'] == true) splitPaymentsCount++;
       
-      final mode = p['paymentMode']?.toString() ?? '?';
+      final mode = pMap['paymentMode']?.toString() ?? '?';
       modes[mode] = (modes[mode] ?? 0) + 1;
       
-      final oids = (p['orderIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+      final oidsRaw = pMap['orderIds'];
+      final oids = oidsRaw is List ? (oidsRaw as List).map((e) => e.toString()).toList() : <String>[];
       orderIds.addAll(oids);
     }
     
@@ -272,23 +277,30 @@ class DiagnosticService {
   /// Extraire les détails des commandes
   static List<Map<String, dynamic>> _extractOrderDetails(List<dynamic> orders) {
     return orders.map((o) {
-      final paymentHistory = (o['paymentHistory'] as List<dynamic>?) ?? [];
+      // 🆕 CORRECTION WEB : Convertir o en Map<String, dynamic> pour éviter LinkedMap
+      final oMap = o is Map ? Map<String, dynamic>.from(o as Map) : <String, dynamic>{};
       
-      return {
-        'orderId': o['id']?.toString() ?? '?',
-        'table': o['table']?.toString() ?? '?',
-        'server': o['server']?.toString() ?? '?',
-        'status': o['status']?.toString() ?? '?',
-        'createdAt': o['createdAt']?.toString() ?? '?',
-        'archivedAt': o['archivedAt']?.toString(),
-        'total': (o['total'] as num?)?.toDouble() ?? 0.0,
+      final paymentHistoryRaw = oMap['paymentHistory'];
+      final paymentHistory = paymentHistoryRaw is List ? List<dynamic>.from(paymentHistoryRaw) : <dynamic>[];
+      
+      return <String, dynamic>{
+        'orderId': oMap['id']?.toString() ?? '?',
+        'table': oMap['table']?.toString() ?? '?',
+        'server': oMap['server']?.toString() ?? '?',
+        'status': oMap['status']?.toString() ?? '?',
+        'createdAt': oMap['createdAt']?.toString() ?? '?',
+        'archivedAt': oMap['archivedAt']?.toString(),
+        'total': (oMap['total'] as num?)?.toDouble() ?? 0.0,
         'paymentHistory_count': paymentHistory.length,
-        'paymentHistory': paymentHistory.map((p) => {
-          'timestamp': p['timestamp']?.toString() ?? '?',
-          'paymentMode': p['paymentMode']?.toString() ?? '?',
-          'amount': (p['amount'] as num?)?.toDouble() ?? 0.0,
-          'isSplitPayment': p['isSplitPayment'] == true,
-          'splitPaymentId': p['splitPaymentId']?.toString(),
+        'paymentHistory': paymentHistory.map((p) {
+          final pMap = p is Map ? Map<String, dynamic>.from(p as Map) : <String, dynamic>{};
+          return <String, dynamic>{
+            'timestamp': pMap['timestamp']?.toString() ?? '?',
+            'paymentMode': pMap['paymentMode']?.toString() ?? '?',
+            'amount': (pMap['amount'] as num?)?.toDouble() ?? 0.0,
+            'isSplitPayment': pMap['isSplitPayment'] == true,
+            'splitPaymentId': pMap['splitPaymentId']?.toString(),
+          };
         }).toList(),
       };
     }).toList();
@@ -296,12 +308,19 @@ class DiagnosticService {
   
   /// Extraire les données traitées d'une table
   static Map<String, dynamic> _extractTableProcessed(Map<String, dynamic> tableProcessed) {
-    final sessions = (tableProcessed['sessions'] as List<dynamic>?) ?? [];
-    final services = (tableProcessed['services'] as Map<String, dynamic>?) ?? {};
+    final sessionsRaw = tableProcessed['sessions'];
+    final sessions = sessionsRaw is List
+        ? List<dynamic>.from(sessionsRaw)
+        : <dynamic>[];
+    final servicesRaw = tableProcessed['services'];
+    final services = servicesRaw is Map
+        ? Map<String, dynamic>.from(servicesRaw as Map)
+        : <String, dynamic>{};
     
     final servicesList = <Map<String, dynamic>>[];
     services.forEach((serviceIndex, serviceData) {
-      final serviceMap = serviceData as Map<String, dynamic>;
+      // 🆕 CORRECTION WEB : Convertir serviceData en Map<String, dynamic> pour éviter LinkedMap
+      final serviceMap = serviceData is Map ? Map<String, dynamic>.from(serviceData as Map) : <String, dynamic>{};
       servicesList.add({
         'serviceIndex': serviceIndex,
         'total': (serviceMap['total'] as num?)?.toDouble() ?? 0.0,
@@ -322,14 +341,15 @@ class DiagnosticService {
     final orderIds = <String>{};
     
     for (final o in orders) {
-      totalAmount += (o['total'] as num?)?.toDouble() ?? 0.0;
-      final id = o['id']?.toString();
+      // 🆕 CORRECTION WEB : Convertir o en Map<String, dynamic> pour éviter LinkedMap
+      final oMap = o is Map ? Map<String, dynamic>.from(o as Map) : <String, dynamic>{};
+      
+      totalAmount += (oMap['total'] as num?)?.toDouble() ?? 0.0;
+      final id = oMap['id']?.toString();
       if (id != null) orderIds.add(id);
     }
     
-    final servicesRaw = processed?['services'];
-    final services = servicesRaw is Map ? Map<String, dynamic>.from(servicesRaw as Map) : null;
-    final servicesCount = services?.length ?? 0;
+    final servicesCount = (processed?['services'] as Map<String, dynamic>?)?.length ?? 0;
     
     return {
       'orders_count': orders.length,
@@ -345,8 +365,11 @@ class DiagnosticService {
     final orderIds = <String>{};
     
     for (final o in orders) {
-      totalAmount += (o['total'] as num?)?.toDouble() ?? 0.0;
-      final id = o['id']?.toString();
+      // 🆕 CORRECTION WEB : Convertir o en Map<String, dynamic> pour éviter LinkedMap
+      final oMap = o is Map ? Map<String, dynamic>.from(o as Map) : <String, dynamic>{};
+      
+      totalAmount += (oMap['total'] as num?)?.toDouble() ?? 0.0;
+      final id = oMap['id']?.toString();
       if (id != null) orderIds.add(id);
     }
     
@@ -460,18 +483,15 @@ class DiagnosticService {
     buffer.writeln('Timestamp: ${diagnosticData['timestamp']}');
     buffer.writeln('${'=' * 70}\n');
     
-    final sourcesRaw = diagnosticData['sources'];
-    final sources = sourcesRaw is Map ? Map<String, dynamic>.from(sourcesRaw as Map) : <String, dynamic>{};
+    final sources = diagnosticData['sources'] as Map<String, dynamic>? ?? {};
     
     // Source Report-X
-    final reportXRaw = sources['report_x'];
-    final reportX = reportXRaw is Map ? Map<String, dynamic>.from(reportXRaw as Map) : null;
+    final reportX = sources['report_x'] as Map<String, dynamic>?;
     if (reportX != null) {
       if (reportX.containsKey('error')) {
         buffer.writeln('❌ REPORT-X: Erreur - ${reportX['error']}');
       } else {
-        final summaryRaw = reportX['summary'];
-        final summary = summaryRaw is Map ? Map<String, dynamic>.from(summaryRaw as Map) : null;
+        final summary = reportX['summary'] as Map<String, dynamic>?;
         buffer.writeln('📊 SOURCE 1: Report-X (KPI)');
         buffer.writeln('  - Paiements trouvés: ${summary?['payments_count'] ?? 0}');
         buffer.writeln('  - Montant total: ${_formatCurrency(summary?['totalAmount'] ?? 0.0)}');

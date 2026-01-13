@@ -145,7 +145,7 @@ class ChronologicalOrderView extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.access_time, size: 16, color: Colors.blue.shade700),
+                Icon(Icons.access_time, size: 16, color: Colors.blue.withValues(alpha: 0.7)),
                 const SizedBox(width: 8),
                 Text(
                   createdAt != null
@@ -165,19 +165,19 @@ class ChronologicalOrderView extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     color: isClientOrder 
-                      ? Colors.orange.shade700  // 🆕 Couleur discrète pour distinction
-                      : Colors.blue.shade700,
+                      ? Colors.orange.withValues(alpha: 0.7)  // 🆕 Couleur discrète pour distinction
+                      : Colors.blue.withValues(alpha: 0.7),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(width: 8),
-                Icon(Icons.person, size: 14, color: Colors.blue.shade700),
+                Icon(Icons.person, size: 14, color: Colors.blue.withValues(alpha: 0.7)),
                 const SizedBox(width: 4),
                 Text(
                   server,
                   style: TextStyle(
                     fontSize: 11,
-                    color: Colors.blue.shade700,
+                    color: Colors.blue.withValues(alpha: 0.7),
                     fontWeight: FontWeight.w600,
                   ),
                 ),

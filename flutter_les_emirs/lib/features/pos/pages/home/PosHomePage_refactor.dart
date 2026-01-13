@@ -1040,7 +1040,7 @@ class _PosHomePageState extends State<PosHomePage> {
                 ElevatedButton(
                   onPressed: _toggleHistory,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _showHistory ? Colors.orange.shade700 : Colors.purple.shade700,
+                    backgroundColor: _showHistory ? Colors.orange.withValues(alpha: 0.7) : Colors.purple.withValues(alpha: 0.7),
                     foregroundColor: Colors.white,
                   ),
                   child: Text(_showHistory ? 'Tables' : 'Historique'),
@@ -1256,8 +1256,8 @@ class _AdminServerOverviewCard extends StatelessWidget {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: Colors.blueGrey.withOpacity(0.15),
-                  foregroundColor: Colors.blueGrey.shade700,
+                  backgroundColor: Colors.blueGrey.withValues(alpha: 0.15),
+                  foregroundColor: Colors.blueGrey.withValues(alpha: 0.7),
                   child: const Icon(Icons.person),
                 ),
                 const SizedBox(width: 12),
@@ -1268,7 +1268,7 @@ class _AdminServerOverviewCard extends StatelessWidget {
                   ),
                 ),
                 Chip(
-                  backgroundColor: Colors.blueGrey.withOpacity(0.1),
+                  backgroundColor: Colors.blueGrey.withValues(alpha: 0.1),
                   label: Text('$tableCount table(s)'),
                 ),
               ],
@@ -1331,7 +1331,7 @@ class _AdminOverviewMetric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = highlight ? Colors.orange.shade700 : Colors.grey.shade800;
+    final color = highlight ? Colors.orange.withValues(alpha: 0.7) : Colors.grey.shade800;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(

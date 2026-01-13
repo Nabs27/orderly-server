@@ -124,7 +124,7 @@ class PaymentSummaryDialog extends StatelessWidget {
       titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
       title: Row(
         children: [
-          Icon(Icons.receipt_long, color: Colors.green.shade700),
+          Icon(Icons.receipt_long, color: Colors.green.withValues(alpha: 0.7)),
           const SizedBox(width: 12),
           const Expanded(
             child: Text(
@@ -202,7 +202,7 @@ class PaymentSummaryDialog extends StatelessWidget {
                     padding: const EdgeInsets.only(left: 40, bottom: 8),
                     child: Row(
                       children: [
-                        Icon(_getPaymentModeIcon(mode), size: 18, color: Colors.grey.shade700),
+                        Icon(_getPaymentModeIcon(mode), size: 18, color: Colors.grey.withValues(alpha: 0.7)),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -239,7 +239,7 @@ class PaymentSummaryDialog extends StatelessWidget {
                     padding: const EdgeInsets.only(left: 40, bottom: 8),
                     child: Row(
                       children: [
-                        Icon(_getPaymentModeIcon(mode), size: 18, color: Colors.grey.shade700),
+                        Icon(_getPaymentModeIcon(mode), size: 18, color: Colors.grey.withValues(alpha: 0.7)),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -283,7 +283,7 @@ class PaymentSummaryDialog extends StatelessWidget {
                     'Client: $creditClientName',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey.shade700,
+                      color: Colors.grey.withValues(alpha: 0.7),
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -348,7 +348,7 @@ class PaymentSummaryDialog extends StatelessWidget {
         ElevatedButton(
           onPressed: onConfirm,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green.shade700,
+            backgroundColor: Colors.green.withValues(alpha: 0.7),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
@@ -402,7 +402,7 @@ class PaymentSummaryDialog extends StatelessWidget {
           style: TextStyle(
             fontSize: isTotal ? 18 : 14,
             fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
-            color: isTotal ? Colors.green.shade700 : Colors.black87,
+            color: isTotal ? Colors.green.withValues(alpha: 0.7) : Colors.black87,
           ),
         ),
         Text(
@@ -411,9 +411,9 @@ class PaymentSummaryDialog extends StatelessWidget {
             fontSize: isTotal ? 20 : 16,
             fontWeight: FontWeight.bold,
             color: isDiscount
-                ? Colors.red.shade700
+                ? Colors.red.withValues(alpha: 0.7)
                 : isTotal
-                    ? Colors.green.shade700
+                    ? Colors.green.withValues(alpha: 0.7)
                     : Colors.black87,
           ),
         ),

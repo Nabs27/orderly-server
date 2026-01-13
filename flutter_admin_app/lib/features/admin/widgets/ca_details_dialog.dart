@@ -544,65 +544,85 @@ class _CaDetailsDialogState extends State<CaDetailsDialog> {
               return InkWell(
                 onTap: () => _showCategoryDetails(category, categoryData),
                 borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Row(
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.shade100),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${index + 1}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.orange.shade700,
+                      // Ligne 1 : Badge numéro + Nom catégorie + Icône
+                      Row(
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade200,
+                              borderRadius: BorderRadius.circular(6),
                             ),
+                            child: Center(
+                              child: Text(
+                                '${index + 1}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  color: Colors.orange.shade800,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              category,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Icon(Icons.open_in_new,
+                              size: 16, color: Colors.orange.shade600),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      // Ligne 2 : Barre de progression
+                      SizedBox(
+                        height: 6,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(3),
+                          child: LinearProgressIndicator(
+                            value: percent / 100,
+                            backgroundColor: Colors.orange.shade100,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.orange.shade400),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  category,
-                                  style: const TextStyle(fontWeight: FontWeight.w600),
-                                ),
-                                Icon(Icons.open_in_new,
-                                    size: 16, color: Colors.orange.shade700),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            LinearProgressIndicator(
-                              value: percent / 100,
-                              backgroundColor: Colors.grey.shade200,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.orange.shade300),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                      const SizedBox(height: 8),
+                      // Ligne 3 : Montant et pourcentage
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            _formatCurrency(total),
-                            style:
-                                TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade700),
+                            '${percent.toStringAsFixed(1)}% du CA',
+                            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                           ),
                           Text(
-                            '${percent.toStringAsFixed(1)}%',
-                            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                            _formatCurrency(total),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Colors.orange.shade700,
+                            ),
                           ),
                         ],
                       ),

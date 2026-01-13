@@ -40,6 +40,6 @@ class TimeHelpers {
     final minutes = elapsed.inMinutes;
     if (minutes < 15) return Colors.green.shade600;
     if (minutes < 30) return Colors.orange.shade600;
-    return Colors.red.shade700;
+    return Colors.red.withValues(alpha: 0.7);
   }
 }

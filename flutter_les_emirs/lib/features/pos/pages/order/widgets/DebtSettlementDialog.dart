@@ -163,8 +163,8 @@ class DebtSettlementDialogState extends State<DebtSettlementDialog> {
                             size: 28,
                           ),
                           color: searchKeyboardType == VirtualKeyboardType.phone
-                              ? Colors.blue.shade700
-                              : Colors.green.shade700,
+                              ? Colors.blue.withValues(alpha: 0.7)
+                              : Colors.green.withValues(alpha: 0.7),
                           style: IconButton.styleFrom(
                             backgroundColor: searchKeyboardType == VirtualKeyboardType.phone
                                 ? Colors.blue.shade50
@@ -253,7 +253,7 @@ class DebtSettlementDialogState extends State<DebtSettlementDialog> {
                                           ),
                                           Expanded(
                                             flex: 1,
-                                            child: Text(client['phone'], textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade700)),
+                                            child: Text(client['phone'], textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.withValues(alpha: 0.7))),
                                           ),
                                           Expanded(
                                             flex: 1,

@@ -55,7 +55,7 @@ class PaymentModesSection extends StatelessWidget {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: color.withOpacity(0.4),
+                      color: color.withValues(alpha: 0.4),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -152,7 +152,7 @@ class PaymentModesSection extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: isSplitPayment ? Colors.blue.shade700 : Colors.grey.shade400,
+                  color: isSplitPayment ? Colors.blue.withValues(alpha: 0.7) : Colors.grey.shade400,
                   width: isSplitPayment ? 2.5 : 1.5,
                 ),
                 borderRadius: BorderRadius.circular(6),
@@ -160,7 +160,7 @@ class PaymentModesSection extends StatelessWidget {
                 boxShadow: isSplitPayment
                     ? [
                         BoxShadow(
-                          color: Colors.blue.withOpacity(0.4),
+                          color: Colors.blue.withValues(alpha: 0.4),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -177,7 +177,7 @@ class PaymentModesSection extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.account_balance_wallet,
-                        color: isSplitPayment ? Colors.blue.shade700 : Colors.grey.shade600,
+                        color: isSplitPayment ? Colors.blue.withValues(alpha: 0.7) : Colors.grey.shade600,
                         size: 20,
                       ),
                       const SizedBox(width: 8),
@@ -186,14 +186,14 @@ class PaymentModesSection extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: isSplitPayment ? Colors.blue.shade700 : Colors.grey.shade600,
+                          color: isSplitPayment ? Colors.blue.withValues(alpha: 0.7) : Colors.grey.shade600,
                         ),
                       ),
                       if (isSplitPayment) ...[
                         const SizedBox(width: 8),
                         Icon(
                           Icons.check_circle,
-                          color: Colors.blue.shade700,
+                          color: Colors.blue.withValues(alpha: 0.7),
                           size: 16,
                         ),
                       ],
@@ -219,13 +219,13 @@ class PaymentModesSection extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.person, color: Colors.blue.shade700, size: 20),
+                      Icon(Icons.person, color: Colors.blue.withValues(alpha: 0.7), size: 20),
                       const SizedBox(width: 8),
                       Text(
                         'Client Crédit Sélectionné',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade700,
+                          color: Colors.blue.withValues(alpha: 0.7),
                           fontSize: 16,
                         ),
                       ),

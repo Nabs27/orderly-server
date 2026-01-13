@@ -45,9 +45,9 @@ class TotalsSection extends StatelessWidget {
                 : EdgeInsets.zero,
             decoration: isTotal
                 ? BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
                   )
                 : null,
             child: Text(
@@ -102,7 +102,7 @@ class TotalsSection extends StatelessWidget {
         border: Border(top: BorderSide(color: Colors.grey.shade300, width: 2)),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity(0.3),
+            color: Colors.green.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),

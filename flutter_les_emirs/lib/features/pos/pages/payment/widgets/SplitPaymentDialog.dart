@@ -470,7 +470,7 @@ class _SplitPaymentDialogState extends State<SplitPaymentDialog> {
               children: [
             Row(
               children: [
-                Icon(Icons.account_balance_wallet, color: Colors.blue.shade700, size: 24), // 🆕 Agrandi
+                Icon(Icons.account_balance_wallet, color: Colors.blue.withValues(alpha: 0.7), size: 24), // 🆕 Agrandi
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Text(
@@ -561,9 +561,9 @@ class _SplitPaymentDialogState extends State<SplitPaymentDialog> {
                               margin: const EdgeInsets.only(bottom: 4),
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                               decoration: BoxDecoration(
-                                border: Border.all(color: color.withOpacity(0.5), width: 1),
+                                border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
                                 borderRadius: BorderRadius.circular(6),
-                                color: color.withOpacity(0.1),
+                                color: color.withValues(alpha: 0.1),
                               ),
                               child: Row(
                                 children: [
@@ -598,7 +598,7 @@ class _SplitPaymentDialogState extends State<SplitPaymentDialog> {
                           decoration: BoxDecoration(
                             border: Border.all(color: color, width: 2),
                             borderRadius: BorderRadius.circular(8),
-                            color: color.withOpacity(0.05),
+                            color: color.withValues(alpha: 0.05),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -674,12 +674,12 @@ class _SplitPaymentDialogState extends State<SplitPaymentDialog> {
                                         ),
                                         child: Row(
                                           children: [
-                                            Icon(Icons.person, size: 14, color: Colors.blue.shade700),
+                                            Icon(Icons.person, size: 14, color: Colors.blue.withValues(alpha: 0.7)),
                                             const SizedBox(width: 6),
                                             Expanded(
                                               child: Text(
                                                 'Client: ${client['name'] ?? 'Client #${transaction.clientId}'}',
-                                                style: TextStyle(fontSize: 11, color: Colors.blue.shade700),
+                                                style: TextStyle(fontSize: 11, color: Colors.blue.withValues(alpha: 0.7)),
                                               ),
                                             ),
                                             TextButton(
@@ -705,12 +705,12 @@ class _SplitPaymentDialogState extends State<SplitPaymentDialog> {
                                         ),
                                         child: Row(
                                           children: [
-                                            Icon(Icons.person, size: 14, color: Colors.orange.shade700),
+                                            Icon(Icons.person, size: 14, color: Colors.orange.withValues(alpha: 0.7)),
                                             const SizedBox(width: 6),
                                             Expanded(
                                               child: Text(
                                                 'Client: Client #${transaction.clientId}',
-                                                style: TextStyle(fontSize: 11, color: Colors.orange.shade700),
+                                                style: TextStyle(fontSize: 11, color: Colors.orange.withValues(alpha: 0.7)),
                                               ),
                                             ),
                                             TextButton(
@@ -778,7 +778,7 @@ class _SplitPaymentDialogState extends State<SplitPaymentDialog> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: remaining.abs() < 0.01 ? Colors.green.shade700 : Colors.orange.shade700,
+                          color: remaining.abs() < 0.01 ? Colors.green.withValues(alpha: 0.7) : Colors.orange.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -794,8 +794,8 @@ class _SplitPaymentDialogState extends State<SplitPaymentDialog> {
                             fontSize: 13, // 🆕 Agrandi (11 -> 13)
                             fontWeight: FontWeight.w600,
                             color: remaining > 0 
-                                ? Colors.orange.shade700 
-                                : (hasCash ? Colors.red.shade700 : Colors.green.shade700),
+                                ? Colors.orange.withValues(alpha: 0.7) 
+                                : (hasCash ? Colors.red.withValues(alpha: 0.7) : Colors.green.withValues(alpha: 0.7)),
                           ),
                         ),
                         Text(
@@ -804,8 +804,8 @@ class _SplitPaymentDialogState extends State<SplitPaymentDialog> {
                             fontSize: 16, // 🆕 Agrandi et plus visible (11 -> 16)
                             fontWeight: FontWeight.bold,
                             color: remaining > 0 
-                                ? Colors.orange.shade700 
-                                : (hasCash ? Colors.red.shade700 : Colors.green.shade700),
+                                ? Colors.orange.withValues(alpha: 0.7) 
+                                : (hasCash ? Colors.red.withValues(alpha: 0.7) : Colors.green.withValues(alpha: 0.7)),
                           ),
                         ),
                       ],
@@ -835,7 +835,7 @@ class _SplitPaymentDialogState extends State<SplitPaymentDialog> {
                   // Autoriser la validation si on a au moins une transaction confirmée
                   onPressed: _transactions.any((t) => t.isConfirmed) ? _validateAndConfirm : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
+                    backgroundColor: Colors.blue.withValues(alpha: 0.7),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14), // 🆕 Agrandi pour tactile (16,8 -> 24,14)
                     minimumSize: const Size(120, 50), // 🆕 Taille minimale pour tactile

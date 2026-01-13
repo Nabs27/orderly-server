@@ -132,14 +132,14 @@ class TicketPreviewDialog extends StatelessWidget {
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.account_balance_wallet, size: 16, color: Colors.blue.shade700),
+                                Icon(Icons.account_balance_wallet, size: 16, color: Colors.blue.withValues(alpha: 0.7)),
                                 const SizedBox(width: 6),
                                 Text(
                                   'PAIEMENT DIVISÉ',
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.blue.shade700,
+                                    color: Colors.blue.withValues(alpha: 0.7),
                                   ),
                                 ),
                               ],
@@ -170,7 +170,7 @@ class TicketPreviewDialog extends StatelessWidget {
                                         style: TextStyle(
                                           fontSize: 11,
                                           fontWeight: isCredit ? FontWeight.w600 : FontWeight.normal,
-                                          color: isCredit ? Colors.orange.shade700 : Colors.grey.shade700,
+                                          color: isCredit ? Colors.orange.withValues(alpha: 0.7) : Colors.grey.withValues(alpha: 0.7),
                                         ),
                                       ),
                                     ),
@@ -179,7 +179,7 @@ class TicketPreviewDialog extends StatelessWidget {
                                       style: TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold,
-                                        color: isCredit ? Colors.orange.shade700 : Colors.grey.shade700,
+                                        color: isCredit ? Colors.orange.withValues(alpha: 0.7) : Colors.grey.withValues(alpha: 0.7),
                                       ),
                                     ),
                                   ],

@@ -556,35 +556,67 @@ class _ServiceDetailPage extends StatelessWidget {
         },
       );
       
-      // 🆕 ÉTAPE 2: Collecter TOUS les paymentDetails de tous les paiements
+      // 🆕 ÉTAPE 2: Agréger tous les paymentDetails de tous les paiements
       final consolidatedPaymentDetails = <Map<String, dynamic>>[];
-
-      // Pour chaque paiement dans la liste, récupérer ses paymentDetails
+      final processedDetails = <String>{}; // Pour dédupliquer les paiements divisés
+      
       for (final payment in payments) {
-        if (payment['ticket'] != null && payment['ticket']['paymentDetails'] != null) {
-          // Pour les paiements avec ticket (divisés ou non), utiliser paymentDetails du ticket
-          final ticket = payment['ticket'] as Map<String, dynamic>;
-          final ticketPaymentDetails = (ticket['paymentDetails'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-          consolidatedPaymentDetails.addAll(ticketPaymentDetails.map((detail) => Map<String, dynamic>.from(detail)));
+        // Pour les paiements divisés, utiliser paymentDetails du ticket du backend
+        if (payment['isSplitPayment'] == true && payment['ticket'] != null) {
+          final ticket = payment['ticket'] as Map<String, dynamic>?;
+          if (ticket != null && ticket['paymentDetails'] != null) {
+            final ticketPaymentDetails = (ticket['paymentDetails'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+            for (final detail in ticketPaymentDetails) {
+              // 🆕 CORRECTION: Utiliser l'index pour distinguer les paiements du même mode/montant
+              // ⚠️ RÈGLE .cursorrules 3.2: Ne pas dédupliquer avec mode+montant seul car plusieurs paiements peuvent avoir le même mode et montant
+              final index = detail['index'] ?? (consolidatedPaymentDetails.where((d) => d['mode'] == detail['mode'] && d['amount'] == detail['amount']).length + 1);
+              final detailKey = '${detail['mode']}_${detail['amount']}_${index}_${detail['clientName'] ?? ''}';
+              if (!processedDetails.contains(detailKey)) {
+                processedDetails.add(detailKey);
+                final newDetail = Map<String, dynamic>.from(detail);
+                newDetail['index'] = index; // Préserver l'index
+                consolidatedPaymentDetails.add(newDetail);
+              }
+            }
+          } else if (payment['splitPaymentAmounts'] != null) {
+            // Fallback: utiliser splitPaymentAmounts du paiement
+            final splitAmounts = (payment['splitPaymentAmounts'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+            for (final detail in splitAmounts) {
+              // 🆕 CORRECTION: Utiliser l'index pour distinguer les paiements du même mode/montant
+              final index = detail['index'] ?? (consolidatedPaymentDetails.where((d) => d['mode'] == detail['mode'] && d['amount'] == detail['amount']).length + 1);
+              final detailKey = '${detail['mode']}_${detail['amount']}_${index}_${detail['clientName'] ?? ''}';
+              if (!processedDetails.contains(detailKey)) {
+                processedDetails.add(detailKey);
+                consolidatedPaymentDetails.add({
+                  'mode': detail['mode']?.toString() ?? 'N/A',
+                  'amount': (detail['amount'] as num?)?.toDouble() ?? 0.0,
+                  'index': index,
+                  if (detail['clientName'] != null) 'clientName': detail['clientName'].toString(),
+                });
+              }
+            }
+          }
         } else {
-          // Pour les paiements simples sans ticket, construire depuis les données du paiement
-          final enteredAmount = (payment['enteredAmount'] as num?)?.toDouble() ??
+          // Pour les paiements simples, construire le détail
+          final enteredAmount = (payment['enteredAmount'] as num?)?.toDouble() ?? 
               ((payment['amount'] as num?)?.toDouble() ?? 0.0);
           final paymentMode = payment['paymentMode']?.toString() ?? '';
-          final detail = {
-            'mode': paymentMode,
-            'amount': enteredAmount,
-          };
-          if (paymentMode == 'CREDIT' && payment['creditClientName'] != null) {
-            detail['clientName'] = payment['creditClientName'].toString();
+          // 🆕 Pour les paiements simples, compter combien de fois ce mode+montant existe déjà
+          final index = consolidatedPaymentDetails.where((d) => d['mode'] == paymentMode && d['amount'] == enteredAmount).length + 1;
+          final detailKey = '${paymentMode}_${enteredAmount}_${index}_${payment['creditClientName'] ?? ''}';
+          if (!processedDetails.contains(detailKey)) {
+            processedDetails.add(detailKey);
+            final detail = <String, dynamic>{
+              'mode': paymentMode,
+              'amount': enteredAmount,
+              'index': index,
+            };
+            if (paymentMode == 'CREDIT' && payment['creditClientName'] != null) {
+              detail['clientName'] = payment['creditClientName'].toString();
+            }
+            consolidatedPaymentDetails.add(detail);
           }
-          consolidatedPaymentDetails.add(detail);
         }
-      }
-
-      // 🆕 DEBUG: Afficher les paymentDetails collectés pour diagnostiquer
-      if (tableNumber == '1') {
-        print('🔍 [DEBUG] Table 1 - PaymentDetails collectés: $consolidatedPaymentDetails');
       }
       
       // Calculer le taux de remise global
@@ -825,11 +857,11 @@ class _ServiceDetailPage extends StatelessWidget {
               final ticket = payment['ticket'] as Map<String, dynamic>?;
               final isSplitPayment = payment['isSplitPayment'] == true;
               
-              // 🆕 Pour les paiements divisés, utiliser le ticket principal qui contient tous les détails
-              // ⚠️ RÈGLE .cursorrules 3.1: Utiliser le ticket du backend (déjà calculé correctement)
-              final effectiveTicket = isSplitPayment 
-                  ? mainTicket // Utiliser le ticket principal avec paymentDetails et excessAmount du backend
-                  : (ticket ?? {
+              // 🆕 CORRECTION: Utiliser le ticket du backend pour CHAQUE paiement (pas mainTicket)
+              // ⚠️ RÈGLE .cursorrules 3.1: Le ticket du backend contient seulement les articles de CE paiement
+              // mainTicket = tous les articles de la table (pour le résumé global)
+              // ticket = articles de ce paiement spécifique (pour le détail du paiement)
+              final effectiveTicket = ticket ?? {
                 'table': payment['table']?.toString() ?? '—',
                 'date': payment['timestamp']?.toString() ?? DateTime.now().toIso8601String(),
                 'items': (payment['items'] as List?)?.cast<Map<String, dynamic>>() ?? [],
@@ -841,17 +873,20 @@ class _ServiceDetailPage extends StatelessWidget {
                 'covers': payment['covers'] ?? 1,
                 'server': payment['server']?.toString() ?? 'unknown',
                 'paymentMode': payment['paymentMode']?.toString(),
-                      'isSplitPayment': false,
-                      // 🆕 Ajouter les détails de paiement et pourboire pour les paiements individuels
-                      'excessAmount': payment['excessAmount'] != null ? (payment['excessAmount'] as num?)?.toDouble() : null,
-                      'paymentDetails': [{
-                        'mode': paymentMode,
-                        'amount': (payment['enteredAmount'] as num?)?.toDouble() ?? amount,
-                        if (paymentMode == 'CREDIT' && payment['creditClientName'] != null)
-                          'clientName': payment['creditClientName']?.toString(),
-                      }],
-                      'totalAmount': (payment['enteredAmount'] as num?)?.toDouble() ?? amount,
-                    });
+                'isSplitPayment': false,
+                // 🆕 Ajouter les détails de paiement et pourboire pour les paiements individuels
+                'excessAmount': payment['excessAmount'] != null ? (payment['excessAmount'] as num?)?.toDouble() : null,
+                'paymentDetails': [
+                  {
+                    'mode': paymentMode,
+                    'amount': (payment['enteredAmount'] as num?)?.toDouble() ?? amount,
+                    ...(paymentMode == 'CREDIT' && payment['creditClientName'] != null
+                        ? {'clientName': payment['creditClientName']?.toString()}
+                        : {}),
+                  }
+                ],
+                'totalAmount': (payment['enteredAmount'] as num?)?.toDouble() ?? amount,
+              };
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),

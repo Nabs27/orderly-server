@@ -60,6 +60,11 @@ class PaidTicketDialog extends StatelessWidget {
     final paymentDetails = (ticket['paymentDetails'] as List?)?.cast<Map<String, dynamic>>() ?? []; // 🆕 Détails des paiements
     final totalAmount = (ticket['totalAmount'] as num?)?.toDouble(); // 🆕 Montant total encaissé
 
+    // 🆕 SUPPRIMÉ: La correction proportionnelle faussait les montants quand la déduplication supprimait des paiements
+    // ⚠️ RÈGLE .cursorrules 3.2: Les montants originaux des paymentDetails sont la source de vérité
+    // Ne pas les modifier - ils viennent du backend qui les calcule correctement
+    final correctedPaymentDetails = paymentDetails;
+
     final screenWidth = MediaQuery.of(context).size.width;
     final dialogWidth = screenWidth > 800 ? 800.0 : screenWidth * 0.95;
 
@@ -232,7 +237,7 @@ class PaidTicketDialog extends StatelessWidget {
                     ],
                     const SizedBox(height: 8),
                     // 🆕 Détails des paiements (modes et montants)
-                    if (paymentDetails.isNotEmpty) ...[
+                    if (correctedPaymentDetails.isNotEmpty) ...[
                       const Divider(),
                       const Text(
                         'Détails des paiements:',
@@ -242,7 +247,7 @@ class PaidTicketDialog extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      ...paymentDetails.map((detail) {
+                      ...correctedPaymentDetails.map((detail) {
                         final mode = detail['mode']?.toString() ?? 'N/A';
                         final amount = (detail['amount'] as num?)?.toDouble() ?? 0.0;
                         final clientName = detail['clientName']?.toString(); // 🆕 Nom du client pour CREDIT
@@ -281,7 +286,7 @@ class PaidTicketDialog extends StatelessWidget {
                       // ⚠️ IMPORTANT: Ne l'afficher QUE s'il y a vraiment un CREDIT dans paymentDetails
                       // La différence total - totalAmount peut être due au pourboire, pas forcément au crédit
                       ...(() {
-                        final hasCredit = paymentDetails.any((d) => d['mode']?.toString() == 'CREDIT');
+                        final hasCredit = correctedPaymentDetails.any((d) => d['mode']?.toString() == 'CREDIT');
                         if (!hasCredit) return <Widget>[];
                         
                         // Calculer le montant CREDIT total depuis paymentDetails

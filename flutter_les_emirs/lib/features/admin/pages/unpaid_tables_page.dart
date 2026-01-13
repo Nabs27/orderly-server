@@ -101,7 +101,7 @@ class UnpaidTablesPage extends StatelessWidget {
                           child: Text(
                             tableNumber.split('_').last,
                             style: TextStyle(
-                              color: Colors.deepOrange.shade700,
+                              color: Colors.deepOrange.withValues(alpha: 0.7),
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
                             ),
@@ -199,7 +199,7 @@ class UnpaidTablesPage extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.deepOrange.shade700,
+                      color: Colors.deepOrange.withValues(alpha: 0.7),
                     ),
                   ),
                 ],

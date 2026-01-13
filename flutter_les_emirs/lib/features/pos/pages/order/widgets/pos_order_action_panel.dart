@@ -131,7 +131,7 @@ class PosOrderActionPanel extends StatelessWidget {
                       icon: const Icon(Icons.swap_horiz, size: 24),
                       label: const Text('Note', style: TextStyle(fontSize: 16)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purple.shade700,
+                        backgroundColor: Colors.purple.withValues(alpha: 0.7),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
@@ -147,7 +147,7 @@ class PosOrderActionPanel extends StatelessWidget {
                       icon: const Icon(Icons.swap_horiz, size: 24),
                       label: const Text('Table', style: TextStyle(fontSize: 16)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green.shade700,
+                        backgroundColor: Colors.green.withValues(alpha: 0.7),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),

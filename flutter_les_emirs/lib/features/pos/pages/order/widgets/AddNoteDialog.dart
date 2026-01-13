@@ -133,7 +133,7 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
                       child: IconButton(
                         onPressed: noteCovers > 1 ? () => setState(() => noteCovers--) : null,
                         icon: const Icon(Icons.remove_circle, size: 40),
-                        color: Colors.red.shade700,
+                        color: Colors.red.withValues(alpha: 0.7),
                       ),
                     ),
                     Container(
@@ -154,7 +154,7 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
                       child: IconButton(
                         onPressed: () => setState(() => noteCovers++),
                         icon: const Icon(Icons.add_circle, size: 40),
-                        color: Colors.green.shade700,
+                        color: Colors.green.withValues(alpha: 0.7),
                       ),
                     ),
                   ],

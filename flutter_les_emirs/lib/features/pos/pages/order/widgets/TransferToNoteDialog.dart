@@ -41,12 +41,12 @@ class TransferToNoteDialog extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.swap_horiz, color: Colors.orange.shade700, size: 24),
+                  Icon(Icons.swap_horiz, color: Colors.orange.withValues(alpha: 0.7), size: 24),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'Sélectionnez la note de destination pour ${selectedItems.length} articles',
-                      style: TextStyle(color: Colors.orange.shade700, fontSize: 16, fontWeight: FontWeight.w500),
+                      style: TextStyle(color: Colors.orange.withValues(alpha: 0.7), fontSize: 16, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ],
@@ -95,7 +95,7 @@ class TransferToNoteDialog extends StatelessWidget {
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: getNoteColor(note.id).withOpacity(0.2),
+                      color: getNoteColor(note.id).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(25),
                     ),
                     child: Icon(Icons.person, color: getNoteColor(note.id), size: 28),

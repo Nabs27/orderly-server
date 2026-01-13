@@ -103,7 +103,7 @@ class HistoryTableCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14, // 🆕 Augmenté de 12 à 14
                   fontWeight: FontWeight.w500, // 🆕 Ajout de poids pour meilleure visibilité
-                  color: Colors.grey.shade700, // 🆕 Couleur légèrement plus foncée
+                  color: Colors.grey.withValues(alpha: 0.7), // 🆕 Couleur légèrement plus foncée
                 ),
               ),
               const SizedBox(height: 4),
@@ -113,7 +113,7 @@ class HistoryTableCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: Colors.green.shade700,
+                  color: Colors.green.withValues(alpha: 0.7),
                 ),
               ),
             ],

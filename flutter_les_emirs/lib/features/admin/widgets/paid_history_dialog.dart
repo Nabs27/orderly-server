@@ -120,7 +120,7 @@ class _PaidHistoryDialogState extends State<PaidHistoryDialog> {
                             child: Text(
                               tableNumber,
                               style: TextStyle(
-                                color: Colors.green.shade700,
+                                color: Colors.green.withValues(alpha: 0.7),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -291,7 +291,7 @@ class _TableServicesDialogState extends State<_TableServicesDialog> {
                               child: Text(
                                 '$serviceIndex',
                                 style: TextStyle(
-                                  color: Colors.blue.shade700,
+                                  color: Colors.blue.withValues(alpha: 0.7),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -311,14 +311,14 @@ class _TableServicesDialogState extends State<_TableServicesDialog> {
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(Icons.account_balance_wallet, size: 12, color: Colors.orange.shade700),
+                                        Icon(Icons.account_balance_wallet, size: 12, color: Colors.orange.withValues(alpha: 0.7)),
                                         const SizedBox(width: 4),
                                         Text(
                                           'Paiement divisé',
                                           style: TextStyle(
                                             fontSize: 10,
                                             fontWeight: FontWeight.bold,
-                                            color: Colors.orange.shade700,
+                                            color: Colors.orange.withValues(alpha: 0.7),
                                           ),
                                         ),
                                       ],
@@ -720,7 +720,7 @@ class _ServiceDetailDialog extends StatelessWidget {
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.receipt_long, color: Colors.green.shade700),
+                                Icon(Icons.receipt_long, color: Colors.green.withValues(alpha: 0.7)),
                                 const SizedBox(width: 8),
                                 const Text(
                                   'Ticket Principal',
@@ -737,7 +737,7 @@ class _ServiceDetailDialog extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.green.shade700,
+                                color: Colors.green.withValues(alpha: 0.7),
                               ),
                             ),
                             // 🆕 Afficher le pourboire si présent
@@ -817,7 +817,7 @@ class _ServiceDetailDialog extends StatelessWidget {
                             backgroundColor: Colors.blue.shade100,
                             child: Icon(
                               paymentMode == 'ESPECE' ? Icons.money : Icons.credit_card,
-                              color: Colors.blue.shade700,
+                              color: Colors.blue.withValues(alpha: 0.7),
                             ),
                           ),
                           title: Row(
@@ -837,14 +837,14 @@ class _ServiceDetailDialog extends StatelessWidget {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.account_balance_wallet, size: 12, color: Colors.orange.shade700),
+                                      Icon(Icons.account_balance_wallet, size: 12, color: Colors.orange.withValues(alpha: 0.7)),
                                       const SizedBox(width: 4),
                                       Text(
                                         'Divisé',
                                         style: TextStyle(
                                           fontSize: 10,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.orange.shade700,
+                                          color: Colors.orange.withValues(alpha: 0.7),
                                         ),
                                       ),
                                     ],

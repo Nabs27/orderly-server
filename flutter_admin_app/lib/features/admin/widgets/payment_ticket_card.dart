@@ -70,7 +70,7 @@ class PaymentTicketCard extends StatelessWidget {
           // 🆕 Afficher le nom du client si présent
           if (discountClientName != null && discountClientName!.isNotEmpty) ...[
             const SizedBox(height: 2),
-            Text('Client: $discountClientName', style: TextStyle(color: Colors.blue.shade700, fontWeight: FontWeight.w500)),
+            Text('Client: $discountClientName', style: TextStyle(color: Colors.blue.withValues(alpha: 0.7), fontWeight: FontWeight.w500)),
           ],
           if (covers != null && covers! > 0) ...[
             const SizedBox(height: 2),

@@ -73,7 +73,7 @@ class TableGrid extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.blue.shade700,
+                            color: Colors.blue.withValues(alpha: 0.7),
                           ),
                           textAlign: TextAlign.center,
                         ),

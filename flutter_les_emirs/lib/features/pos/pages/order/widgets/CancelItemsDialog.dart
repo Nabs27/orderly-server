@@ -190,13 +190,13 @@ class _CancelItemsDialogState extends State<CancelItemsDialog> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.warning, color: Colors.orange.shade700, size: 24),
+                    Icon(Icons.warning, color: Colors.orange.withValues(alpha: 0.7), size: 24),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Sélectionnez les articles à annuler et précisez leur état, la raison et l\'action à prendre.',
                         style: TextStyle(
-                          color: Colors.orange.shade700,
+                          color: Colors.orange.withValues(alpha: 0.7),
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),

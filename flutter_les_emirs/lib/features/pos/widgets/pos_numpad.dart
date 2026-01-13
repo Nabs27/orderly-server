@@ -45,12 +45,12 @@ class PosNumpad extends StatelessWidget {
         // Ligne 4: 0, 00, .
         _buildNumButton('0', () => onNumberPressed(0)),
         _buildNumButton('00', () => onNumberPressed(0)), // Ou logique spécifique
-        _buildActionButton('.', Icons.circle, Colors.grey.shade700, () {}),
+        _buildActionButton('.', Icons.circle, Colors.grey.withValues(alpha: 0.7), () {}),
         
         // Ligne 5: Actions
-        _buildActionButton('Annuler', Icons.close, Colors.red.shade700, onCancel),
-        _buildActionButton('Effacer', Icons.backspace, Colors.orange.shade700, onClear),
-        _buildActionButton('Retour', Icons.undo, Colors.blue.shade700, onBack ?? () {}),
+        _buildActionButton('Annuler', Icons.close, Colors.red.withValues(alpha: 0.7), onCancel),
+        _buildActionButton('Effacer', Icons.backspace, Colors.orange.withValues(alpha: 0.7), onClear),
+        _buildActionButton('Retour', Icons.undo, Colors.blue.withValues(alpha: 0.7), onBack ?? () {}),
         
       ],
     );

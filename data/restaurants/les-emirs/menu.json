@@ -14,7 +14,7 @@
           "name": "Eau Minérale (0,5L)",
           "price": 4,
           "type": "Boisson froide",
-          "available": false
+          "available": true
         },
         {
           "id": 9002,

@@ -80,7 +80,7 @@ class _EnrichedHistorySectionState extends State<EnrichedHistorySection> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -217,7 +217,7 @@ class _EnrichedHistorySectionState extends State<EnrichedHistorySection> {
                           child: ListTile(
                             leading: CircleAvatar(
                               backgroundColor: Colors.green.shade100,
-                              child: Icon(Icons.check_circle, color: Colors.green.shade700),
+                              child: Icon(Icons.check_circle, color: Colors.green.withValues(alpha: 0.7)),
                             ),
                             title: Text('Table $table'),
                             subtitle: Text('${_formatDate(timestamp)} • ${paymentMode ?? '—'}'),
@@ -225,7 +225,7 @@ class _EnrichedHistorySectionState extends State<EnrichedHistorySection> {
                               _formatCurrency(amount),
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.green.shade700,
+                                color: Colors.green.withValues(alpha: 0.7),
                               ),
                             ),
                           ),

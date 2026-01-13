@@ -114,6 +114,11 @@ class _PosPaymentPageState extends State<PosPaymentPage> {
     // 🆕 Initialiser allOrders depuis widget
     _currentAllOrders = widget.allOrders;
     
+    // 🆕 CORRECTION : Recharger les commandes au démarrage pour avoir les paidQuantity à jour
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _reloadAllOrders();
+    });
+    
     // 🆕 Initialiser les paiements par note
     _initializeNotePayments();
     
@@ -490,8 +495,8 @@ class _PosPaymentPageState extends State<PosPaymentPage> {
   // 🆕 Recharger toutes les commandes depuis le serveur
   Future<void> _reloadAllOrders() async {
     try {
-      // 🆕 Attendre un peu pour que le serveur ait fini de sauvegarder
-      await Future.delayed(const Duration(milliseconds: 300));
+      // 🆕 CORRECTION : Augmenter le délai pour laisser le serveur sauvegarder
+      await Future.delayed(const Duration(milliseconds: 500));
       
       final updatedOrders = await OrderPaymentService.PaymentService.getAllOrdersForTable(widget.tableNumber);
       if (updatedOrders != null && mounted) {
@@ -510,12 +515,15 @@ class _PosPaymentPageState extends State<PosPaymentPage> {
             for (final item in items) {
               final paidQty = item['paidQuantity'] as int? ?? 0;
               final totalQty = (item['quantity'] as num?)?.toInt() ?? 0;
-              if (paidQty > 0) {
-                print('[PAYMENT] 📊 Article ${item['name']} (id: ${item['id']}): qté totale=$totalQty, payée=$paidQty, reste=${totalQty - paidQty}');
+              final unpaidQty = totalQty - paidQty;
+              if (item['id'] == 1206) { // Couscous à l'Agneau
+                print('[PAYMENT] 📊 Couscous à l\'Agneau (orderId: ${order['id']}): qté totale=$totalQty, payée=$paidQty, reste=$unpaidQty');
               }
             }
           }
         }
+      } else {
+        print('[PAYMENT] ⚠️ Aucune commande récupérée ou widget non monté');
       }
     } catch (e) {
       print('[PAYMENT] ⚠️ Erreur rechargement commandes: $e');
@@ -530,9 +538,18 @@ class _PosPaymentPageState extends State<PosPaymentPage> {
 
     // 🆕 SOURCE DE VÉRITÉ UNIQUE : Utiliser _currentAllOrders en priorité (données backend à jour)
     // _currentAllOrders est mis à jour après chaque paiement pour garantir la synchronisation
-    final allOrders = _currentAllOrders ?? widget.allOrders;
-
+    // 🆕 CORRECTION : Si _currentAllOrders est null, forcer le rechargement au lieu d'utiliser widget.allOrders obsolète
+    if (_currentAllOrders == null) {
+      print('[PAYMENT] ⚠️ _currentAllOrders est null, rechargement forcé...');
+      // Recharger de manière asynchrone (ne bloque pas l'affichage)
+      _reloadAllOrders();
+      // Retourner une liste vide temporairement pour éviter d'afficher des données obsolètes
+      return [];
+    }
+    
+    final allOrders = _currentAllOrders;
     if (allOrders != null) {
+      print('[PAYMENT] 🔍 _getAllItemsOrganized: ${allOrders.length} commande(s) à traiter');
       for (final order in allOrders) {
         final orderId = order['id'] as int?;
         // Note principale
@@ -543,6 +560,12 @@ class _PosPaymentPageState extends State<PosPaymentPage> {
             final totalQuantity = (item['quantity'] as num?)?.toInt() ?? 0;
             final paidQuantity = (item['paidQuantity'] as num?)?.toInt() ?? 0;
             final unpaidQuantity = totalQuantity - paidQuantity;
+            
+            // 🆕 DEBUG : Log pour Couscous à l'Agneau
+            if (item['id'] == 1206) {
+              print('[PAYMENT] 🔍 Couscous à l\'Agneau (orderId: $orderId): total=$totalQuantity, payé=$paidQuantity, reste=$unpaidQuantity');
+            }
+            
             if (unpaidQuantity > 0) {
               allItems.add({
                 'id': item['id'],
@@ -580,8 +603,30 @@ class _PosPaymentPageState extends State<PosPaymentPage> {
         }
       }
 
+      // 🆕 DEBUG : Log avant regroupement
+      print('[PAYMENT] 🔍 Articles bruts avant regroupement: ${allItems.length} article(s)');
+      for (final item in allItems) {
+        if (item['id'] == 1206) {
+          print('[PAYMENT] 🔍 Couscous brut: orderId=${item['orderId']}, quantity=${item['quantity']}');
+        }
+      }
+      
       // Organiser par catégories avec regroupement
       final organizedItems = _organizeFromRawItems(allItems);
+      
+      // 🆕 DEBUG : Log après regroupement
+      print('[PAYMENT] 🔍 Articles après regroupement: ${organizedItems.length} article(s)');
+      for (final item in organizedItems) {
+        if (item['id'] == 1206) {
+          print('[PAYMENT] 🔍 Couscous regroupé: quantity=${item['quantity']}, sources=${item['sources']?.length ?? 0}');
+          if (item['sources'] != null) {
+            for (final source in item['sources'] as List) {
+              print('[PAYMENT] 🔍   - Source: orderId=${source['orderId']}, quantity=${source['quantity']}');
+            }
+          }
+        }
+      }
+      
       return organizedItems;
     }
 
@@ -1357,6 +1402,7 @@ class _PosPaymentPageState extends State<PosPaymentPage> {
           splitPaymentTransactions: isSplitPayment ? _splitPaymentTransactions : null, // 🆕 Liste de transactions
           serverName: widget.currentServer, // 🆕 CORRECTION : Transmettre le serveur pour les détails des remises KPI
           scripturalEnteredAmount: _scripturalEnteredAmount, // 🆕 Montant réellement saisi pour paiement scriptural simple
+          clientId: !isSplitPayment && selectedPaymentMode == 'CREDIT' ? (_selectedClientForCredit?['id'] as int?) : null, // 🆕 ID du client pour paiements CREDIT simples
         );
         print('[PAYMENT] Articles marqués comme vendus et supprimés avec succès');
         

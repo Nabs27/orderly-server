@@ -306,7 +306,7 @@ class _AdminCreditPageState extends State<AdminCreditPage> {
         subtitle: 'Réglements clients',
         color: Colors.green.shade50,
         icon: Icons.call_made,
-        iconColor: Colors.green.shade700,
+        iconColor: Colors.green.withValues(alpha: 0.7),
       ),
       _SummaryCardData(
         title: 'Solde en cours',
@@ -314,7 +314,7 @@ class _AdminCreditPageState extends State<AdminCreditPage> {
         subtitle: 'Dettes - paiements',
         color: Colors.orange.shade50,
         icon: Icons.account_balance_wallet,
-        iconColor: Colors.orange.shade700,
+        iconColor: Colors.orange.withValues(alpha: 0.7),
       ),
       _SummaryCardData(
         title: 'Clients concernés',
@@ -322,7 +322,7 @@ class _AdminCreditPageState extends State<AdminCreditPage> {
         subtitle: 'Actifs sur la période',
         color: Colors.blue.shade50,
         icon: Icons.people_alt,
-        iconColor: Colors.blue.shade700,
+        iconColor: Colors.blue.withValues(alpha: 0.7),
       ),
       _SummaryCardData(
         title: 'Mouvements',
@@ -330,7 +330,7 @@ class _AdminCreditPageState extends State<AdminCreditPage> {
         subtitle: 'Transactions crédit/débit',
         color: Colors.teal.shade50,
         icon: Icons.swap_vert,
-        iconColor: Colors.teal.shade700,
+        iconColor: Colors.teal.withValues(alpha: 0.7),
       ),
     ];
 
@@ -459,7 +459,7 @@ class _AdminCreditPageState extends State<AdminCreditPage> {
 
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: color.withOpacity(0.15),
+                          backgroundColor: color.withValues(alpha: 0.15),
                           child: Icon(
                             isDebit ? Icons.arrow_downward : Icons.arrow_upward,
                             color: color,
@@ -543,7 +543,7 @@ class _SummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: data.color,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: data.iconColor.withOpacity(0.2)),
+        border: Border.all(color: data.iconColor.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

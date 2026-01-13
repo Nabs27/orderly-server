@@ -7,6 +7,7 @@ import 'admin_credit_page.dart';
 import 'admin_menu_editor_page.dart';
 import 'admin_servers_page.dart';
 import 'report_x_page.dart';
+import 'pages/diagnostic_page.dart';
 import 'widgets/admin_dashboard_kpi_section.dart';
 
 class AdminDashboardPage extends StatefulWidget {
@@ -346,7 +347,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       padding: const EdgeInsets.fromLTRB(20, 32, 20, 32),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 6))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0, 6))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -447,6 +448,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         title: 'Rapport X',
         subtitle: 'Suivi réglementaire',
         action: _openReportXPage,
+      ),
+      _AdminShortcut(
+        icon: Icons.bug_report,
+        title: 'Diagnostic données',
+        subtitle: 'Comparer les sources de données',
+        action: _openDiagnosticPage,
       ),
     ];
   }
@@ -563,6 +570,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Future<void> _openReportXPage() async {
     await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ReportXPage()));
   }
+
+  Future<void> _openDiagnosticPage() async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DiagnosticPage()));
+  }
 }
 
 class _ShortcutCard extends StatelessWidget {
@@ -583,7 +594,7 @@ class _ShortcutCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            CircleAvatar(backgroundColor: Colors.teal.withOpacity(0.1), foregroundColor: Colors.teal, child: Icon(shortcut.icon)),
+            CircleAvatar(backgroundColor: Colors.teal.withValues(alpha: 0.1), foregroundColor: Colors.teal, child: Icon(shortcut.icon)),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -631,14 +642,14 @@ class _RestaurantCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 18, offset: const Offset(0, 10))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 18, offset: const Offset(0, 10))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              CircleAvatar(radius: 26, backgroundColor: Colors.teal.withOpacity(0.1), child: const Icon(Icons.restaurant, color: Colors.teal)),
+              CircleAvatar(radius: 26, backgroundColor: Colors.teal.withValues(alpha: 0.1), child: const Icon(Icons.restaurant, color: Colors.teal)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -692,7 +703,7 @@ class _StatChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(12)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

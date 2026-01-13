@@ -367,8 +367,8 @@ class DebtPaymentDialogState extends State<DebtPaymentDialog> {
                                   size: 28,
                                 ),
                                 color: searchKeyboardTypeRef[0] == VirtualKeyboardType.phone
-                                    ? Colors.blue.shade700
-                                    : Colors.green.shade700,
+                                    ? Colors.blue.withValues(alpha: 0.7)
+                                    : Colors.green.withValues(alpha: 0.7),
                                 style: IconButton.styleFrom(
                                   backgroundColor: searchKeyboardTypeRef[0] == VirtualKeyboardType.phone
                                       ? Colors.blue.shade50
@@ -577,10 +577,10 @@ class DebtPaymentDialogState extends State<DebtPaymentDialog> {
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           color: ((t['runningBalance'] as num?)?.toDouble() ?? 0.0) > 0 
-                                              ? Colors.red.shade700 
+                                              ? Colors.red.withValues(alpha: 0.7) 
                                               : ((t['runningBalance'] as num?)?.toDouble() ?? 0.0) < 0 
-                                                  ? Colors.green.shade700 
-                                                  : Colors.grey.shade700,
+                                                  ? Colors.green.withValues(alpha: 0.7) 
+                                                  : Colors.grey.withValues(alpha: 0.7),
                                           fontWeight: FontWeight.bold,
                                           fontSize: 13,
                                         ),
@@ -679,8 +679,8 @@ class DebtPaymentDialogState extends State<DebtPaymentDialog> {
                                   color: amount == 0.0
                                       ? Colors.grey.shade400
                                       : isAmountTooHigh
-                                          ? Colors.red.shade700 // 🆕 Rouge si montant trop élevé
-                                          : Colors.blue.shade700,
+                                          ? Colors.red.withValues(alpha: 0.7) // 🆕 Rouge si montant trop élevé
+                                          : Colors.blue.withValues(alpha: 0.7),
                                 ),
                               ),
                               // 🆕 Message d'avertissement si montant trop élevé
@@ -696,13 +696,13 @@ class DebtPaymentDialogState extends State<DebtPaymentDialog> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.warning, color: Colors.red.shade700, size: 18),
+                                      Icon(Icons.warning, color: Colors.red.withValues(alpha: 0.7), size: 18),
                                       const SizedBox(width: 8),
                                       Flexible(
                                         child: Text(
                                           'Solde restant: ${balance.toStringAsFixed(3)} DT',
                                           style: TextStyle(
-                                            color: Colors.red.shade700,
+                                            color: Colors.red.withValues(alpha: 0.7),
                                             fontSize: 14,
                                             fontWeight: FontWeight.w600,
                                           ),
@@ -726,7 +726,7 @@ class DebtPaymentDialogState extends State<DebtPaymentDialog> {
                                           await _submit();
                                         },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green.shade700,
+                                    backgroundColor: Colors.green.withValues(alpha: 0.7),
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(vertical: 16),
                                     shape: RoundedRectangleBorder(

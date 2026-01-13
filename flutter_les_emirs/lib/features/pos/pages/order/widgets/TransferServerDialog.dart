@@ -183,7 +183,7 @@ class TransferServerDialogState extends State<TransferServerDialog> {
                                             style: TextStyle(
                                               fontSize: 18,
                                               fontWeight: FontWeight.bold,
-                                              color: isCurrentTable ? Colors.blue.shade700 : Colors.black87,
+                                              color: isCurrentTable ? Colors.blue.withValues(alpha: 0.7) : Colors.black87,
                                             ),
                                           ),
                                           if (isCurrentTable) ...[
@@ -191,7 +191,7 @@ class TransferServerDialogState extends State<TransferServerDialog> {
                                             Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                               decoration: BoxDecoration(
-                                                color: Colors.blue.shade700,
+                                                color: Colors.blue.withValues(alpha: 0.7),
                                                 borderRadius: BorderRadius.circular(12),
                                               ),
                                               child: const Text(

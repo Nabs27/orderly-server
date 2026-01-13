@@ -81,7 +81,7 @@ class TableCard extends StatelessWidget {
                           width: isTablet ? 28 : 24,
                           height: isTablet ? 28 : 24,
                           decoration: BoxDecoration(
-                            color: Colors.orange.shade700,
+                            color: Colors.orange.withValues(alpha: 0.7),
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: Colors.white,
@@ -171,7 +171,7 @@ class TableCard extends StatelessWidget {
                         vertical: isTablet ? 6 : 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.green.shade700,
+                        color: Colors.green.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: Colors.white,
@@ -216,7 +216,7 @@ class TableCard extends StatelessWidget {
                             Container(
                               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -246,7 +246,7 @@ class TableCard extends StatelessWidget {
                         vertical: isTablet ? 6 : 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.orange.shade700,
+                        color: Colors.orange.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: Colors.white,

@@ -31,12 +31,12 @@ class CreateTableForNoteTransferDialog extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.info, color: Colors.purple.shade700, size: 20),
+                Icon(Icons.info, color: Colors.purple.withValues(alpha: 0.7), size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     '$noteName aura sa propre table avec ses articles',
-                    style: TextStyle(color: Colors.purple.shade700, fontSize: 14),
+                    style: TextStyle(color: Colors.purple.withValues(alpha: 0.7), fontSize: 14),
                   ),
                 ),
               ],

@@ -412,40 +412,11 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
 
   Widget _buildPaymentModeBreakdown() {
     final paymentsByMode = (_reportData!['paymentsByMode'] as Map<String, dynamic>?) ?? {};
-    final paidPayments = (_reportData!['paidPayments'] as List<dynamic>?) ?? [];
-    
+
     if (paymentsByMode.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    // 🆕 Collecter les détails des paiements divisés depuis paidPayments
-    final splitPaymentDetails = <String, List<Map<String, dynamic>>>{}; // mode -> liste de détails
-    for (final payment in paidPayments) {
-      final isSplit = payment['isSplitPayment'] == true;
-      final splitAmounts = payment['splitPaymentAmounts'] as List<dynamic>?;
-      
-      if (isSplit && splitAmounts != null) {
-        // Dédupliquer par mode + amount pour éviter les doublons
-        final processedTxs = <String>{};
-        for (final splitDetail in splitAmounts) {
-          final splitMode = (splitDetail['mode'] as String?) ?? '';
-          final splitAmount = (splitDetail['amount'] as num?)?.toDouble() ?? 0.0;
-          final txKey = '${splitMode}_${splitAmount.toStringAsFixed(3)}';
-          
-          if (!processedTxs.contains(txKey) && splitMode.isNotEmpty && splitAmount > 0.01) {
-            processedTxs.add(txKey);
-            if (!splitPaymentDetails.containsKey(splitMode)) {
-              splitPaymentDetails[splitMode] = [];
-            }
-            splitPaymentDetails[splitMode]!.add({
-              'amount': splitAmount,
-              'table': payment['table']?.toString() ?? '—',
-              'clientName': splitDetail['clientName'] as String?,
-            });
-          }
-        }
-      }
-    }
 
     final modes = <MapEntry<String, Map<String, dynamic>>>[];
     paymentsByMode.forEach((mode, data) {
@@ -512,111 +483,68 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
                   color = Colors.grey;
               }
 
-              // 🆕 Récupérer les détails des paiements divisés pour ce mode
-              final splitDetails = splitPaymentDetails[mode] ?? [];
-              final hasSplitDetails = splitDetails.isNotEmpty;
-
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: InkWell(
+                  onTap: () => _showPaymentModeDetails(context, mode, data),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Icon(icon, size: 20, color: color),
-                            const SizedBox(width: 8),
-                            Text(
-                              mode,
-                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            Row(
+                              children: [
+                                Icon(icon, size: 20, color: color),
+                                const SizedBox(width: 8),
+                                Text(
+                                  mode,
+                                  style: const TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '($count)',
+                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '($count)',
-                              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                            Row(
+                              children: [
+                                Text(
+                                  _formatCurrency(total),
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: color),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  Icons.chevron_right,
+                                  size: 16,
+                                  color: color.withOpacity(0.7),
+                                ),
+                              ],
                             ),
                           ],
                         ),
+                        const SizedBox(height: 4),
+                        LinearProgressIndicator(
+                          value: percent / 100,
+                          backgroundColor: Colors.grey.shade200,
+                          valueColor: AlwaysStoppedAnimation<Color>(color.withOpacity(0.6)),
+                        ),
+                        const SizedBox(height: 4),
                         Text(
-                          _formatCurrency(total),
-                          style: TextStyle(fontWeight: FontWeight.bold, color: color),
+                          '${percent.toStringAsFixed(1)}%',
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    LinearProgressIndicator(
-                      value: percent / 100,
-                      backgroundColor: Colors.grey.shade200,
-                      valueColor: AlwaysStoppedAnimation<Color>(color.withOpacity(0.6)),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${percent.toStringAsFixed(1)}%',
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                    ),
-                    // 🆕 Afficher les détails des paiements divisés si disponibles
-                    if (hasSplitDetails) ...[
-                      const SizedBox(height: 8),
-                      Container(
-                        margin: const EdgeInsets.only(left: 28, top: 4),
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey.shade300, width: 1),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: splitDetails.asMap().entries.map((detailEntry) {
-                            final index = detailEntry.key;
-                            final detail = detailEntry.value;
-                            final detailAmount = (detail['amount'] as num?)?.toDouble() ?? 0.0;
-                            final detailTable = detail['table']?.toString() ?? '—';
-                            final clientName = detail['clientName'] as String?;
-                            
-                            // 🆕 Afficher le nom du client pour les paiements CREDIT (comme dans l'historique)
-                            final displayLabel = mode == 'CREDIT' && clientName != null
-                                ? 'CREDIT ($clientName)'
-                                : '${mode} #${index + 1}';
-                            
-                            return Padding(
-                              padding: EdgeInsets.only(bottom: index < splitDetails.length - 1 ? 6 : 0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      displayLabel,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade700,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    _formatCurrency(detailAmount),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: color,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    textAlign: TextAlign.right,
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
               );
             }),
@@ -676,65 +604,85 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
               return InkWell(
                 onTap: () => _showCategoryDetails(category, categoryData),
                 borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Row(
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.shade100),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${index + 1}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.orange.shade700,
+                      // Ligne 1 : Badge numéro + Nom catégorie + Icône
+                      Row(
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade200,
+                              borderRadius: BorderRadius.circular(6),
                             ),
+                            child: Center(
+                              child: Text(
+                                '${index + 1}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  color: Colors.orange.shade800,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              category,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Icon(Icons.open_in_new,
+                              size: 16, color: Colors.orange.shade600),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      // Ligne 2 : Barre de progression
+                      SizedBox(
+                        height: 6,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(3),
+                          child: LinearProgressIndicator(
+                            value: percent / 100,
+                            backgroundColor: Colors.orange.shade100,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.orange.shade400),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  category,
-                                  style: const TextStyle(fontWeight: FontWeight.w600),
-                                ),
-                                Icon(Icons.open_in_new,
-                                    size: 16, color: Colors.orange.shade700),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            LinearProgressIndicator(
-                              value: percent / 100,
-                              backgroundColor: Colors.grey.shade200,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.orange.shade300),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                      const SizedBox(height: 8),
+                      // Ligne 3 : Montant et pourcentage
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            _formatCurrency(total),
-                            style:
-                                TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade700),
+                            '${percent.toStringAsFixed(1)}% du CA',
+                            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                           ),
                           Text(
-                            '${percent.toStringAsFixed(1)}%',
-                            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                            _formatCurrency(total),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Colors.orange.shade700,
+                            ),
                           ),
                         ],
                       ),
@@ -948,6 +896,242 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
                 child: TextButton(
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Fermer'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPaymentModeDetails(BuildContext context, String mode, Map<String, dynamic> data) {
+    final count = (data['count'] as int?) ?? 0;
+    final total = (data['total'] as num?)?.toDouble() ?? 0.0;
+    final paidPayments = (_reportData!['paidPayments'] as List<dynamic>?) ?? [];
+
+    // Collecter tous les paiements de ce mode (simples + divisés)
+    final allPayments = <Map<String, dynamic>>[];
+
+    // Récupérer les détails des paiements divisés pour ce mode
+    final splitPaymentDetails = <String, List<Map<String, dynamic>>>{};
+    for (final payment in paidPayments) {
+      final isSplit = payment['isSplitPayment'] == true;
+      final splitAmounts = payment['splitPaymentAmounts'] as List<dynamic>?;
+
+      if (isSplit && splitAmounts != null) {
+        // Dédupliquer par mode + amount pour éviter les doublons
+        final processedTxs = <String>{};
+        for (final splitDetail in splitAmounts) {
+          final splitMode = (splitDetail['mode'] as String?) ?? '';
+          final splitAmount = (splitDetail['amount'] as num?)?.toDouble() ?? 0.0;
+          final txKey = '${splitMode}_${splitAmount.toStringAsFixed(3)}';
+
+          if (!processedTxs.contains(txKey) && splitMode.isNotEmpty && splitAmount > 0.01) {
+            processedTxs.add(txKey);
+            if (!splitPaymentDetails.containsKey(splitMode)) {
+              splitPaymentDetails[splitMode] = [];
+            }
+            splitPaymentDetails[splitMode]!.add({
+              'amount': splitAmount,
+              'table': payment['table']?.toString() ?? '—',
+              'clientName': splitDetail['clientName'] as String?,
+              'time': payment['timestamp'] != null
+                  ? DateTime.parse(payment['timestamp']).toLocal().toString().substring(11, 16)
+                  : '—',
+            });
+          }
+        }
+      }
+    }
+
+    // Ajouter les paiements divisés pour ce mode
+    final splitDetails = splitPaymentDetails[mode] ?? [];
+    allPayments.addAll(splitDetails);
+
+    // Ajouter les paiements simples du même mode
+    for (final payment in paidPayments) {
+      if (payment['paymentMode'] == mode && payment['isSplitPayment'] != true) {
+        final enteredAmount = payment['enteredAmount'] != null ? payment['enteredAmount'] : (payment['amount'] ?? 0);
+        final table = payment['table']?.toString() ?? '—';
+        final timestamp = payment['timestamp'] as String?;
+        final timeStr = timestamp != null
+            ? DateTime.parse(timestamp).toLocal().toString().substring(11, 16) // HH:MM
+            : '—';
+
+        // Pour les paiements simples CREDIT, récupérer le nom du client
+        String? clientName;
+        if (mode == 'CREDIT') {
+          clientName = payment['creditClientName'] as String?;
+        }
+
+        allPayments.add({
+          'amount': enteredAmount,
+          'table': table,
+          'time': timeStr,
+          'clientName': clientName,
+        });
+      }
+    }
+
+    // Trier par heure décroissante (plus récent en haut)
+    allPayments.sort((a, b) {
+      final timeA = a['time'] as String?;
+      final timeB = b['time'] as String?;
+      if (timeA == null || timeB == null) return 0;
+      return timeB.compareTo(timeA);
+    });
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final dialogWidth = screenWidth > 800 ? 600.0 : screenWidth * 0.9;
+
+    IconData icon;
+    Color color;
+    switch (mode) {
+      case 'ESPECE':
+        icon = Icons.money;
+        color = Colors.green;
+        break;
+      case 'CARTE':
+        icon = Icons.credit_card;
+        color = Colors.blue;
+        break;
+      case 'CHEQUE':
+        icon = Icons.description;
+        color = Colors.orange;
+        break;
+      case 'CREDIT':
+        icon = Icons.account_balance_wallet;
+        color = Colors.deepPurple;
+        break;
+      case 'TPE':
+        icon = Icons.payment;
+        color = Colors.teal;
+        break;
+      default:
+        icon = Icons.payment;
+        color = Colors.grey;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        child: Container(
+          width: dialogWidth,
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+            maxWidth: 600,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    topRight: Radius.circular(8),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(icon, color: color, size: 28),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Paiements $mode',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: color,
+                            ),
+                          ),
+                          Text(
+                            '$count paiement(s) • ${_formatCurrency(total)}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: color.withOpacity(0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Liste des paiements
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: allPayments.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final payment = allPayments[index];
+                    final amount = (payment['amount'] as num?)?.toDouble() ?? 0.0;
+                    final table = payment['table'] as String? ?? '—';
+                    final time = payment['time'] as String? ?? '—';
+                    final clientName = payment['clientName'] as String?;
+
+                    final displayLabel = mode == 'CREDIT' && clientName != null && clientName.isNotEmpty
+                        ? '$mode ($clientName)'
+                        : mode;
+
+                    return ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      title: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Table $table',
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                          Text(
+                            time,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      subtitle: Text(displayLabel),
+                      trailing: Text(
+                        _formatCurrency(amount),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: color,
+                          fontSize: 16,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // Footer
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Fermer'),
+                  ),
                 ),
               ),
             ],

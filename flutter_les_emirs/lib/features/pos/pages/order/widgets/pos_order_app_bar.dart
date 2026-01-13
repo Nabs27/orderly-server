@@ -106,7 +106,7 @@ class PosOrderAppBar extends StatelessWidget implements PreferredSizeWidget {
                 decoration: BoxDecoration(
                   color: Colors.green,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.shade700, width: 2),
+                  border: Border.all(color: Colors.green.withValues(alpha: 0.7), width: 2),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
@@ -158,7 +158,7 @@ class PosOrderAppBar extends StatelessWidget implements PreferredSizeWidget {
               icon: const Icon(Icons.check_circle, color: Colors.white),
               label: const Text('Confirmer', style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange.shade700,
+                backgroundColor: Colors.orange.withValues(alpha: 0.7),
                 foregroundColor: Colors.white,
               ),
             ),

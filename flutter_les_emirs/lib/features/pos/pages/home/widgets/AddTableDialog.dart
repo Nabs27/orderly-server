@@ -71,7 +71,7 @@ class _AddTableDialogState extends State<AddTableDialog> {
                       child: IconButton(
                         onPressed: covers > 1 ? () => setState(() => covers--) : null,
                         icon: const Icon(Icons.remove_circle, size: 40),
-                        color: Colors.red.shade700,
+                        color: Colors.red.withValues(alpha: 0.7),
                       ),
                     ),
                     Container(
@@ -92,7 +92,7 @@ class _AddTableDialogState extends State<AddTableDialog> {
                       child: IconButton(
                         onPressed: () => setState(() => covers++),
                         icon: const Icon(Icons.add_circle, size: 40),
-                        color: Colors.green.shade700,
+                        color: Colors.green.withValues(alpha: 0.7),
                       ),
                     ),
                   ],

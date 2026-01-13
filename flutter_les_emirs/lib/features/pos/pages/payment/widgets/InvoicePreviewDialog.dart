@@ -57,14 +57,14 @@ class InvoicePreviewDialog extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.table_restaurant, color: Colors.blue.shade700, size: 18),
+                          Icon(Icons.table_restaurant, color: Colors.blue.withValues(alpha: 0.7), size: 18),
                           const SizedBox(width: 8),
                           Text(
                             'Table $tableNumber',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.blue.shade700,
+                              color: Colors.blue.withValues(alpha: 0.7),
                             ),
                           ),
                         ],
@@ -84,7 +84,7 @@ class InvoicePreviewDialog extends StatelessWidget {
                 // Nombre de couverts
                 Row(
                   children: [
-                    Icon(Icons.people, color: Colors.blue.shade700, size: 18),
+                    Icon(Icons.people, color: Colors.blue.withValues(alpha: 0.7), size: 18),
                     const SizedBox(width: 8),
                     const Text('Nombre de couverts:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                     const Spacer(),
@@ -132,14 +132,14 @@ class InvoicePreviewDialog extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.business, color: Colors.grey.shade700, size: 18),
+                          Icon(Icons.business, color: Colors.grey.withValues(alpha: 0.7), size: 18),
                           const SizedBox(width: 8),
                           Text(
                             'Informations société',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: Colors.grey.shade700,
+                              color: Colors.grey.withValues(alpha: 0.7),
                             ),
                           ),
                         ],

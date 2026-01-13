@@ -454,7 +454,7 @@ class _ClientHistoryPageState extends State<ClientHistoryPage> {
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 18,
-                                    color: balance > 0 ? Colors.red.shade700 : Colors.green.shade700,
+                                    color: balance > 0 ? Colors.red.withValues(alpha: 0.7) : Colors.green.withValues(alpha: 0.7),
                                   ),
                                 ),
                               ),

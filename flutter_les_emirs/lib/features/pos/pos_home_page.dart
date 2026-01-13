@@ -152,7 +152,7 @@ class _PosHomePageState extends State<PosHomePage> {
     } else if (minutes < 30) {
       return Colors.orange.shade600;
     } else {
-      return Colors.red.shade700;
+      return Colors.red.withValues(alpha: 0.7);
     }
   }
 
@@ -242,7 +242,7 @@ class _PosHomePageState extends State<PosHomePage> {
                       }
                     },
                         icon: const Icon(Icons.remove_circle, size: 40),
-                        color: Colors.red.shade700,
+                        color: Colors.red.withValues(alpha: 0.7),
                       ),
                   ),
                   Container(
@@ -265,7 +265,7 @@ class _PosHomePageState extends State<PosHomePage> {
                       setDialogState(() => covers++);
                     },
                         icon: const Icon(Icons.add_circle, size: 40),
-                        color: Colors.green.shade700,
+                        color: Colors.green.withValues(alpha: 0.7),
                       ),
                   ),
                 ],
@@ -1899,7 +1899,7 @@ class _PosHomePageState extends State<PosHomePage> {
                   icon: const Icon(Icons.play_circle_outline, color: Colors.white),
                   label: const Text('Simulation', style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple.shade700,
+                    backgroundColor: Colors.deepPurple.withValues(alpha: 0.7),
                     foregroundColor: Colors.white,
                   ),
                 ),
@@ -2021,7 +2021,7 @@ class _PosHomePageState extends State<PosHomePage> {
                                       style: TextStyle(
                                         fontSize: 16, 
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.blue.shade700,
+                                        color: Colors.blue.withValues(alpha: 0.7),
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
@@ -2301,7 +2301,7 @@ class _PosHomePageState extends State<PosHomePage> {
           width: 16,
           height: 16,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
+            color: color.withValues(alpha: 0.2),
             border: Border.all(color: color, width: 2),
             borderRadius: BorderRadius.circular(4),
           ),

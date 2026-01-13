@@ -162,7 +162,7 @@ class AdminDashboardKpiSectionState extends State<AdminDashboardKpiSection> {
         'subtitle': 'Encaissements nets',
         'icon': Icons.payments,
         'color': const LinearGradient(colors: [Color(0xFFDDF7E3), Color(0xFFF2FFF2)]),
-        'iconColor': Colors.green.shade700,
+        'iconColor': Colors.green.withValues(alpha: 0.7),
         'onTap': () => _showPaidHistory(context, kpis),
       },
       {
@@ -194,7 +194,7 @@ class AdminDashboardKpiSectionState extends State<AdminDashboardKpiSection> {
         'subtitle': '${kpis.tauxRemise.toStringAsFixed(1)}% • ${kpis.nombreRemises} remise(s)',
         'icon': Icons.percent,
         'color': const LinearGradient(colors: [Color(0xFFFFF0C2), Color(0xFFFFF7E1)]),
-        'iconColor': Colors.amber.shade700,
+        'iconColor': Colors.amber.withValues(alpha: 0.7),
         'onTap': () => _showDiscountDetails(context, kpis),
       },
     ];
@@ -406,14 +406,14 @@ class _KpiCardState extends State<_KpiCard> with SingleTickerProviderStateMixin 
               gradient: widget.gradient,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: widget.iconColor.withOpacity(
+                color: widget.iconColor.withValues(alpha: 
                   0.15 + (flashOpacity * 0.5), // Le bord s'illumine aussi
                 ),
                 width: 1.0 + (flashOpacity * 2),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: widget.iconColor.withOpacity(0.06 + (flashOpacity * 0.2)),
+                  color: widget.iconColor.withValues(alpha: 0.06 + (flashOpacity * 0.2)),
                   blurRadius: 10 + (flashOpacity * 10),
                   offset: const Offset(0, 4),
                 ),
@@ -426,7 +426,7 @@ class _KpiCardState extends State<_KpiCard> with SingleTickerProviderStateMixin 
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(flashOpacity),
+                        color: Colors.white.withValues(alpha: flashOpacity),
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
@@ -438,7 +438,7 @@ class _KpiCardState extends State<_KpiCard> with SingleTickerProviderStateMixin 
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.5),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(widget.icon, color: widget.iconColor, size: 24),
@@ -499,7 +499,7 @@ class _KpiCardState extends State<_KpiCard> with SingleTickerProviderStateMixin 
                     child: Icon(
                       Icons.chevron_right,
                       size: 18,
-                      color: widget.iconColor.withOpacity(0.4),
+                      color: widget.iconColor.withValues(alpha: 0.4),
                     ),
                   ),
               ],

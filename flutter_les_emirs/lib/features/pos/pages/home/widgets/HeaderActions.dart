@@ -31,7 +31,7 @@ class HeaderActions extends StatelessWidget {
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange.shade700,
+              backgroundColor: Colors.orange.withValues(alpha: 0.7),
             ),
             child: const Text('Redémarrer'),
           ),
@@ -82,7 +82,7 @@ class HeaderActions extends StatelessWidget {
             builder: (context) => AlertDialog(
               title: Row(
                 children: [
-                  Icon(Icons.warning, color: Colors.orange.shade700),
+                  Icon(Icons.warning, color: Colors.orange.withValues(alpha: 0.7)),
                   const SizedBox(width: 8),
                   const Text('Redémarrage lancé'),
                 ],
@@ -106,7 +106,7 @@ class HeaderActions extends StatelessWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: const Text('⚠️ FERMEZ MAINTENANT cette fenêtre du navigateur (Alt+F4)'),
-                        backgroundColor: Colors.orange.shade700,
+                        backgroundColor: Colors.orange.withValues(alpha: 0.7),
                         duration: const Duration(seconds: 15),
                         action: SnackBarAction(
                           label: 'Compris',
@@ -180,7 +180,7 @@ class HeaderActions extends StatelessWidget {
             icon: const Icon(Icons.refresh, size: 18),
             label: const Text('Redémarrer'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange.shade700,
+              backgroundColor: Colors.orange.withValues(alpha: 0.7),
               foregroundColor: Colors.white,
               visualDensity: VisualDensity.compact,
             ),

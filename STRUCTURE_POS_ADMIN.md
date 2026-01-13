@@ -87,6 +87,81 @@ Les pourboires sont calculés via `excessAmount = enteredAmount - allocatedAmoun
 
 ---
 
+## 💳 Détails des modes de paiement (Rapprochement bancaire)
+
+### Fonctionnalité existante (partielle)
+
+La page "Détails du CA" (`ca_details_page.dart`) affiche déjà une **répartition par mode de paiement** avec :
+
+**Données récupérées** :
+- `paymentsByMode` : Totaux et compteurs par mode (CARTE, TPE, CHEQUE, etc.)
+- `paidPayments` : Liste complète de tous les paiements du jour
+- `splitPaymentDetails` : Détails des paiements divisés
+
+**Affichage actuel** :
+- Chaque mode avec son total et nombre de paiements : `CARTE (3) - 150.00 TND`
+- **Interface cliquable** : clic ouvre dialogue détaillé avec tous les paiements
+- **Affichage simplifié** : plus de boîte grise avec détails individuels
+
+### Utilisation pour rapprochement bancaire
+
+**✅ Ce qui fonctionne déjà** :
+- Comptage précis des transactions par mode
+- Détails des paiements divisés (ex: 3 paiements CARTE dans un split)
+- Noms des clients pour les crédits
+
+**❌ Ce qui manque** :
+- Détails des **paiements simples** (non divisés) - la majorité des paiements
+- **Dialogue cliquable** sur chaque ligne de mode
+- **Informations temporelles** (heure, table) pour chaque paiement
+
+**🎯 Besoin exprimé** :
+Permettre un clic sur "CARTE (3)" pour voir un dialogue listant :
+- "Table 4 à 21h30 - CARTE 50.00 TND"
+- "Table 7 à 22h15 - CARTE 70.00 TND"
+- "Table 12 à 23h45 - CARTE 30.00 TND"
+
+**✅ Implémentation réalisée** :
+- **Interface simplifiée** : suppression de la boîte grise des détails individuels
+- **Correction comptage** : déduplication complète des paiements (simples ET divisés) ✅
+- Rendu cliquable de chaque ligne de mode de paiement
+- Dialogue modal avec liste détaillée de TOUS les paiements du mode
+- Affichage : "Table X à HH:MM - MODE Montant TND"
+- Tri par heure décroissante (plus récent en haut)
+- Noms de clients pour les paiements CREDIT
+- Support des paiements simples et divisés
+- **Heure de paiement affichée** pour tous les modes (simples et divisés)
+
+### Architecture technique
+
+**Backend** (`pos-report-x.js`) :
+- `buildReportData()` récupère déjà toutes les données nécessaires
+- `paidPayments` contient timestamp, table, paymentMode, enteredAmount
+- Les données existent, il suffit de les exploiter côté frontend
+
+**Frontend** (`ca_details_page.dart`) :
+- `_buildPaymentModeBreakdown()` gère déjà l'affichage
+- Logique de récupération des détails divisés existe
+- Il faut étendre pour inclure les paiements simples + dialogue
+
+### État d'implémentation
+
+**✅ Complètement implémenté** :
+- Récupération des données complètes depuis `paidPayments`
+- Affichage des détails pour paiements divisés (existant)
+- Comptage et totaux corrects par mode
+- **Dialogue cliquable** sur chaque ligne de mode de paiement
+- Liste détaillée de **TOUS les paiements** (simples + divisés)
+- Affichage avec **heure et table** pour chaque paiement
+- Tri chronologique (plus récent en haut)
+- Noms de clients pour paiements CREDIT
+- Interface responsive pour mobile
+
+**🎯 Résultat** :
+Clic sur "CARTE (3)" → Dialogue listant tous les paiements cartes avec heure/table pour rapprochement bancaire ultra-rapide !
+
+---
+
 ## 📜 Historique enrichi
 
 L'historique utilise `history-processor.js` pour :
@@ -105,6 +180,77 @@ Pour les **paiements divisés**, les tickets sont créés dynamiquement côté F
 - `items` : Articles dédupliqués du ticket global
 
 **Important** : Le backend (`pos-report-x.js`) calcule déjà correctement ces valeurs depuis les articles dédupliqués. Le Flutter doit utiliser ces valeurs directement, pas les recalculer.
+
+---
+
+## 📋 Structure "Tables Encaissées" (KPI)
+
+### Hiérarchie des tickets
+
+```
+Table X - Service #N
+├── 📊 Ticket Principal (mainTicket)
+│   ├── total: TOUS les articles de la table
+│   ├── paymentDetails: Agrégation de TOUS les paiements
+│   ├── totalAmount: Montant encaissé (exclut CREDIT)
+│   ├── excessAmount: Pourboire total
+│   └── Crédit client (non encaissé) si présent
+│
+└── 📄 Tickets de Paiement (payments[])
+    ├── Ticket 1: Espèces (134.00 TND)
+    │   └── items: Articles payés dans CE paiement
+    │
+    └── Ticket 2: CARTE + CHEQUE + CREDIT (240.00 TND) [Divisé]
+        ├── items: Articles payés dans CE paiement
+        └── paymentDetails: [{mode: "CARTE", amount: 90, index: 1}, 
+                            {mode: "CHEQUE", amount: 90, index: 1},
+                            {mode: "CREDIT", amount: 70, clientName: "Client"}]
+```
+
+### ⚠️ Règles critiques
+
+| Règle | Description |
+|-------|-------------|
+| **mainTicket** | Contient TOUS les articles de la table (résumé global) |
+| **ticket (par paiement)** | Contient SEULEMENT les articles de CE paiement spécifique |
+| **totalAmount** | Montant encaissé = exclut toujours CREDIT |
+| **paymentDetails.index** | Utilisé pour distinguer plusieurs paiements du même mode/montant (CARTE #1, CARTE #2) |
+| **creditClientName** | Nom du client pour les paiements CREDIT |
+
+### Modes de paiement supportés
+
+| Mode | Description | Encaissé ? |
+|------|-------------|------------|
+| `ESPECE` | Espèces/Liquide | ✅ Oui |
+| `CARTE` | Carte bancaire | ✅ Oui |
+| `CHEQUE` | Chèque | ✅ Oui |
+| `TPE` | Terminal de paiement électronique | ✅ Oui |
+| `CREDIT` | Crédit client (dette différée) | ❌ Non (affiché séparément) |
+
+### Paiements divisés (Split Payments)
+
+Les paiements divisés (`isSplitPayment === true`) regroupent plusieurs modes en une seule transaction :
+
+- **`splitPaymentId`** : Identifiant unique du groupe (format: `split_TIMESTAMP`)
+- **`splitPaymentModes`** : Liste des modes utilisés (ex: `["CARTE", "CHEQUE", "CREDIT"]`)
+- **`splitPaymentAmounts`** / **`paymentDetails`** : Détails avec index
+
+**Exemple** :
+```json
+{
+  "paymentDetails": [
+    { "mode": "CARTE", "amount": 90, "index": 1 },
+    { "mode": "CHEQUE", "amount": 90, "index": 1 },
+    { "mode": "CREDIT", "amount": 70, "index": 1, "clientName": "Nabil Gafsi" }
+  ]
+}
+```
+
+### Déduplication des paymentDetails
+
+**Clé de déduplication** (côté frontend) : `${mode}_${amount}_${index}_${clientName}`
+
+**⚠️ NE JAMAIS** utiliser `${mode}_${amount}` seul car plusieurs paiements peuvent avoir le même mode et montant (ex: 2x CARTE 100 TND).
 
 ---
 
@@ -243,5 +389,5 @@ Page de génération et affichage du Rapport X :
 - **Paiements** : `STRUCTURE_POS_PAYMENT.md` (pourboires, split payments)
 - **Backend** : `STRUCTURE_SERVEUR.md` (API, endpoints)
 
-**Dernière mise à jour** : 2025-01-03 (Création du fichier, intégration pourboires, single source of truth)
+**Dernière mise à jour** : 2025-01-12 (Correction comptage paiements + heures dans dialogue détails + simplification interface)
 

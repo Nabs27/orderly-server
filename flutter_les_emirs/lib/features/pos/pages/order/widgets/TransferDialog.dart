@@ -50,14 +50,14 @@ class _TransferDialogState extends State<TransferDialog> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info, color: Colors.blue.shade700, size: 24),
+                    Icon(Icons.info, color: Colors.blue.withValues(alpha: 0.7), size: 24),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         widget.activeNoteId != 'main' 
                           ? 'Transfert complet de ${widget.activeNote.name} vers une autre table. Tous les articles sont sélectionnés.'
                           : 'Sélectionnez les articles à transférer vers une nouvelle note.',
-                        style: TextStyle(color: Colors.blue.shade700, fontSize: 16, fontWeight: FontWeight.w500),
+                        style: TextStyle(color: Colors.blue.withValues(alpha: 0.7), fontSize: 16, fontWeight: FontWeight.w500),
                       ),
                     ),
                   ],
@@ -115,7 +115,7 @@ class _TransferDialogState extends State<TransferDialog> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: isSelected ? Colors.blue.shade700 : Colors.grey.shade600,
+                                  color: isSelected ? Colors.blue.withValues(alpha: 0.7) : Colors.grey.shade600,
                                 ),
                               ),
                             ),
@@ -170,7 +170,7 @@ class _TransferDialogState extends State<TransferDialog> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.green.shade700,
+                          color: Colors.green.withValues(alpha: 0.7),
                         ),
                       ),
                     ],

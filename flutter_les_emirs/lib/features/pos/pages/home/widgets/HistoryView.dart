@@ -240,7 +240,7 @@ class _HistoryViewState extends State<HistoryView> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: Colors.grey.shade700,
+                  color: Colors.grey.withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -300,7 +300,7 @@ class _HistoryViewState extends State<HistoryView> {
       ),
       child: Row(
         children: [
-          Icon(Icons.calendar_today, size: 20, color: Colors.blue.shade700),
+          Icon(Icons.calendar_today, size: 20, color: Colors.blue.withValues(alpha: 0.7)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -324,11 +324,11 @@ class _HistoryViewState extends State<HistoryView> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade700,
+                          color: Colors.blue.withValues(alpha: 0.7),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Icon(Icons.arrow_drop_down, color: Colors.blue.shade700),
+                      Icon(Icons.arrow_drop_down, color: Colors.blue.withValues(alpha: 0.7)),
                     ],
                   ),
                 ),
@@ -343,10 +343,10 @@ class _HistoryViewState extends State<HistoryView> {
                   _selectedDate = DateTime.now();
                 });
               },
-              icon: Icon(Icons.today, size: 18, color: Colors.blue.shade700),
+              icon: Icon(Icons.today, size: 18, color: Colors.blue.withValues(alpha: 0.7)),
               label: Text(
                 'Aujourd\'hui',
-                style: TextStyle(color: Colors.blue.shade700),
+                style: TextStyle(color: Colors.blue.withValues(alpha: 0.7)),
               ),
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

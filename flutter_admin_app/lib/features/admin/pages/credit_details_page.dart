@@ -114,7 +114,7 @@ class _CreditDetailsPageState extends State<CreditDetailsPage> {
 
   Widget _buildSummaryChip(String label, double value, Color color) {
     return Chip(
-      backgroundColor: color.withOpacity(0.1),
+      backgroundColor: color.withValues(alpha: 0.1),
       label: SizedBox(
         width: 140,
         child: Column(

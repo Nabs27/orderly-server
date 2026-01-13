@@ -70,7 +70,7 @@ class _DiscountDetailsDialogState extends State<DiscountDetailsDialog> {
     return AlertDialog(
       title: Row(
         children: [
-          Icon(Icons.percent, color: Colors.amber.shade700),
+          Icon(Icons.percent, color: Colors.amber.withValues(alpha: 0.7)),
           const SizedBox(width: 8),
           const Text('Détails des remises'),
         ],
@@ -95,7 +95,7 @@ class _DiscountDetailsDialogState extends State<DiscountDetailsDialog> {
                         count: totalRemisesGlobalCount,
                         icon: _selectedServer == null ? Icons.check_circle : Icons.circle_outlined,
                         isSelected: _selectedServer == null,
-                        selectedColor: Colors.amber.shade700,
+                        selectedColor: Colors.amber.withValues(alpha: 0.7),
                         onSelected: (selected) {
                           setState(() {
                             _selectedServer = null;
@@ -114,7 +114,7 @@ class _DiscountDetailsDialogState extends State<DiscountDetailsDialog> {
                           count: stats?.count ?? 0,
                           icon: isSelected ? Icons.person : Icons.person_outline,
                           isSelected: isSelected,
-                          selectedColor: Colors.blue.shade700,
+                          selectedColor: Colors.blue.withValues(alpha: 0.7),
                           onSelected: (selected) {
                             setState(() {
                               _selectedServer = selected ? server : null;
@@ -204,7 +204,7 @@ class _DiscountDetailsDialogState extends State<DiscountDetailsDialog> {
                             leading: CircleAvatar(
                               backgroundColor: Colors.amber.shade100,
                               child: Icon(Icons.percent,
-                                  color: Colors.amber.shade700),
+                                  color: Colors.amber.withValues(alpha: 0.7)),
                             ),
                             title: Text(
                               'Table $table • $noteName',
@@ -225,7 +225,7 @@ class _DiscountDetailsDialogState extends State<DiscountDetailsDialog> {
                                   Text(
                                     'Client: $discountClientName',
                                     style: TextStyle(
-                                      color: Colors.blue.shade700,
+                                      color: Colors.blue.withValues(alpha: 0.7),
                                       fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -244,13 +244,13 @@ class _DiscountDetailsDialogState extends State<DiscountDetailsDialog> {
                                   'Voir ticket',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.amber.shade700,
+                                    color: Colors.amber.withValues(alpha: 0.7),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
                                 const SizedBox(width: 4),
                                 Icon(Icons.receipt_long,
-                                    color: Colors.amber.shade700),
+                                    color: Colors.amber.withValues(alpha: 0.7)),
                               ],
                             ),
                           ),
@@ -288,7 +288,7 @@ class _DiscountDetailsDialogState extends State<DiscountDetailsDialog> {
       avatar: Icon(
         icon,
         size: 18,
-        color: isSelected ? Colors.white : Colors.grey.shade700,
+        color: isSelected ? Colors.white : Colors.grey.withValues(alpha: 0.7),
       ),
       label: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,7 +298,7 @@ class _DiscountDetailsDialogState extends State<DiscountDetailsDialog> {
             label,
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: isSelected ? Colors.white : Colors.grey.shade700,
+              color: isSelected ? Colors.white : Colors.grey.withValues(alpha: 0.7),
             ),
           ),
           Text(
@@ -395,7 +395,7 @@ class _DiscountDetailsDialogState extends State<DiscountDetailsDialog> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.receipt_long, color: Colors.amber.shade700),
+                    Icon(Icons.receipt_long, color: Colors.amber.withValues(alpha: 0.7)),
                     const SizedBox(width: 8),
                     const Expanded(
                       child: Text(

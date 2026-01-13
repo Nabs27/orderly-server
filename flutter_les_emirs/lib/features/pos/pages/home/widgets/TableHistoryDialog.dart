@@ -164,7 +164,7 @@ class _ServicesListDialog extends StatelessWidget {
                         child: Text(
                           '$serviceIndex',
                           style: TextStyle(
-                            color: Colors.blue.shade700,
+                            color: Colors.blue.withValues(alpha: 0.7),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -186,7 +186,7 @@ class _ServicesListDialog extends StatelessWidget {
                           ),
                         ],
                       ),
-                      trailing: Icon(Icons.chevron_right, color: Colors.blue.shade700),
+                      trailing: Icon(Icons.chevron_right, color: Colors.blue.withValues(alpha: 0.7)),
                       onTap: () => onSelectService(serviceIndex),
                     ),
                   );
@@ -212,11 +212,11 @@ class _ServicesListDialog extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: Colors.grey.shade700),
+          Icon(icon, size: 12, color: Colors.grey.withValues(alpha: 0.7)),
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+            style: TextStyle(fontSize: 11, color: Colors.grey.withValues(alpha: 0.7)),
           ),
         ],
       ),
@@ -309,7 +309,7 @@ class _ServiceDetailDialog extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700,
+                    color: Colors.grey.withValues(alpha: 0.7),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -318,7 +318,7 @@ class _ServiceDetailDialog extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 36,
-                    color: Colors.green.shade700,
+                    color: Colors.green.withValues(alpha: 0.7),
                   ),
                 ),
                 if (mainTicket != null) ...[
@@ -328,7 +328,7 @@ class _ServiceDetailDialog extends StatelessWidget {
                     icon: const Icon(Icons.receipt, size: 18),
                     label: const Text('Voir le ticket principal'),
                     style: TextButton.styleFrom(
-                      foregroundColor: Colors.blue.shade700,
+                      foregroundColor: Colors.blue.withValues(alpha: 0.7),
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     ),
                   ),
@@ -384,7 +384,7 @@ class _ServiceDetailDialog extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 20, color: Colors.grey.shade700),
+          Icon(icon, size: 20, color: Colors.grey.withValues(alpha: 0.7)),
           const SizedBox(height: 6),
           Text(
             value,
@@ -408,7 +408,7 @@ class _ServiceDetailDialog extends StatelessWidget {
               ),
               if (isClickable) ...[
                 const SizedBox(width: 4),
-                Icon(Icons.arrow_forward_ios, size: 10, color: Colors.blue.shade700),
+                Icon(Icons.arrow_forward_ios, size: 10, color: Colors.blue.withValues(alpha: 0.7)),
               ],
             ],
           ),
@@ -460,10 +460,10 @@ class _ServiceDetailDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade700,
+                  color: Colors.blue.withValues(alpha: 0.7),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -538,10 +538,10 @@ class _ServiceDetailDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade700,
+                  color: Colors.green.withValues(alpha: 0.7),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -644,10 +644,10 @@ class _ServiceDetailDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.purple.shade700,
+                  color: Colors.purple.withValues(alpha: 0.7),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -794,7 +794,7 @@ class _ServiceDetailDialog extends StatelessWidget {
                                         style: TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.purple.shade700,
+                                          color: Colors.purple.withValues(alpha: 0.7),
                                         ),
                                       ),
                                     ],
@@ -835,7 +835,7 @@ class _ServiceDetailDialog extends StatelessWidget {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.receipt, color: Colors.blue.shade700),
+            Icon(Icons.receipt, color: Colors.blue.withValues(alpha: 0.7)),
             const SizedBox(width: 8),
             const Text('Ticket Principal'),
           ],
@@ -948,7 +948,7 @@ class _ServiceDetailDialog extends StatelessWidget {
                                     : singleDiscountLabel,
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.orange.shade700,
+                                  color: Colors.orange.withValues(alpha: 0.7),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -956,7 +956,7 @@ class _ServiceDetailDialog extends StatelessWidget {
                                 '-${discountAmount.toStringAsFixed(2)} TND',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.red.shade700,
+                                  color: Colors.red.withValues(alpha: 0.7),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -977,14 +977,14 @@ class _ServiceDetailDialog extends StatelessWidget {
                                       '  • Remise $rate:',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.grey.shade700,
+                                        color: Colors.grey.withValues(alpha: 0.7),
                                       ),
                                     ),
                                     Text(
                                       '-${amount.toStringAsFixed(2)} TND',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.grey.shade700,
+                                        color: Colors.grey.withValues(alpha: 0.7),
                                       ),
                                     ),
                                   ],
@@ -1013,7 +1013,7 @@ class _ServiceDetailDialog extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.green.shade700,
+                                color: Colors.green.withValues(alpha: 0.7),
                               ),
                             ),
                           ],
@@ -1165,7 +1165,7 @@ class OrderEventCard extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.orange.shade700,
+                                    color: Colors.orange.withValues(alpha: 0.7),
                                   ),
                                 ),
                               ),
@@ -1202,7 +1202,7 @@ class OrderEventCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.green.shade700,
+                      color: Colors.green.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -1275,20 +1275,20 @@ class RealPaymentCard extends StatelessWidget {
     if (isSubNote && noteName != null) {
       paymentTitle = 'Sous-note: $noteName';
       paymentTypeIcon = Icons.person;
-      paymentTypeColor = Colors.purple.shade700;
+      paymentTypeColor = Colors.purple.withValues(alpha: 0.7);
     } else if (isPartial && isMainNote) {
       paymentTitle = 'Paiement partiel - Note principale';
       paymentTypeIcon = Icons.payment;
-      paymentTypeColor = Colors.orange.shade700;
+      paymentTypeColor = Colors.orange.withValues(alpha: 0.7);
     } else if (isMainNote) {
       // 🆕 Si c'est un paiement complet, afficher "Note principale" au lieu de "Paiement partiel"
       paymentTitle = 'Note principale';
       paymentTypeIcon = Icons.receipt;
-      paymentTypeColor = Colors.blue.shade700;
+      paymentTypeColor = Colors.blue.withValues(alpha: 0.7);
     } else {
       paymentTitle = 'Ticket #${index + 1}';
       paymentTypeIcon = Icons.receipt;
-      paymentTypeColor = Colors.grey.shade700;
+      paymentTypeColor = Colors.grey.withValues(alpha: 0.7);
     }
 
     // Couleur selon le mode de paiement
@@ -1296,31 +1296,31 @@ class RealPaymentCard extends StatelessWidget {
     IconData modeIcon;
     switch (paymentMode.toUpperCase()) {
       case 'ESPECE':
-        modeColor = Colors.green.shade700;
+        modeColor = Colors.green.withValues(alpha: 0.7);
         modeIcon = Icons.money;
         break;
       case 'CARTE':
-        modeColor = Colors.blue.shade700;
+        modeColor = Colors.blue.withValues(alpha: 0.7);
         modeIcon = Icons.credit_card;
         break;
       case 'CHEQUE':
-        modeColor = Colors.purple.shade700;
+        modeColor = Colors.purple.withValues(alpha: 0.7);
         modeIcon = Icons.receipt;
         break;
       case 'TPE':
-        modeColor = Colors.orange.shade700;
+        modeColor = Colors.orange.withValues(alpha: 0.7);
         modeIcon = Icons.payment;
         break;
       case 'OFFRE':
-        modeColor = Colors.red.shade700;
+        modeColor = Colors.red.withValues(alpha: 0.7);
         modeIcon = Icons.card_giftcard;
         break;
       case 'CREDIT':
-        modeColor = Colors.orange.shade700;
+        modeColor = Colors.orange.withValues(alpha: 0.7);
         modeIcon = Icons.account_balance_wallet;
         break;
       default:
-        modeColor = Colors.grey.shade700;
+        modeColor = Colors.grey.withValues(alpha: 0.7);
         modeIcon = Icons.receipt;
     }
 
@@ -1432,7 +1432,7 @@ class RealPaymentCard extends StatelessWidget {
                               'Inclut pourboire: ${excessAmount.toStringAsFixed(2)} TND',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: Colors.green.shade700,
+                                color: Colors.green.withValues(alpha: 0.7),
                                 fontStyle: FontStyle.italic,
                               ),
                             ),
@@ -1455,13 +1455,13 @@ class RealPaymentCard extends StatelessWidget {
                 // 🆕 Badge "Paiement divisé" si applicable
                 if (isSplitPayment)
                   Chip(
-                    avatar: Icon(Icons.account_balance_wallet, size: 16, color: Colors.blue.shade700),
+                    avatar: Icon(Icons.account_balance_wallet, size: 16, color: Colors.blue.withValues(alpha: 0.7)),
                     label: Text(
                       'Paiement divisé',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
-                        color: Colors.blue.shade700,
+                        color: Colors.blue.withValues(alpha: 0.7),
                       ),
                     ),
                     backgroundColor: Colors.blue.shade50,
@@ -1477,7 +1477,7 @@ class RealPaymentCard extends StatelessWidget {
                       color: paymentTypeColor,
                     ),
                   ),
-                  backgroundColor: paymentTypeColor.withOpacity(0.1),
+                  backgroundColor: paymentTypeColor.withValues(alpha: 0.1),
                 ),
                 // Badge mode(s) de paiement
                 if (isSplitPayment && splitPaymentModes.isNotEmpty)
@@ -1487,31 +1487,31 @@ class RealPaymentCard extends StatelessWidget {
                     IconData modeIcon;
                     switch (mode.toUpperCase()) {
                       case 'ESPECE':
-                        modeColor = Colors.green.shade700;
+                        modeColor = Colors.green.withValues(alpha: 0.7);
                         modeIcon = Icons.money;
                         break;
                       case 'CARTE':
-                        modeColor = Colors.blue.shade700;
+                        modeColor = Colors.blue.withValues(alpha: 0.7);
                         modeIcon = Icons.credit_card;
                         break;
                       case 'CHEQUE':
-                        modeColor = Colors.purple.shade700;
+                        modeColor = Colors.purple.withValues(alpha: 0.7);
                         modeIcon = Icons.receipt;
                         break;
                       case 'TPE':
-                        modeColor = Colors.orange.shade700;
+                        modeColor = Colors.orange.withValues(alpha: 0.7);
                         modeIcon = Icons.payment;
                         break;
                       case 'OFFRE':
-                        modeColor = Colors.red.shade700;
+                        modeColor = Colors.red.withValues(alpha: 0.7);
                         modeIcon = Icons.card_giftcard;
                         break;
                       case 'CREDIT':
-                        modeColor = Colors.orange.shade700;
+                        modeColor = Colors.orange.withValues(alpha: 0.7);
                         modeIcon = Icons.account_balance_wallet;
                         break;
                       default:
-                        modeColor = Colors.grey.shade700;
+                        modeColor = Colors.grey.withValues(alpha: 0.7);
                         modeIcon = Icons.receipt;
                     }
                     
@@ -1548,7 +1548,7 @@ class RealPaymentCard extends StatelessWidget {
                                 color: modeColor,
                               ),
                             ),
-                            backgroundColor: modeColor.withOpacity(0.1),
+                            backgroundColor: modeColor.withValues(alpha: 0.1),
                           );
                         }).toList(),
                       );
@@ -1576,7 +1576,7 @@ class RealPaymentCard extends StatelessWidget {
                             color: modeColor,
                           ),
                         ),
-                        backgroundColor: modeColor.withOpacity(0.1),
+                        backgroundColor: modeColor.withValues(alpha: 0.1),
                       );
                     }
                   }).toList()
@@ -1595,17 +1595,17 @@ class RealPaymentCard extends StatelessWidget {
                         color: modeColor,
                       ),
                     ),
-                    backgroundColor: modeColor.withOpacity(0.1),
+                    backgroundColor: modeColor.withValues(alpha: 0.1),
                   ),
                 if (payment['hasDiscount'] == true && payment['discount'] != null && (payment['discount'] as num) > 0)
                   Chip(
-                    avatar: Icon(Icons.local_offer, size: 16, color: Colors.orange.shade700),
+                    avatar: Icon(Icons.local_offer, size: 16, color: Colors.orange.withValues(alpha: 0.7)),
                     label: Text(
                       'Remise: ${(payment['discount'] as num).toStringAsFixed(0)}${payment['isPercentDiscount'] == true ? '%' : ' TND'}',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
-                        color: Colors.orange.shade700,
+                        color: Colors.orange.withValues(alpha: 0.7),
                       ),
                     ),
                     backgroundColor: Colors.orange.shade50,
@@ -1661,11 +1661,11 @@ class RealPaymentCard extends StatelessWidget {
                   children: [
                     Text(
                       'Remise ${((payment['discount'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(0)}${payment['isPercentDiscount'] == true ? '%' : ' TND'}',
-                      style: TextStyle(fontSize: 13, color: Colors.orange.shade700),
+                      style: TextStyle(fontSize: 13, color: Colors.orange.withValues(alpha: 0.7)),
                     ),
                     Text(
                       '-${calculatedDiscount.toStringAsFixed(2)} TND',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.orange.shade700),
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.orange.withValues(alpha: 0.7)),
                     ),
                   ],
                 ),
@@ -1710,7 +1710,7 @@ class RealPaymentCard extends StatelessWidget {
                                 'Inclut pourboire: ${excessAmount.toStringAsFixed(2)} TND',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.green.shade700,
+                                  color: Colors.green.withValues(alpha: 0.7),
                                   fontStyle: FontStyle.italic,
                                 ),
                               ),
@@ -1801,14 +1801,14 @@ class CancellationEventCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.cancel_outlined, color: Colors.orange.shade700, size: 20),
+                    Icon(Icons.cancel_outlined, color: Colors.orange.withValues(alpha: 0.7), size: 20),
                     const SizedBox(width: 8),
                     Text(
                       'Annulation',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: Colors.orange.shade700,
+                        color: Colors.orange.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -1867,7 +1867,7 @@ class CancellationEventCard extends StatelessWidget {
                           '$quantity x $itemName',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.orange.shade700,
+                            color: Colors.orange.withValues(alpha: 0.7),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -1877,7 +1877,7 @@ class CancellationEventCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: Colors.orange.shade700,
+                          color: Colors.orange.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -1894,7 +1894,7 @@ class CancellationEventCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Colors.orange.shade700,
+                      color: Colors.orange.withValues(alpha: 0.7),
                     ),
                   ),
                   Text(
@@ -1902,7 +1902,7 @@ class CancellationEventCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.orange.shade700,
+                      color: Colors.orange.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -1919,7 +1919,7 @@ class CancellationEventCard extends StatelessWidget {
                       style: const TextStyle(fontSize: 10),
                     ),
                     backgroundColor: Colors.blue.shade50,
-                    labelStyle: TextStyle(color: Colors.blue.shade700),
+                    labelStyle: TextStyle(color: Colors.blue.withValues(alpha: 0.7)),
                   ),
                   Chip(
                     label: Text(
@@ -1927,7 +1927,7 @@ class CancellationEventCard extends StatelessWidget {
                       style: const TextStyle(fontSize: 10),
                     ),
                     backgroundColor: Colors.grey.shade100,
-                    labelStyle: TextStyle(color: Colors.grey.shade700),
+                    labelStyle: TextStyle(color: Colors.grey.withValues(alpha: 0.7)),
                   ),
                   Chip(
                     label: Text(
@@ -1935,7 +1935,7 @@ class CancellationEventCard extends StatelessWidget {
                       style: const TextStyle(fontSize: 10),
                     ),
                     backgroundColor: Colors.green.shade50,
-                    labelStyle: TextStyle(color: Colors.green.shade700),
+                    labelStyle: TextStyle(color: Colors.green.withValues(alpha: 0.7)),
                   ),
                 ],
               ),
@@ -1951,7 +1951,7 @@ class CancellationEventCard extends StatelessWidget {
                     description,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey.shade700,
+                      color: Colors.grey.withValues(alpha: 0.7),
                       fontStyle: FontStyle.italic,
                     ),
                   ),

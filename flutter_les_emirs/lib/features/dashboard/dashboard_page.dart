@@ -384,7 +384,7 @@ class _DashboardPageState extends State<DashboardPage>
         final gkey = '${g.orderId}|${g.table}';
         final isNew = station == 'bar' ? unseenBarGroups.contains(gkey) : unseenKitchenGroups.contains(gkey);
         return Container(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           child: ExpansionTile(
             tilePadding: const EdgeInsets.symmetric(horizontal: 12.0),
             title: Row(children: [
@@ -451,7 +451,7 @@ class _DashboardPageState extends State<DashboardPage>
         final color = _lerpUrgencyColor(ratio);
         final remaining = s.remainingMinutes().clamp(0, s.slaMinutes);
         return Container(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           child: ListTile(
             title: Text('${s.label} — Table ${s.table}'),
             subtitle: Text(_fmtTime(s.createdAt)),

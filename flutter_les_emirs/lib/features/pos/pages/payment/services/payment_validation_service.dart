@@ -173,6 +173,7 @@ class PaymentValidationService {
     List<Map<String, dynamic>>? splitPaymentTransactions, // 🆕 Liste de transactions (nouveau format)
     String? serverName, // 🆕 CORRECTION : Ajouter le serveur pour les détails des remises KPI
     double? scripturalEnteredAmount, // 🆕 Montant réellement saisi pour paiement scriptural simple (CARTE/TPE/CHEQUE)
+    int? clientId, // 🆕 ID du client pour paiements CREDIT simples
   }) async {
     if (selectedNoteForPayment == 'all') {
       // Paiement complet : utiliser payMultiOrders pour TOUS les articles
@@ -198,6 +199,7 @@ class PaymentValidationService {
         splitPaymentTransactions: splitPaymentTransactions, // 🆕 Liste de transactions
         serverName: serverName, // 🆕 CORRECTION : Transmettre le serveur
         scripturalEnteredAmount: scripturalEnteredAmount, // 🆕 Montant réellement saisi pour paiement scriptural simple
+        clientId: clientId, // 🆕 Passer l'ID du client pour paiements CREDIT simples
       );
       
       // Fermer la table après paiement complet
@@ -219,6 +221,7 @@ class PaymentValidationService {
         splitCreditClients: splitCreditClients, // 🆕 DEPRECATED
         splitPaymentTransactions: splitPaymentTransactions, // 🆕 Liste de transactions
         serverName: serverName, // 🆕 CORRECTION : Transmettre le serveur
+        clientId: clientId, // 🆕 Passer l'ID du client pour paiements CREDIT simples
       );
     } else if (selectedNoteForPayment == 'main') {
       // 🆕 SOURCE DE VÉRITÉ UNIQUE : Utiliser la même logique que pour 'all'
@@ -252,6 +255,7 @@ class PaymentValidationService {
         splitCreditClients: splitCreditClients, // 🆕 DEPRECATED
         splitPaymentTransactions: splitPaymentTransactions, // 🆕 Liste de transactions
         serverName: serverName, // 🆕 CORRECTION : Transmettre le serveur
+        clientId: clientId, // 🆕 Passer l'ID du client pour paiements CREDIT simples
       );
     } else if (selectedNoteForPayment.startsWith('sub_')) {
       // 🆕 SOURCE DE VÉRITÉ UNIQUE : Utiliser la même logique que pour 'all' et 'main'
@@ -276,6 +280,7 @@ class PaymentValidationService {
         splitCreditClients: splitCreditClients, // 🆕 DEPRECATED
         splitPaymentTransactions: splitPaymentTransactions, // 🆕 Liste de transactions
         serverName: serverName, // 🆕 CORRECTION : Transmettre le serveur
+        clientId: clientId, // 🆕 Passer l'ID du client pour paiements CREDIT simples
       );
     }
   }

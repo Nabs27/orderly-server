@@ -49,7 +49,7 @@ class PosNoteItems extends StatelessWidget {
             ),
             boxShadow: isNewlyAdded ? [
               BoxShadow(
-                color: Colors.green.withOpacity(0.2),
+                color: Colors.green.withValues(alpha: 0.2),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -69,8 +69,8 @@ class PosNoteItems extends StatelessWidget {
               child: Icon(
                 isNewlyAdded ? Icons.add_circle : Icons.restaurant,
                 color: isNewlyAdded 
-                    ? Colors.green.shade700 
-                    : Colors.blue.shade700,
+                    ? Colors.green.withValues(alpha: 0.7) 
+                    : Colors.blue.withValues(alpha: 0.7),
                 size: 20,
               ),
             ),
@@ -127,7 +127,7 @@ class PosNoteItems extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                       color: isNewlyAdded 
-                          ? Colors.green.shade700 
+                          ? Colors.green.withValues(alpha: 0.7) 
                           : Colors.black87,
                     ),
                   ),

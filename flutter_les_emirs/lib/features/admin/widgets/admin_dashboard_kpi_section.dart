@@ -151,7 +151,7 @@ class AdminDashboardKpiSectionState extends State<AdminDashboardKpiSection> {
         'subtitle': 'Encaissements nets',
         'icon': Icons.payments,
         'color': const LinearGradient(colors: [Color(0xFFDDF7E3), Color(0xFFF2FFF2)]),
-        'iconColor': Colors.green.shade700,
+        'iconColor': Colors.green.withValues(alpha: 0.7),
         'onTap': () => _showPaidHistory(context, kpis),
       },
       {
@@ -183,7 +183,7 @@ class AdminDashboardKpiSectionState extends State<AdminDashboardKpiSection> {
         'subtitle': '${kpis.tauxRemise.toStringAsFixed(1)}% • ${kpis.nombreRemises} remise(s)',
         'icon': Icons.percent,
         'color': const LinearGradient(colors: [Color(0xFFFFF0C2), Color(0xFFFFF7E1)]),
-        'iconColor': Colors.amber.shade700,
+        'iconColor': Colors.amber.withValues(alpha: 0.7),
         'onTap': () => _showDiscountDetails(context, kpis),
       },
     ];
@@ -397,10 +397,10 @@ class _KpiCard extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: gradient,
           borderRadius: BorderRadius.circular(16), // Rayon réduit
-          border: Border.all(color: iconColor.withOpacity(0.15)),
+          border: Border.all(color: iconColor.withValues(alpha: 0.15)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10, // Ombre réduite
               offset: const Offset(0, 4),
             ),
@@ -413,7 +413,7 @@ class _KpiCard extends StatelessWidget {
               Positioned(
                 top: 0,
                 right: 0,
-                child: Icon(Icons.touch_app, size: 14, color: iconColor.withOpacity(0.5)),
+                child: Icon(Icons.touch_app, size: 14, color: iconColor.withValues(alpha: 0.5)),
               ),
           ],
         ),
