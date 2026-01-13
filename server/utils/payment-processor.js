@@ -667,6 +667,10 @@ function getPaymentDetails(payments) {
         // ⚠️ FIX: Force à 1 pour éviter les erreurs de calcul si nbOrders est incorrect
         const nbTransactions = 1;
 
+        if (tx.count > 1) {
+            console.log(`[payment-processor] ⚠️ Fix forcing nbTransactions=1 for ${tx.mode} (count=${tx.count}, nbOrders=${nbOrders}). Value should be 1.`);
+        }
+
         // Créer N entrées pour cette transaction
         for (let i = 0; i < nbTransactions; i++) {
             const detail = {
