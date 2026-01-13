@@ -1349,8 +1349,14 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				paymentsByMode[mode].count += 1;
 
 				// Ajouter le nom du payeur si disponible
-				if (payment.noteName && !paymentsByMode[mode].payers.includes(payment.noteName)) {
-					paymentsByMode[mode].payers.push(payment.noteName);
+				if (payment.noteName) {
+					let payerName = payment.noteName;
+					// 🆕 Si on a un index (dans les split payments), on l'ajoute pour différencier les paiements identiques
+					if (detail.index) {
+						payerName = `${payment.noteName} #${detail.index}`;
+					}
+					// ⚠️ On ne déduplique plus par nom car chaque 'detail' est une transaction unique vérifiée
+					paymentsByMode[mode].payers.push(payerName);
 				}
 			}
 		}
