@@ -486,9 +486,10 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 
 	// 🆕 NOTE: totals et itemsByCategory seront créés APRÈS la création de paidPayments
 	// pour éviter de compter les articles plusieurs fois pour les paiements divisés
-	// ⚠️ CORRECTION: Utiliser le module commun payment-processor pour la déduplication
-	// Cela garantit que History, KPI et X Report utilisent la même logique
-	const paymentsByMode = paymentProcessor.calculatePaymentsByMode(allPayments);
+	// ⚠️ CORRECTION: paymentsByMode sera calculé après paidPayments pour garantir la cohérence
+	// avec la logique de fusion déjà appliquée dans paidPayments (source de vérité fusionnée)
+	let paymentsByMode = {}; // Sera rempli après paidPayments
+
 	// totals sera calculé après paidPayments
 	const unpaidTables = calculateUnpaidTables(server);
 
@@ -1307,6 +1308,45 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 		const dateB = new Date(b.timestamp || 0);
 		return dateB - dateA;
 	});
+
+	// 🆕 RECALCULATION: Construire paymentsByMode depuis paidPayments (source de vérité fusionnée)
+	// Cela évite les incohérences entre la liste des tickets (juste) et le total par mode (qui était faux)
+	paymentsByMode = {};
+
+	for (const payment of paidPayments) {
+		const details = payment.paymentDetails || [];
+
+		for (const detail of details) {
+			const mode = detail.mode;
+			const amount = detail.amount || 0;
+
+			if (!paymentsByMode[mode]) {
+				paymentsByMode[mode] = { total: 0, count: 0, payers: [] };
+			}
+
+			paymentsByMode[mode].total += amount;
+			// 🆕 Pour le count, on compte chaque transaction réelle (detail)
+			paymentsByMode[mode].count += 1;
+
+			// Ajouter le nom du payeur si disponible
+			// Pour les paiements regroupés, on pourrait avoir plusieurs payeurs, mais ici on simplifie
+			if (payment.noteName && !paymentsByMode[mode].payers.includes(payment.noteName)) {
+				paymentsByMode[mode].payers.push(payment.noteName);
+			}
+		}
+	}
+
+	// 🆕 Ajouter les tables non payées (réintégration de la logique qui était avant)
+	if (unpaidTables.total > 0 && unpaidTables.byMode) {
+		for (const [mode, data] of Object.entries(unpaidTables.byMode)) {
+			if (!paymentsByMode[mode]) {
+				paymentsByMode[mode] = { total: 0, count: 0, payers: [] };
+			}
+			paymentsByMode[mode].total += data.total;
+			// Pour unpaid, count est généralement le nombre de commandes non payées
+			paymentsByMode[mode].count += data.count;
+		}
+	}
 
 	// 🆕 Créer un map pour retrouver les tickets par actKey (après construction de paidPayments)
 	// Cela garantit que le ticket de remise = ticket exact de l'acte (comme dans paidPayments)
