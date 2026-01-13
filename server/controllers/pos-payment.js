@@ -489,6 +489,7 @@ async function payMultiOrders(req, res) {
 					noteName: orderInfo.paidItems[0]?.noteName || 'Note Principale',
 					creditClientName: split.mode === 'CREDIT' ? (dataStore.clientCredits.find(c => c.id === Number(split.clientId))?.name || `Client #${split.clientId}`) : null,
 					creditClientId: split.mode === 'CREDIT' ? Number(split.clientId) : null, // 🆕 Stocker l'ID du client pour récupérer le nom actuel
+					orderId: Number(orderId), // 🆕 Ajout explicite de l'ID commande pour déduplication robuste
 					isCompletePayment: false // Sera mis à true si archivé
 				};
 				order.paymentHistory.push(paymentRecord);
@@ -547,6 +548,7 @@ async function payMultiOrders(req, res) {
 				noteName: orderInfo.paidItems[0]?.noteName || 'Note Principale',
 				creditClientName: paymentMode === 'CREDIT' && req.body.clientId ? (dataStore.clientCredits.find(c => c.id === Number(req.body.clientId))?.name || `Client #${req.body.clientId}`) : null, // 🆕 Nom du client pour CREDIT
 				creditClientId: paymentMode === 'CREDIT' && req.body.clientId ? Number(req.body.clientId) : null, // 🆕 Stocker l'ID du client pour récupérer le nom actuel
+				orderId: Number(orderId), // 🆕 Ajout explicite de l'ID commande pour déduplication robuste
 				isCompletePayment: false // Sera mis à true si archivé
 			};
 			order.paymentHistory.push(paymentRecord);

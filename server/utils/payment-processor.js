@@ -101,7 +101,10 @@ function deduplicateAndCalculate(payments) {
         for (const txKey in txCounts) {
             const tx = txCounts[txKey];
             // Nombre réel de transactions = occurrences / nombre de commandes
-            const numTransactions = Math.round(tx.count / nbOrders);
+            // ⚠️ FIX: Utiliser une vraie déduplication par splitPaymentId
+            // On considère que pour un splitPaymentId donné, chaque couple (mode + montant) est unique
+            // Cela corrige le cas où nbOrders est mal calculé (ex: 1 au lieu de 3)
+            const numTransactions = 1;
 
             // Ajouter au chiffre d'affaire (somme des allocatedAmount)
             totals.chiffreAffaire += tx.allocatedSum;
@@ -340,7 +343,8 @@ function groupSplitPayments(payments) {
             }
 
             // Nombre de transactions réelles = count / nbOrders
-            const numTransactions = Math.round(tx.count / nbOrders);
+            // ⚠️ FIX: Force à 1 pour éviter les erreurs de calcul si nbOrders est incorrect
+            const numTransactions = 1;
             for (let i = 0; i < numTransactions; i++) {
                 splitPaymentAmounts.push({
                     mode: tx.mode,
@@ -468,7 +472,8 @@ function calculatePaymentsByMode(payments) {
         // Ajouter au résultat avec le nombre correct de transactions
         for (const txKey in txCounts) {
             const tx = txCounts[txKey];
-            const numTransactions = Math.round(tx.count / nbOrders);
+            // ⚠️ FIX: Force à 1 pour éviter les erreurs de calcul si nbOrders est incorrect
+            const numTransactions = 1;
 
             if (!result[tx.mode]) {
                 result[tx.mode] = { total: 0, count: 0, payers: [] };
@@ -563,7 +568,7 @@ function calculatePaymentsByMode(payments) {
 
         for (const key in txCounts) {
             const tx = txCounts[key];
-            const numTransactions = Math.round(tx.count / nbOrders);
+            const numTransactions = 1; // ⚠️ FIX: Force à 1 pour éviter erreur si nbOrders incorrect
             totalEntered += tx.enteredAmount * numTransactions;
             totalAllocated += tx.allocatedSum;
         }
@@ -624,12 +629,12 @@ function getPaymentDetails(payments) {
 
     // Compter les occurrences de chaque mode + enteredAmount
     const txCounts = {};
-    
+
     for (const p of payments) {
         const enteredAmount = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
         const mode = p.paymentMode || 'N/A';
         const txKey = `${mode}_${enteredAmount.toFixed(3)}`;
-        
+
         if (!txCounts[txKey]) {
             txCounts[txKey] = {
                 count: 0,
@@ -640,14 +645,14 @@ function getPaymentDetails(payments) {
         }
         txCounts[txKey].count++;
     }
-    
+
     // Calculer le nombre de commandes distinctes
     const distinctOrderIds = new Set(payments.map(p => p.orderId || p.sessionId)).size;
     const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
-    
+
     // Créer les paymentDetails avec index (CARTE #1, CARTE #2, etc.)
     const paymentDetails = [];
-    
+
     // Accéder à dataStore pour chercher les clients crédit (fallback)
     let dataStore = null;
     try {
@@ -655,12 +660,13 @@ function getPaymentDetails(payments) {
     } catch (e) {
         // Ignorer si dataStore n'est pas disponible
     }
-    
+
     for (const txKey in txCounts) {
         const tx = txCounts[txKey];
         // Nombre réel de transactions = occurrences / nombre de commandes
-        const nbTransactions = Math.round(tx.count / nbOrders);
-        
+        // ⚠️ FIX: Force à 1 pour éviter les erreurs de calcul si nbOrders est incorrect
+        const nbTransactions = 1;
+
         // Créer N entrées pour cette transaction
         for (let i = 0; i < nbTransactions; i++) {
             const detail = {
@@ -668,27 +674,27 @@ function getPaymentDetails(payments) {
                 amount: tx.amount,
                 index: paymentDetails.filter(d => d.mode === tx.mode).length + 1 // Index par mode (CARTE #1, CARTE #2, etc.)
             };
-            
+
             // Ajouter le nom du client pour les paiements CREDIT
             if (tx.mode === 'CREDIT') {
                 let clientName = null;
-                
+
                 // 1. Essayer creditClientId (nouveau système)
                 if (tx.payment.creditClientId && dataStore?.clientCredits) {
                     const client = dataStore.clientCredits.find(c => c.id === tx.payment.creditClientId);
                     if (client?.name) clientName = client.name;
                 }
-                
+
                 // 2. Essayer creditClientName (ancien système)
                 if (!clientName && tx.payment.creditClientName) {
                     clientName = tx.payment.creditClientName;
                 }
-                
+
                 // 3. Dernier recours : chercher dans les transactions de crédit par montant
                 if (!clientName && dataStore?.clientCredits) {
                     const paymentAmount = tx.payment.amount || tx.payment.allocatedAmount || tx.amount || 0;
                     const paymentTimestamp = tx.payment.timestamp ? new Date(tx.payment.timestamp).getTime() : 0;
-                    
+
                     for (const client of (dataStore.clientCredits || [])) {
                         if (!client.transactions) continue;
                         for (const txCredit of client.transactions) {
@@ -696,7 +702,7 @@ function getPaymentDetails(payments) {
                             const txAmount = Math.abs(txCredit.amount || 0);
                             const txTimestamp = txCredit.date ? new Date(txCredit.date).getTime() : 0;
                             // Correspondance : même montant et timestamp proche (5 min)
-                            if (Math.abs(txAmount - paymentAmount) < 0.01 && 
+                            if (Math.abs(txAmount - paymentAmount) < 0.01 &&
                                 Math.abs(txTimestamp - paymentTimestamp) < 5 * 60 * 1000) {
                                 if (client.name) {
                                     clientName = client.name;
@@ -707,14 +713,14 @@ function getPaymentDetails(payments) {
                         if (clientName) break;
                     }
                 }
-                
+
                 detail.clientName = clientName || 'Client inconnu';
             }
-            
+
             paymentDetails.push(detail);
         }
     }
-    
+
     return paymentDetails;
 }
 

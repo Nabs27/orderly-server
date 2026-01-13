@@ -8618,5 +8618,1448 @@
     "updatedAt": "2026-01-12T14:58:12.803Z",
     "archivedAt": "2026-01-12T14:58:12.807Z",
     "paid": true
+  },
+  {
+    "id": 47,
+    "tempId": null,
+    "table": "1",
+    "server": "ALI",
+    "covers": 4,
+    "notes": "",
+    "status": "archived",
+    "source": "pos",
+    "serverConfirmed": true,
+    "consumptionConfirmed": false,
+    "createdAt": "2026-01-13T11:29:45.729Z",
+    "paymentHistory": [
+      {
+        "id": "pay_1768303862983_64obeoh3u",
+        "timestamp": "2026-01-13T11:31:02.976Z",
+        "amount": 4.25,
+        "enteredAmount": 4.71105527638191,
+        "allocatedAmount": 4.25,
+        "excessAmount": 0.461,
+        "hasCashInPayment": false,
+        "paymentMode": "CARTE",
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1,
+            "total": 5,
+            "orderId": 47,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 5,
+        "discount": 15,
+        "isPercentDiscount": true,
+        "discountAmount": 0.7500000000000001,
+        "discountClientName": "Ali Bk",
+        "server": "ALI",
+        "table": "1",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": false
+      },
+      {
+        "id": "pay_1768303939690_yng9vza1i",
+        "timestamp": "2026-01-13T11:32:19.685Z",
+        "amount": 4.666666666666666,
+        "enteredAmount": 100,
+        "allocatedAmount": 4.666666666666666,
+        "excessAmount": 28.666666666666664,
+        "hasCashInPayment": false,
+        "paymentMode": "CARTE",
+        "items": [
+          {
+            "id": 9001,
+            "name": "Eau Minérale (0,5L)",
+            "price": 4,
+            "quantity": 1,
+            "total": 4,
+            "orderId": 47,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 10003,
+            "name": "Sprite",
+            "price": 5,
+            "quantity": 1,
+            "total": 5,
+            "orderId": 47,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 10002,
+            "name": "Boga",
+            "price": 5,
+            "quantity": 1,
+            "total": 5,
+            "orderId": 47,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 4.666666666666666,
+        "discount": 0,
+        "isPercentDiscount": false,
+        "discountAmount": 0,
+        "discountClientName": null,
+        "isSplitPayment": true,
+        "splitPaymentId": "split_2026-01-13T11:32:19.685Z",
+        "server": "ALI",
+        "table": "1",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": true
+      },
+      {
+        "id": "pay_1768303939690_4gqnr35z0",
+        "timestamp": "2026-01-13T11:32:19.685Z",
+        "amount": 4.666666666666666,
+        "enteredAmount": 100,
+        "allocatedAmount": 4.666666666666666,
+        "excessAmount": 28.666666666666664,
+        "hasCashInPayment": false,
+        "paymentMode": "CARTE",
+        "items": [
+          {
+            "id": 9001,
+            "name": "Eau Minérale (0,5L)",
+            "price": 4,
+            "quantity": 1,
+            "total": 4,
+            "orderId": 47,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 10003,
+            "name": "Sprite",
+            "price": 5,
+            "quantity": 1,
+            "total": 5,
+            "orderId": 47,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 10002,
+            "name": "Boga",
+            "price": 5,
+            "quantity": 1,
+            "total": 5,
+            "orderId": 47,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 4.666666666666666,
+        "discount": 0,
+        "isPercentDiscount": false,
+        "discountAmount": 0,
+        "discountClientName": null,
+        "isSplitPayment": true,
+        "splitPaymentId": "split_2026-01-13T11:32:19.685Z",
+        "server": "ALI",
+        "table": "1",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": true
+      },
+      {
+        "id": "pay_1768303939690_4n9knjqji",
+        "timestamp": "2026-01-13T11:32:19.685Z",
+        "amount": 4.666666666666666,
+        "enteredAmount": 100,
+        "allocatedAmount": 4.666666666666666,
+        "excessAmount": 28.666666666666664,
+        "hasCashInPayment": false,
+        "paymentMode": "CHEQUE",
+        "items": [
+          {
+            "id": 9001,
+            "name": "Eau Minérale (0,5L)",
+            "price": 4,
+            "quantity": 1,
+            "total": 4,
+            "orderId": 47,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 10003,
+            "name": "Sprite",
+            "price": 5,
+            "quantity": 1,
+            "total": 5,
+            "orderId": 47,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 10002,
+            "name": "Boga",
+            "price": 5,
+            "quantity": 1,
+            "total": 5,
+            "orderId": 47,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 4.666666666666666,
+        "discount": 0,
+        "isPercentDiscount": false,
+        "discountAmount": 0,
+        "discountClientName": null,
+        "isSplitPayment": true,
+        "splitPaymentId": "split_2026-01-13T11:32:19.685Z",
+        "server": "ALI",
+        "table": "1",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": true
+      }
+    ],
+    "orderHistory": [
+      {
+        "timestamp": "2026-01-13T11:29:45.729Z",
+        "action": "order_created",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10003,
+            "name": "Sprite",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10002,
+            "name": "Boga",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 9001,
+            "name": "Eau Minérale (0,5L)",
+            "price": 4,
+            "quantity": 1
+          }
+        ],
+        "details": "Création commande initiale"
+      }
+    ],
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 4,
+      "items": [
+        {
+          "id": 10000,
+          "name": "Coca",
+          "price": 5,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 10003,
+          "name": "Sprite",
+          "price": 5,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 10002,
+          "name": "Boga",
+          "price": 5,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 9001,
+          "name": "Eau Minérale (0,5L)",
+          "price": 4,
+          "quantity": 1,
+          "paidQuantity": 1
+        }
+      ],
+      "total": 0,
+      "paid": false
+    },
+    "subNotes": [],
+    "total": 0,
+    "paidAmount": 18.71105527638191,
+    "updatedAt": "2026-01-13T11:32:19.690Z",
+    "archivedAt": "2026-01-13T11:32:19.691Z",
+    "paid": true
+  },
+  {
+    "id": 48,
+    "tempId": null,
+    "table": "1",
+    "server": "ALI",
+    "covers": 4,
+    "notes": "",
+    "status": "archived",
+    "source": "pos",
+    "serverConfirmed": true,
+    "consumptionConfirmed": false,
+    "createdAt": "2026-01-13T11:29:50.245Z",
+    "paymentHistory": [
+      {
+        "id": "pay_1768303862985_ivoualvyq",
+        "timestamp": "2026-01-13T11:31:02.976Z",
+        "amount": 18.87,
+        "enteredAmount": 20.91708542713568,
+        "allocatedAmount": 18.87,
+        "excessAmount": 2.047,
+        "hasCashInPayment": false,
+        "paymentMode": "CARTE",
+        "items": [
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 3,
+            "total": 22.200000000000003,
+            "orderId": 48,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 22.200000000000003,
+        "discount": 15,
+        "isPercentDiscount": true,
+        "discountAmount": 3.3300000000000005,
+        "discountClientName": "Ali Bk",
+        "server": "ALI",
+        "table": "1",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": false
+      },
+      {
+        "id": "pay_1768303939690_tl2am9zbc",
+        "timestamp": "2026-01-13T11:32:19.685Z",
+        "amount": 17.266666666666666,
+        "enteredAmount": 100,
+        "allocatedAmount": 17.266666666666666,
+        "excessAmount": 16.066666666666663,
+        "hasCashInPayment": false,
+        "paymentMode": "CARTE",
+        "items": [
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 7,
+            "total": 51.800000000000004,
+            "orderId": 48,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 17.266666666666666,
+        "discount": 0,
+        "isPercentDiscount": false,
+        "discountAmount": 0,
+        "discountClientName": null,
+        "isSplitPayment": true,
+        "splitPaymentId": "split_2026-01-13T11:32:19.685Z",
+        "server": "ALI",
+        "table": "1",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": true
+      },
+      {
+        "id": "pay_1768303939690_wucd33f9f",
+        "timestamp": "2026-01-13T11:32:19.685Z",
+        "amount": 17.266666666666666,
+        "enteredAmount": 100,
+        "allocatedAmount": 17.266666666666666,
+        "excessAmount": 16.066666666666663,
+        "hasCashInPayment": false,
+        "paymentMode": "CARTE",
+        "items": [
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 7,
+            "total": 51.800000000000004,
+            "orderId": 48,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 17.266666666666666,
+        "discount": 0,
+        "isPercentDiscount": false,
+        "discountAmount": 0,
+        "discountClientName": null,
+        "isSplitPayment": true,
+        "splitPaymentId": "split_2026-01-13T11:32:19.685Z",
+        "server": "ALI",
+        "table": "1",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": true
+      },
+      {
+        "id": "pay_1768303939690_j49jsxswo",
+        "timestamp": "2026-01-13T11:32:19.685Z",
+        "amount": 17.266666666666666,
+        "enteredAmount": 100,
+        "allocatedAmount": 17.266666666666666,
+        "excessAmount": 16.066666666666663,
+        "hasCashInPayment": false,
+        "paymentMode": "CHEQUE",
+        "items": [
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 7,
+            "total": 51.800000000000004,
+            "orderId": 48,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 17.266666666666666,
+        "discount": 0,
+        "isPercentDiscount": false,
+        "discountAmount": 0,
+        "discountClientName": null,
+        "isSplitPayment": true,
+        "splitPaymentId": "split_2026-01-13T11:32:19.685Z",
+        "server": "ALI",
+        "table": "1",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": true
+      }
+    ],
+    "orderHistory": [
+      {
+        "timestamp": "2026-01-13T11:29:50.245Z",
+        "action": "order_created",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "items": [
+          {
+            "id": 9502,
+            "name": "Beck's",
+            "price": 7.4,
+            "quantity": 10
+          }
+        ],
+        "details": "Création commande initiale"
+      }
+    ],
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 4,
+      "items": [
+        {
+          "id": 9502,
+          "name": "Beck's",
+          "price": 7.4,
+          "quantity": 10,
+          "paidQuantity": 10
+        }
+      ],
+      "total": 0,
+      "paid": false
+    },
+    "subNotes": [],
+    "total": 0,
+    "paidAmount": 72.71708542713569,
+    "updatedAt": "2026-01-13T11:32:19.690Z",
+    "archivedAt": "2026-01-13T11:32:19.691Z",
+    "paid": true
+  },
+  {
+    "id": 49,
+    "tempId": null,
+    "table": "1",
+    "server": "ALI",
+    "covers": 4,
+    "notes": "",
+    "status": "archived",
+    "source": "pos",
+    "serverConfirmed": true,
+    "consumptionConfirmed": false,
+    "createdAt": "2026-01-13T11:29:56.733Z",
+    "paymentHistory": [
+      {
+        "id": "pay_1768303862985_nzbb4wxrn",
+        "timestamp": "2026-01-13T11:31:02.976Z",
+        "amount": 61.2,
+        "enteredAmount": 67.8391959798995,
+        "allocatedAmount": 61.2,
+        "excessAmount": 6.639,
+        "hasCashInPayment": false,
+        "paymentMode": "CARTE",
+        "items": [
+          {
+            "id": 10022,
+            "name": "Crevettes à l’Ail",
+            "price": 40,
+            "quantity": 1,
+            "total": 40,
+            "orderId": 49,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1107,
+            "name": "Moules Marinières",
+            "price": 32,
+            "quantity": 1,
+            "total": 32,
+            "orderId": 49,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 72,
+        "discount": 15,
+        "isPercentDiscount": true,
+        "discountAmount": 10.8,
+        "discountClientName": "Ali Bk",
+        "server": "ALI",
+        "table": "1",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": false
+      },
+      {
+        "id": "pay_1768303939690_19dlt67fy",
+        "timestamp": "2026-01-13T11:32:19.685Z",
+        "amount": 18,
+        "enteredAmount": 100,
+        "allocatedAmount": 18,
+        "excessAmount": 15.333333333333329,
+        "hasCashInPayment": false,
+        "paymentMode": "CARTE",
+        "items": [
+          {
+            "id": 1109,
+            "name": "Tagliata de Veau aux Copeaux de Parmesan",
+            "price": 54,
+            "quantity": 1,
+            "total": 54,
+            "orderId": 49,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 18,
+        "discount": 0,
+        "isPercentDiscount": false,
+        "discountAmount": 0,
+        "discountClientName": null,
+        "isSplitPayment": true,
+        "splitPaymentId": "split_2026-01-13T11:32:19.685Z",
+        "server": "ALI",
+        "table": "1",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": true
+      },
+      {
+        "id": "pay_1768303939690_2xihyctpw",
+        "timestamp": "2026-01-13T11:32:19.685Z",
+        "amount": 18,
+        "enteredAmount": 100,
+        "allocatedAmount": 18,
+        "excessAmount": 15.333333333333329,
+        "hasCashInPayment": false,
+        "paymentMode": "CARTE",
+        "items": [
+          {
+            "id": 1109,
+            "name": "Tagliata de Veau aux Copeaux de Parmesan",
+            "price": 54,
+            "quantity": 1,
+            "total": 54,
+            "orderId": 49,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 18,
+        "discount": 0,
+        "isPercentDiscount": false,
+        "discountAmount": 0,
+        "discountClientName": null,
+        "isSplitPayment": true,
+        "splitPaymentId": "split_2026-01-13T11:32:19.685Z",
+        "server": "ALI",
+        "table": "1",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": true
+      },
+      {
+        "id": "pay_1768303939690_30evoetpc",
+        "timestamp": "2026-01-13T11:32:19.685Z",
+        "amount": 18,
+        "enteredAmount": 100,
+        "allocatedAmount": 18,
+        "excessAmount": 15.333333333333329,
+        "hasCashInPayment": false,
+        "paymentMode": "CHEQUE",
+        "items": [
+          {
+            "id": 1109,
+            "name": "Tagliata de Veau aux Copeaux de Parmesan",
+            "price": 54,
+            "quantity": 1,
+            "total": 54,
+            "orderId": 49,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 18,
+        "discount": 0,
+        "isPercentDiscount": false,
+        "discountAmount": 0,
+        "discountClientName": null,
+        "isSplitPayment": true,
+        "splitPaymentId": "split_2026-01-13T11:32:19.685Z",
+        "server": "ALI",
+        "table": "1",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": true
+      }
+    ],
+    "orderHistory": [
+      {
+        "timestamp": "2026-01-13T11:29:56.733Z",
+        "action": "order_created",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "items": [
+          {
+            "id": 1107,
+            "name": "Moules Marinières",
+            "price": 32,
+            "quantity": 1
+          },
+          {
+            "id": 1109,
+            "name": "Tagliata de Veau aux Copeaux de Parmesan",
+            "price": 54,
+            "quantity": 1
+          },
+          {
+            "id": 10022,
+            "name": "Crevettes à l’Ail",
+            "price": 40,
+            "quantity": 1
+          }
+        ],
+        "details": "Création commande initiale"
+      }
+    ],
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 4,
+      "items": [
+        {
+          "id": 1107,
+          "name": "Moules Marinières",
+          "price": 32,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 1109,
+          "name": "Tagliata de Veau aux Copeaux de Parmesan",
+          "price": 54,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 10022,
+          "name": "Crevettes à l’Ail",
+          "price": 40,
+          "quantity": 1,
+          "paidQuantity": 1
+        }
+      ],
+      "total": 0,
+      "paid": false
+    },
+    "subNotes": [],
+    "total": 0,
+    "paidAmount": 121.8391959798995,
+    "updatedAt": "2026-01-13T11:32:19.690Z",
+    "archivedAt": "2026-01-13T11:32:19.692Z",
+    "paid": true
+  },
+  {
+    "id": 50,
+    "tempId": null,
+    "table": "1",
+    "server": "ALI",
+    "covers": 4,
+    "notes": "",
+    "status": "archived",
+    "source": "pos",
+    "serverConfirmed": true,
+    "consumptionConfirmed": false,
+    "createdAt": "2026-01-13T11:30:06.067Z",
+    "paymentHistory": [
+      {
+        "id": "pay_1768303862986_4923dalln",
+        "timestamp": "2026-01-13T11:31:02.976Z",
+        "amount": 51,
+        "enteredAmount": 56.53266331658292,
+        "allocatedAmount": 51,
+        "excessAmount": 5.533,
+        "hasCashInPayment": false,
+        "paymentMode": "CARTE",
+        "items": [
+          {
+            "id": 1206,
+            "name": "Couscous à l’Agneau",
+            "price": 60,
+            "quantity": 1,
+            "total": 60,
+            "orderId": 50,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 60,
+        "discount": 15,
+        "isPercentDiscount": true,
+        "discountAmount": 9,
+        "discountClientName": "Ali Bk",
+        "server": "ALI",
+        "table": "1",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": false
+      },
+      {
+        "id": "pay_1768303939690_l9mogl169",
+        "timestamp": "2026-01-13T11:32:19.685Z",
+        "amount": 56,
+        "enteredAmount": 100,
+        "allocatedAmount": 56,
+        "excessAmount": 0,
+        "hasCashInPayment": false,
+        "paymentMode": "CARTE",
+        "items": [
+          {
+            "id": 1207,
+            "name": "Couscous Royal",
+            "price": 58,
+            "quantity": 1,
+            "total": 58,
+            "orderId": 50,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1208,
+            "name": "Couscous au Poisson",
+            "price": 48,
+            "quantity": 1,
+            "total": 48,
+            "orderId": 50,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1209,
+            "name": "Couscous au Poulpe",
+            "price": 62,
+            "quantity": 1,
+            "total": 62,
+            "orderId": 50,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 56,
+        "discount": 0,
+        "isPercentDiscount": false,
+        "discountAmount": 0,
+        "discountClientName": null,
+        "isSplitPayment": true,
+        "splitPaymentId": "split_2026-01-13T11:32:19.685Z",
+        "server": "ALI",
+        "table": "1",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": true
+      },
+      {
+        "id": "pay_1768303939691_ysdliztpl",
+        "timestamp": "2026-01-13T11:32:19.685Z",
+        "amount": 56,
+        "enteredAmount": 100,
+        "allocatedAmount": 56,
+        "excessAmount": 0,
+        "hasCashInPayment": false,
+        "paymentMode": "CARTE",
+        "items": [
+          {
+            "id": 1207,
+            "name": "Couscous Royal",
+            "price": 58,
+            "quantity": 1,
+            "total": 58,
+            "orderId": 50,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1208,
+            "name": "Couscous au Poisson",
+            "price": 48,
+            "quantity": 1,
+            "total": 48,
+            "orderId": 50,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1209,
+            "name": "Couscous au Poulpe",
+            "price": 62,
+            "quantity": 1,
+            "total": 62,
+            "orderId": 50,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 56,
+        "discount": 0,
+        "isPercentDiscount": false,
+        "discountAmount": 0,
+        "discountClientName": null,
+        "isSplitPayment": true,
+        "splitPaymentId": "split_2026-01-13T11:32:19.685Z",
+        "server": "ALI",
+        "table": "1",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": true
+      },
+      {
+        "id": "pay_1768303939691_xr82n26aa",
+        "timestamp": "2026-01-13T11:32:19.685Z",
+        "amount": 56,
+        "enteredAmount": 100,
+        "allocatedAmount": 56,
+        "excessAmount": 0,
+        "hasCashInPayment": false,
+        "paymentMode": "CHEQUE",
+        "items": [
+          {
+            "id": 1207,
+            "name": "Couscous Royal",
+            "price": 58,
+            "quantity": 1,
+            "total": 58,
+            "orderId": 50,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1208,
+            "name": "Couscous au Poisson",
+            "price": 48,
+            "quantity": 1,
+            "total": 48,
+            "orderId": 50,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1209,
+            "name": "Couscous au Poulpe",
+            "price": 62,
+            "quantity": 1,
+            "total": 62,
+            "orderId": 50,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 56,
+        "discount": 0,
+        "isPercentDiscount": false,
+        "discountAmount": 0,
+        "discountClientName": null,
+        "isSplitPayment": true,
+        "splitPaymentId": "split_2026-01-13T11:32:19.685Z",
+        "server": "ALI",
+        "table": "1",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": true
+      }
+    ],
+    "orderHistory": [
+      {
+        "timestamp": "2026-01-13T11:30:06.067Z",
+        "action": "order_created",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "items": [
+          {
+            "id": 1208,
+            "name": "Couscous au Poisson",
+            "price": 48,
+            "quantity": 1
+          },
+          {
+            "id": 1209,
+            "name": "Couscous au Poulpe",
+            "price": 62,
+            "quantity": 1
+          },
+          {
+            "id": 1207,
+            "name": "Couscous Royal",
+            "price": 58,
+            "quantity": 1
+          },
+          {
+            "id": 1206,
+            "name": "Couscous à l’Agneau",
+            "price": 60,
+            "quantity": 1
+          }
+        ],
+        "details": "Création commande initiale"
+      }
+    ],
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 4,
+      "items": [
+        {
+          "id": 1208,
+          "name": "Couscous au Poisson",
+          "price": 48,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 1209,
+          "name": "Couscous au Poulpe",
+          "price": 62,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 1207,
+          "name": "Couscous Royal",
+          "price": 58,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 1206,
+          "name": "Couscous à l’Agneau",
+          "price": 60,
+          "quantity": 1,
+          "paidQuantity": 1
+        }
+      ],
+      "total": 0,
+      "paid": false
+    },
+    "subNotes": [],
+    "total": 0,
+    "paidAmount": 224.53266331658293,
+    "updatedAt": "2026-01-13T11:32:19.691Z",
+    "archivedAt": "2026-01-13T11:32:19.692Z",
+    "paid": true
+  },
+  {
+    "id": 51,
+    "tempId": null,
+    "table": "21",
+    "server": "MOHAMED",
+    "covers": 4,
+    "notes": "",
+    "status": "archived",
+    "source": "pos",
+    "serverConfirmed": true,
+    "consumptionConfirmed": false,
+    "createdAt": "2026-01-13T11:36:13.072Z",
+    "paymentHistory": [
+      {
+        "id": "pay_1768304200451_27w8sj3nq",
+        "timestamp": "2026-01-13T11:36:40.445Z",
+        "amount": 19,
+        "enteredAmount": 19,
+        "allocatedAmount": 19,
+        "excessAmount": 0,
+        "hasCashInPayment": true,
+        "paymentMode": "ESPECE",
+        "items": [
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1,
+            "total": 5,
+            "orderId": 51,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 9001,
+            "name": "Eau Minérale (0,5L)",
+            "price": 4,
+            "quantity": 1,
+            "total": 4,
+            "orderId": 51,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 10003,
+            "name": "Sprite",
+            "price": 5,
+            "quantity": 1,
+            "total": 5,
+            "orderId": 51,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 10002,
+            "name": "Boga",
+            "price": 5,
+            "quantity": 1,
+            "total": 5,
+            "orderId": 51,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 19,
+        "discount": 0,
+        "isPercentDiscount": false,
+        "discountAmount": 0,
+        "discountClientName": null,
+        "server": "MOHAMED",
+        "table": "21",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": true
+      }
+    ],
+    "orderHistory": [
+      {
+        "timestamp": "2026-01-13T11:36:13.072Z",
+        "action": "order_created",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "items": [
+          {
+            "id": 9001,
+            "name": "Eau Minérale (0,5L)",
+            "price": 4,
+            "quantity": 1
+          },
+          {
+            "id": 10000,
+            "name": "Coca",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10003,
+            "name": "Sprite",
+            "price": 5,
+            "quantity": 1
+          },
+          {
+            "id": 10002,
+            "name": "Boga",
+            "price": 5,
+            "quantity": 1
+          }
+        ],
+        "details": "Création commande initiale"
+      }
+    ],
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 4,
+      "items": [
+        {
+          "id": 9001,
+          "name": "Eau Minérale (0,5L)",
+          "price": 4,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 10000,
+          "name": "Coca",
+          "price": 5,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 10003,
+          "name": "Sprite",
+          "price": 5,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 10002,
+          "name": "Boga",
+          "price": 5,
+          "quantity": 1,
+          "paidQuantity": 1
+        }
+      ],
+      "total": 0,
+      "paid": false
+    },
+    "subNotes": [],
+    "total": 0,
+    "paidAmount": 19,
+    "updatedAt": "2026-01-13T11:36:40.451Z",
+    "archivedAt": "2026-01-13T11:36:40.451Z",
+    "paid": true
+  },
+  {
+    "id": 52,
+    "tempId": null,
+    "table": "21",
+    "server": "MOHAMED",
+    "covers": 4,
+    "notes": "",
+    "status": "archived",
+    "source": "pos",
+    "serverConfirmed": true,
+    "consumptionConfirmed": false,
+    "createdAt": "2026-01-13T11:36:16.833Z",
+    "paymentHistory": [
+      {
+        "id": "pay_1768304200451_7rsg4tn32",
+        "timestamp": "2026-01-13T11:36:40.445Z",
+        "amount": 101,
+        "enteredAmount": 101,
+        "allocatedAmount": 101,
+        "excessAmount": 0,
+        "hasCashInPayment": true,
+        "paymentMode": "ESPECE",
+        "items": [
+          {
+            "id": 1004,
+            "name": "Carpaccio de Bœuf à l’Huile de Truffe",
+            "price": 35,
+            "quantity": 1,
+            "total": 35,
+            "orderId": 52,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1005,
+            "name": "Carpaccio de Poulpe aux Baies Roses",
+            "price": 40,
+            "quantity": 1,
+            "total": 40,
+            "orderId": 52,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1002,
+            "name": "Salade César",
+            "price": 26,
+            "quantity": 1,
+            "total": 26,
+            "orderId": 52,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 101,
+        "discount": 0,
+        "isPercentDiscount": false,
+        "discountAmount": 0,
+        "discountClientName": null,
+        "server": "MOHAMED",
+        "table": "21",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": true
+      }
+    ],
+    "orderHistory": [
+      {
+        "timestamp": "2026-01-13T11:36:16.833Z",
+        "action": "order_created",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "items": [
+          {
+            "id": 1002,
+            "name": "Salade César",
+            "price": 26,
+            "quantity": 1
+          },
+          {
+            "id": 1005,
+            "name": "Carpaccio de Poulpe aux Baies Roses",
+            "price": 40,
+            "quantity": 1
+          },
+          {
+            "id": 1004,
+            "name": "Carpaccio de Bœuf à l’Huile de Truffe",
+            "price": 35,
+            "quantity": 1
+          }
+        ],
+        "details": "Création commande initiale"
+      }
+    ],
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 4,
+      "items": [
+        {
+          "id": 1002,
+          "name": "Salade César",
+          "price": 26,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 1005,
+          "name": "Carpaccio de Poulpe aux Baies Roses",
+          "price": 40,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 1004,
+          "name": "Carpaccio de Bœuf à l’Huile de Truffe",
+          "price": 35,
+          "quantity": 1,
+          "paidQuantity": 1
+        }
+      ],
+      "total": 0,
+      "paid": false
+    },
+    "subNotes": [],
+    "total": 0,
+    "paidAmount": 101,
+    "updatedAt": "2026-01-13T11:36:40.451Z",
+    "archivedAt": "2026-01-13T11:36:40.451Z",
+    "paid": true
+  },
+  {
+    "id": 53,
+    "tempId": null,
+    "table": "21",
+    "server": "MOHAMED",
+    "covers": 4,
+    "notes": "",
+    "status": "archived",
+    "source": "pos",
+    "serverConfirmed": true,
+    "consumptionConfirmed": false,
+    "createdAt": "2026-01-13T11:36:20.530Z",
+    "paymentHistory": [
+      {
+        "id": "pay_1768304200451_cnnoq3u7i",
+        "timestamp": "2026-01-13T11:36:40.445Z",
+        "amount": 138,
+        "enteredAmount": 138,
+        "allocatedAmount": 138,
+        "excessAmount": 0,
+        "hasCashInPayment": true,
+        "paymentMode": "ESPECE",
+        "items": [
+          {
+            "id": 1205,
+            "name": "Couscous au Calamar Farci",
+            "price": 50,
+            "quantity": 1,
+            "total": 50,
+            "orderId": 53,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1202,
+            "name": "Ojja aux Crevettes",
+            "price": 38,
+            "quantity": 1,
+            "total": 38,
+            "orderId": 53,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          },
+          {
+            "id": 1204,
+            "name": "Calamar Farci à la Sfaxienne",
+            "price": 50,
+            "quantity": 1,
+            "total": 50,
+            "orderId": 53,
+            "noteId": "main",
+            "noteName": "Note Principale"
+          }
+        ],
+        "subtotal": 138,
+        "discount": 0,
+        "isPercentDiscount": false,
+        "discountAmount": 0,
+        "discountClientName": null,
+        "server": "MOHAMED",
+        "table": "21",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "creditClientName": null,
+        "creditClientId": null,
+        "isCompletePayment": true
+      }
+    ],
+    "orderHistory": [
+      {
+        "timestamp": "2026-01-13T11:36:20.530Z",
+        "action": "order_created",
+        "noteId": "main",
+        "noteName": "Note Principale",
+        "items": [
+          {
+            "id": 1202,
+            "name": "Ojja aux Crevettes",
+            "price": 38,
+            "quantity": 1
+          },
+          {
+            "id": 1205,
+            "name": "Couscous au Calamar Farci",
+            "price": 50,
+            "quantity": 1
+          },
+          {
+            "id": 1204,
+            "name": "Calamar Farci à la Sfaxienne",
+            "price": 50,
+            "quantity": 1
+          }
+        ],
+        "details": "Création commande initiale"
+      }
+    ],
+    "mainNote": {
+      "id": "main",
+      "name": "Note Principale",
+      "covers": 4,
+      "items": [
+        {
+          "id": 1202,
+          "name": "Ojja aux Crevettes",
+          "price": 38,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 1205,
+          "name": "Couscous au Calamar Farci",
+          "price": 50,
+          "quantity": 1,
+          "paidQuantity": 1
+        },
+        {
+          "id": 1204,
+          "name": "Calamar Farci à la Sfaxienne",
+          "price": 50,
+          "quantity": 1,
+          "paidQuantity": 1
+        }
+      ],
+      "total": 0,
+      "paid": false
+    },
+    "subNotes": [],
+    "total": 0,
+    "paidAmount": 138,
+    "updatedAt": "2026-01-13T11:36:40.451Z",
+    "archivedAt": "2026-01-13T11:36:40.452Z",
+    "paid": true
   }
 ]
