@@ -1235,6 +1235,12 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				covers: payment.covers || 1,
 				// 🆕 Nom du client pour paiement CREDIT (le frontend lit ce champ)
 				creditClientName: creditClientName,
+				// 🆕 FIX: Ajouter paymentDetails au niveau supérieur pour que la réconciliation fonctionne
+				paymentDetails: [{
+					mode: payment.paymentMode,
+					amount: payment.enteredAmount != null ? payment.enteredAmount : (payment.amount || 0),
+					...(payment.paymentMode === 'CREDIT' ? { clientName: creditClientName } : {})
+				}],
 				// 🆕 Ticket encaissé (format ticket de caisse)
 				ticket: (() => {
 					// 🆕 Calculer le montant total encaissé (exclut CREDIT car c'est une dette différée)
