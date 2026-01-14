@@ -920,15 +920,12 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
       final splitAmounts = payment['splitPaymentAmounts'] as List<dynamic>?;
 
       if (isSplit && splitAmounts != null) {
-        // Dédupliquer par mode + amount pour éviter les doublons
-        final processedTxs = <String>{};
+        // Ajouter chaque transaction du paiement divisé
         for (final splitDetail in splitAmounts) {
           final splitMode = (splitDetail['mode'] as String?) ?? '';
           final splitAmount = (splitDetail['amount'] as num?)?.toDouble() ?? 0.0;
-          final txKey = '${splitMode}_${splitAmount.toStringAsFixed(3)}';
 
-          if (!processedTxs.contains(txKey) && splitMode.isNotEmpty && splitAmount > 0.01) {
-            processedTxs.add(txKey);
+          if (splitMode.isNotEmpty && splitAmount > 0.01) {
             if (!splitPaymentDetails.containsKey(splitMode)) {
               splitPaymentDetails[splitMode] = [];
             }

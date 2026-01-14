@@ -1360,26 +1360,10 @@ class _PosPaymentPageState extends State<PosPaymentPage> {
       print('[PAYMENT] 📦 selectedNoteForPayment: $selectedNoteForPayment');
       print('[PAYMENT] 📦 isSplitPayment: $isSplitPayment');
       
-      // 🆕 ÉTAPE 0: Si paiement CREDIT simple (NON divisé), créer la transaction de crédit AVANT de supprimer les articles
-      // ⚠️ Pour les paiements divisés, le backend crée la transaction CREDIT globale, donc on ne le fait PAS ici
-      if (!isSplitPayment && selectedPaymentMode == 'CREDIT' && _selectedClientForCredit != null) {
-        // 🎯 ÉTAPE 0: Si paiement CREDIT simple, créer la transaction de crédit AVANT de supprimer les articles
-        try {
-          await _processCreditPayment(_selectedClientForCredit!, finalTotal);
-          print('[CREDIT] ✅ Transaction de crédit créée avec succès');
-        } catch (e) {
-          print('[CREDIT] ❌ Erreur création transaction crédit: $e');
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Erreur enregistrement crédit: $e'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-          return; // Arrêter le processus si la transaction crédit échoue
-        }
-      }
+      // 🆕 Note: Le backend gère maintenant automatiquement la création de la transaction CREDIT 
+      // pour les paiements simples et divisés via l'API pay-multi-orders.
+      // On ne le fait plus manuellement ici pour éviter les doubles débits.
+
       
       // 🎯 ÉTAPE 1: Marquer les articles comme vendus/payés (supprimer de la commande)
       try {

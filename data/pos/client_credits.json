@@ -5,333 +5,19 @@
     "phone": "22713000",
     "transactions": [
       {
-        "id": 1767992770138,
+        "id": 1768391944946,
         "type": "DEBIT",
-        "amount": 70,
-        "description": "CREDIT • Table 11 - Paiement complet (4 commandes)",
-        "date": "2026-01-09T21:06:10.138Z",
+        "amount": 138.55,
+        "description": "CREDIT • Table 1 - Paiement complet (2 commandes)",
+        "date": "2026-01-14T11:59:04.946Z",
         "orderId": null,
         "orderIds": [
-          7,
-          8,
-          9,
-          10
+          1,
+          2
         ],
         "ticket": {
-          "table": "11",
-          "date": "2026-01-09T21:06:10.138Z",
-          "items": [
-            {
-              "name": "Couscous à l’Agneau",
-              "quantity": 1,
-              "price": 60,
-              "total": 60
-            },
-            {
-              "name": "Sprite",
-              "quantity": 1,
-              "price": 5,
-              "total": 5
-            },
-            {
-              "name": "Salade César",
-              "quantity": 1,
-              "price": 26,
-              "total": 26
-            },
-            {
-              "name": "Salade Méchouia",
-              "quantity": 1,
-              "price": 16,
-              "total": 16
-            },
-            {
-              "name": "Couscous au Calamar Farci",
-              "quantity": 1,
-              "price": 50,
-              "total": 50
-            },
-            {
-              "name": "Couscous au Poisson",
-              "quantity": 1,
-              "price": 48,
-              "total": 48
-            },
-            {
-              "name": "Friture de Camembert",
-              "quantity": 1,
-              "price": 30,
-              "total": 30
-            },
-            {
-              "name": "Boga",
-              "quantity": 1,
-              "price": 5,
-              "total": 5
-            }
-          ],
-          "subtotal": 240,
-          "discount": 0,
-          "total": 70,
-          "paymentMode": "CREDIT",
-          "server": "unknown"
-        },
-        "server": "unknown",
-        "paymentMode": "CREDIT"
-      },
-      {
-        "id": 1768218406281,
-        "type": "DEBIT",
-        "amount": 233.07,
-        "description": "Table 2 - Paiement complet",
-        "date": "2026-01-12T11:46:46.281Z",
-        "orderId": null,
-        "orderIds": [],
-        "ticket": {
-          "table": "2",
-          "date": "2026-01-12T12:46:46.275225",
-          "items": [
-            {
-              "id": 9502,
-              "name": "Beck's",
-              "price": 7.4,
-              "quantity": 3,
-              "noteId": "main"
-            },
-            {
-              "id": 10000,
-              "name": "Coca",
-              "price": 5,
-              "quantity": 1,
-              "noteId": "main"
-            },
-            {
-              "id": 9001,
-              "name": "Eau Minérale (0,5L)",
-              "price": 4,
-              "quantity": 1,
-              "noteId": "main"
-            },
-            {
-              "id": 10003,
-              "name": "Sprite",
-              "price": 5,
-              "quantity": 1,
-              "noteId": "main"
-            },
-            {
-              "id": 1205,
-              "name": "Couscous au Calamar Farci",
-              "price": 50,
-              "quantity": 1,
-              "noteId": "main"
-            },
-            {
-              "id": 1202,
-              "name": "Ojja aux Crevettes",
-              "price": 38,
-              "quantity": 2,
-              "noteId": "main"
-            },
-            {
-              "id": 1105,
-              "name": "Seiches Grillées",
-              "price": 40,
-              "quantity": 1,
-              "noteId": "main"
-            },
-            {
-              "id": 10022,
-              "name": "Crevettes à l’Ail",
-              "price": 40,
-              "quantity": 1,
-              "noteId": "main"
-            },
-            {
-              "id": 1107,
-              "name": "Moules Marinières",
-              "price": 32,
-              "quantity": 1,
-              "noteId": "main"
-            }
-          ],
-          "total": 233.07,
-          "server": "ALI",
-          "subtotal": 233.07,
-          "discount": 0,
-          "isPercentDiscount": false
-        },
-        "server": "ALI"
-      }
-    ]
-  },
-  {
-    "id": 2,
-    "name": "Ali Skanes",
-    "phone": "22334455",
-    "transactions": [
-      {
-        "id": 1768044173236,
-        "type": "DEBIT",
-        "amount": 120,
-        "description": "Table 2 - Paiement complet",
-        "date": "2026-01-10T11:22:53.237Z",
-        "orderId": null,
-        "orderIds": [],
-        "ticket": {
-          "table": "2",
-          "date": "2026-01-10T12:22:53.219391",
-          "items": [
-            {
-              "id": 10000,
-              "name": "Coca",
-              "price": 5,
-              "quantity": 1,
-              "noteId": "main"
-            },
-            {
-              "id": 9001,
-              "name": "Eau Minérale (0,5L)",
-              "price": 4,
-              "quantity": 1,
-              "noteId": "main"
-            },
-            {
-              "id": 10003,
-              "name": "Sprite",
-              "price": 5,
-              "quantity": 1,
-              "noteId": "main"
-            },
-            {
-              "id": 1004,
-              "name": "Carpaccio de Bœuf à l’Huile de Truffe",
-              "price": 35,
-              "quantity": 1,
-              "noteId": "main"
-            },
-            {
-              "id": 1005,
-              "name": "Carpaccio de Poulpe aux Baies Roses",
-              "price": 40,
-              "quantity": 1,
-              "noteId": "main"
-            },
-            {
-              "id": 1002,
-              "name": "Salade César",
-              "price": 26,
-              "quantity": 1,
-              "noteId": "main"
-            },
-            {
-              "id": 10002,
-              "name": "Boga",
-              "price": 5,
-              "quantity": 1,
-              "noteId": "main"
-            }
-          ],
-          "total": 120,
-          "server": "ALI",
-          "subtotal": 120,
-          "discount": 0,
-          "isPercentDiscount": false
-        },
-        "server": "ALI"
-      }
-    ]
-  },
-  {
-    "id": 3,
-    "name": "Mohamed Siriati",
-    "phone": "66778899",
-    "transactions": [
-      {
-        "id": 1768048229569,
-        "type": "DEBIT",
-        "amount": 115,
-        "description": "Table 3 - Paiement complet",
-        "date": "2026-01-10T12:30:29.569Z",
-        "orderId": null,
-        "orderIds": [],
-        "ticket": {
-          "table": "3",
-          "date": "2026-01-10T13:30:29.462999",
-          "items": [
-            {
-              "id": 10000,
-              "name": "Coca",
-              "price": 5,
-              "quantity": 1,
-              "noteId": "main"
-            },
-            {
-              "id": 9001,
-              "name": "Eau Minérale (0,5L)",
-              "price": 4,
-              "quantity": 1,
-              "noteId": "main"
-            },
-            {
-              "id": 1004,
-              "name": "Carpaccio de Bœuf à l’Huile de Truffe",
-              "price": 35,
-              "quantity": 1,
-              "noteId": "main"
-            },
-            {
-              "id": 1005,
-              "name": "Carpaccio de Poulpe aux Baies Roses",
-              "price": 40,
-              "quantity": 1,
-              "noteId": "main"
-            },
-            {
-              "id": 1002,
-              "name": "Salade César",
-              "price": 26,
-              "quantity": 1,
-              "noteId": "main"
-            },
-            {
-              "id": 10002,
-              "name": "Boga",
-              "price": 5,
-              "quantity": 1,
-              "noteId": "main"
-            }
-          ],
-          "total": 115,
-          "server": "ALI",
-          "subtotal": 115,
-          "discount": 0,
-          "isPercentDiscount": false
-        },
-        "server": "ALI"
-      }
-    ]
-  },
-  {
-    "id": 4,
-    "name": "Ali Stock",
-    "phone": "66998855",
-    "transactions": [
-      {
-        "id": 1768219444688,
-        "type": "DEBIT",
-        "amount": 100,
-        "description": "CREDIT • Table 6 - Paiement complet (3 commandes)",
-        "date": "2026-01-12T12:04:04.688Z",
-        "orderId": null,
-        "orderIds": [
-          36,
-          37,
-          38
-        ],
-        "ticket": {
-          "table": "6",
-          "date": "2026-01-12T12:04:04.688Z",
+          "table": "1",
+          "date": "2026-01-14T11:59:04.946Z",
           "items": [
             {
               "name": "Coca",
@@ -346,22 +32,10 @@
               "total": 4
             },
             {
-              "name": "Sprite",
-              "quantity": 1,
-              "price": 5,
-              "total": 5
-            },
-            {
               "name": "Carpaccio de Bœuf à l’Huile de Truffe",
               "quantity": 1,
               "price": 35,
               "total": 35
-            },
-            {
-              "name": "Carpaccio de Poulpe aux Baies Roses",
-              "quantity": 1,
-              "price": 40,
-              "total": 40
             },
             {
               "name": "Salade César",
@@ -370,22 +44,10 @@
               "total": 26
             },
             {
-              "name": "Salade Méchouia",
-              "quantity": 1,
-              "price": 16,
-              "total": 16
-            },
-            {
               "name": "Couscous au Calamar Farci",
               "quantity": 1,
               "price": 50,
               "total": 50
-            },
-            {
-              "name": "Ojja au Merguez",
-              "quantity": 1,
-              "price": 30,
-              "total": 30
             },
             {
               "name": "Ojja aux Crevettes",
@@ -398,21 +60,15 @@
               "quantity": 1,
               "price": 5,
               "total": 5
-            },
-            {
-              "name": "Calamar Farci à la Sfaxienne",
-              "quantity": 1,
-              "price": 50,
-              "total": 50
             }
           ],
-          "subtotal": 304,
-          "discount": 0,
-          "total": 100,
+          "subtotal": 163,
+          "discount": 24.45,
+          "total": 138.55,
           "paymentMode": "CREDIT",
-          "server": "unknown"
+          "server": "Nabil Gafsi"
         },
-        "server": "unknown",
+        "server": "Nabil Gafsi",
         "paymentMode": "CREDIT"
       }
     ]
