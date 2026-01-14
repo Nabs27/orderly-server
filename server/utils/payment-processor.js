@@ -204,36 +204,45 @@ function deduplicateAndCalculate(payments) {
             continue;
         }
 
-        // Dédupliquer les transactions du groupe
-        const txByKey = {};
+        // 🆕 Utiliser la même logique que ÉTAPE 1 pour dédupliquer correctement
+        const distinctOrderIds = new Set(groupPayments.map(p => p.orderId || p.sessionId)).size;
+        const nbOrders = distinctOrderIds > 0 ? distinctOrderIds : 1;
+
+        const txCounts = {};
+        let serverName = 'unknown';
+
         for (const p of groupPayments) {
             const mode = p.paymentMode;
             if (mode === 'TPE' || mode === 'CHEQUE' || mode === 'CARTE') {
                 const entered = p.enteredAmount != null ? p.enteredAmount : (p.amount || 0);
+                const allocated = p.allocatedAmount || p.amount || 0;
                 const key = `${mode}_${entered.toFixed(3)}`;
-                if (!txByKey[key]) {
-                    txByKey[key] = {
+
+                if (!txCounts[key]) {
+                    txCounts[key] = {
+                        count: 0,
                         enteredAmount: entered,
-                        allocatedAmounts: [],
-                        server: p.server || 'unknown'
+                        allocatedSum: 0
                     };
                 }
-                txByKey[key].allocatedAmounts.push(p.allocatedAmount || p.amount || 0);
+                txCounts[key].count += 1;
+                txCounts[key].allocatedSum += allocated;
+
+                if (p.server && p.server !== 'unknown') {
+                    serverName = p.server;
+                }
             }
         }
 
         // Calculer le pourboire total du split
         let totalEntered = 0;
         let totalAllocated = 0;
-        let serverName = 'unknown';
 
-        for (const key in txByKey) {
-            totalEntered += txByKey[key].enteredAmount;
-            // Prendre la somme des allocatedAmounts (car chaque transaction apparaît N fois)
-            totalAllocated += txByKey[key].allocatedAmounts.reduce((sum, val) => sum + val, 0);
-            if (txByKey[key].server !== 'unknown') {
-                serverName = txByKey[key].server;
-            }
+        for (const key in txCounts) {
+            const tx = txCounts[key];
+            const numTransactions = Math.round(tx.count / nbOrders);
+            totalEntered += tx.enteredAmount * numTransactions;
+            totalAllocated += tx.allocatedSum;
         }
 
         const tipAmount = Math.max(0, totalEntered - totalAllocated);
@@ -244,6 +253,7 @@ function deduplicateAndCalculate(payments) {
                 tipsByServer[serverName] = 0;
             }
             tipsByServer[serverName] += tipAmount;
+            console.log(`[payment-processor] ✅ Pourboire split: splitId=${splitId}, serveur=${serverName}, tip=${tipAmount.toFixed(3)}`);
         }
     }
 
