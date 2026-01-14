@@ -395,37 +395,35 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			console.log(`[report-x] ☁️ ${dataStore.archivedOrders.length} commandes archivées rechargées depuis MongoDB`);
 
 			// 🆕 Recharger aussi les commandes actives (pour les tables non payées)
-			// ⚠️ IMPORTANT : Ne pas filtrer les commandes client confirmées ici
-			// Le filtrage des doublons est déjà fait dans loadFromMongoDB() au démarrage
-			// Ici, on veut juste recharger TOUTES les commandes actives pour avoir les données à jour
 			const orders = await dbManager.orders.find({}).toArray();
 
-			// 🆕 Filtrer uniquement les commandes avec status !== 'archived' (comme getAllOrders)
-			// Les commandes archivées sont dans archivedOrders, pas dans orders
-			const activeOrders = orders.filter(o => {
-				// Exclure les commandes archivées
-				if (o.status === 'archived') {
-					return false;
-				}
-				// Exclure les commandes client en attente (waitingForPos: true, pas encore confirmées)
-				// Ces commandes n'ont pas encore d'ID et ne sont pas encore actives
-				if (o.waitingForPos === true && (!o.id || o.id === null) && o.source === 'client') {
-					return false;
-				}
-				return true;
+			// 🆕 Fusionner et dédupliquer par ID (l'archive prime sur l'actif)
+			const allOrdersMap = new Map();
+
+			// Charger les actives d'abord
+			orders.forEach(o => {
+				if (o.id) allOrdersMap.set(Number(o.id), o);
 			});
 
-			dataStore.orders.length = 0;
-			dataStore.orders.push(...activeOrders);
-			console.log(`[report-x] ☁️ ${dataStore.orders.length} commandes actives rechargées depuis MongoDB (sur ${orders.length} total)`);
+			// Charger les archives (écrase les actives si doublon d'ID)
+			archived.forEach(o => {
+				if (o.id) allOrdersMap.set(Number(o.id), o);
+			});
 
-			// 🆕 IMPORTANT : Recharger aussi les clients crédit, sinon le KPI crédit peut être faux sur cloud
-			// Les tickets montrent bien les paiements CREDIT car ils viennent de paymentHistory des commandes,
-			// mais le KPI "Crédit client" lit dataStore.clientCredits qui n'était pas rechargé depuis MongoDB
+			const allUniqueOrders = Array.from(allOrdersMap.values());
+
+			dataStore.archivedOrders.length = 0;
+			dataStore.archivedOrders.push(...allUniqueOrders.filter(o => o.status === 'archived'));
+
+			dataStore.orders.length = 0;
+			dataStore.orders.push(...allUniqueOrders.filter(o => o.status !== 'archived'));
+
+			console.log(`[report-x] ☁️ Données rechargées : ${dataStore.archivedOrders.length} archives, ${dataStore.orders.length} actives (Dédupliquées par ID)`);
+
+			// 🆕 Recharger aussi les clients crédit
 			const clients = await dbManager.clientCredits.find({}).toArray();
 			dataStore.clientCredits.length = 0;
 			dataStore.clientCredits.push(...clients);
-			console.log(`[report-x] ☁️ ${dataStore.clientCredits.length} clients crédit rechargés depuis MongoDB`);
 		} catch (e) {
 			console.error('[report-x] ⚠️ Erreur rechargement données:', e.message);
 		}
@@ -878,19 +876,37 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				}
 			} else {
 				// 🆕 Paiement normal : fusionner les articles de tous les paiements
+				// Mais dédupliquer par orderId pour éviter de doubler si l'ordre est passé deux fois
+				const itemsByOrderId = new Map();
+
 				for (const payment of payments) {
+					const orderId = payment.orderId || 'unknown';
+					if (!itemsByOrderId.has(orderId)) {
+						itemsByOrderId.set(orderId, new Map());
+					}
+					const orderItems = itemsByOrderId.get(orderId);
+
 					for (const item of payment.items || []) {
-						const existingIndex = allItems.findIndex(i => i.id === item.id && i.name === item.name);
-						if (existingIndex !== -1) {
-							allItems[existingIndex].quantity = (allItems[existingIndex].quantity || 0) + (item.quantity || 0);
-						} else {
-							// 🆕 S'assurer que id, price et quantity sont des nombres
-							allItems.push({
+						const itemKey = `${item.id}-${item.name}`;
+						if (!orderItems.has(itemKey)) {
+							orderItems.set(itemKey, {
 								...item,
 								id: Number(item.id) || item.id,
 								price: Number(item.price) || 0,
 								quantity: Number(item.quantity) || 0
 							});
+						}
+					}
+				}
+
+				// Fusionner tous les ordres
+				for (const orderItemsMap of itemsByOrderId.values()) {
+					for (const item of orderItemsMap.values()) {
+						const existingIndex = allItems.findIndex(i => i.id === item.id && i.name === item.name);
+						if (existingIndex !== -1) {
+							allItems[existingIndex].quantity = (allItems[existingIndex].quantity || 0) + (item.quantity || 0);
+						} else {
+							allItems.push({ ...item });
 						}
 					}
 				}

@@ -239,16 +239,16 @@ function groupPaymentsByTimestamp(sessions) {
 		const splitId = payment.splitPaymentId || null;
 		if (!splitId) {
 			// Fallback pour anciennes données sans splitPaymentId (rétrocompatibilité uniquement)
-		let timestampKey;
-		try {
-			const roundedTimestamp = new Date(payment.timestamp).toISOString().substring(0, 19);
+			let timestampKey;
+			try {
+				const roundedTimestamp = new Date(payment.timestamp).toISOString().substring(0, 19);
 				timestampKey = `fallback_${roundedTimestamp}`;
-		} catch (e) {
+			} catch (e) {
 				timestampKey = `fallback_${payment.timestamp}`;
-		}
+			}
 			if (!splitPaymentsBySplitId[timestampKey]) {
 				splitPaymentsBySplitId[timestampKey] = [];
-		}
+			}
 			splitPaymentsBySplitId[timestampKey].push(payment);
 		} else {
 			if (!splitPaymentsBySplitId[splitId]) {
@@ -337,13 +337,13 @@ function groupPaymentsByTimestamp(sessions) {
 		// 🆕 Utiliser payment-processor.js comme source de vérité unique
 		// ⚠️ RÈGLE .cursorrules 3.1: Utiliser payment-processor.js pour la déduplication
 		const allPaymentDetails = paymentProcessor.getPaymentDetails(payments);
-		
+
 		// Extraire les modes uniques et construire splitPaymentAmounts
 		for (const detail of allPaymentDetails) {
 			if (!splitPaymentModes.includes(detail.mode)) {
 				splitPaymentModes.push(detail.mode);
 			}
-				splitPaymentAmounts.push({
+			splitPaymentAmounts.push({
 				mode: detail.mode,
 				amount: detail.amount,
 				index: detail.index,
@@ -446,7 +446,34 @@ function groupPaymentsByTimestamp(sessions) {
 
 		if (payments.length > 1) {
 			// Fusionner plusieurs paiements en un seul acte
-			const allItems = payments.flatMap(p => p.items);
+			// 🆕 Dédupliquer les articles par orderId pour éviter les doublons si l'ordre est répété
+			const itemsByOrderId = new Map();
+			for (const p of payments) {
+				const orderId = p.sessionId || 'unknown';
+				if (!itemsByOrderId.has(orderId)) {
+					itemsByOrderId.set(orderId, new Map());
+				}
+				const orderItems = itemsByOrderId.get(orderId);
+				for (const item of p.items || []) {
+					const itemKey = `${item.id}-${item.name}`;
+					if (!orderItems.has(itemKey)) {
+						orderItems.set(itemKey, { ...item });
+					}
+				}
+			}
+
+			const allItems = [];
+			for (const orderItemsMap of itemsByOrderId.values()) {
+				for (const item of orderItemsMap.values()) {
+					const existingIndex = allItems.findIndex(i => i.id === item.id && i.name === item.name);
+					if (existingIndex !== -1) {
+						allItems[existingIndex].quantity = (allItems[existingIndex].quantity || 0) + (item.quantity || 0);
+					} else {
+						allItems.push({ ...item });
+					}
+				}
+			}
+
 			const totalSubtotal = payments.reduce((sum, p) => sum + p.subtotal, 0);
 			const totalDiscountAmount = payments.reduce((sum, p) => sum + (p.discountAmount || 0), 0);
 			// 🆕 Ticket = subtotal - remise (simple et correct)
