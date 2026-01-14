@@ -1515,10 +1515,15 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			nombreRemises: totals.nombreRemises,
 			nombreCouverts: totals.nombreCouverts,
 			nombreArticles: totals.nombreArticles,
-			nombreTickets: paidPayments.length // 🆕 Nombre de tickets = nombre d'actes de paiement (regroupe les paiements divisés)
+			nombreTickets: paidPayments.length, // 🆕 Nombre de tickets = nombre d'actes de paiement (regroupe les paiements divisés)
+			totalPourboires: totals.totalPourboires, // 🆕 Ajouter les pourboires au summary
+			tipsByServer: totals.tipsByServer // 🆕 Ajouter les pourboires par serveur au summary
 		},
 		itemsByCategory,
-		paymentsByMode,
+		paymentsByMode: {
+			...paymentsByMode,
+			_tipsByServer: totals.tipsByServer // 🆕 Injecter dans paymentsByMode pour compatibilité attendue par le frontend
+		},
 		unpaidTables,
 		paidPayments, // 🆕 Liste complète des paiements encaissés avec tickets
 		discountDetails,

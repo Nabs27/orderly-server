@@ -920,25 +920,33 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
       final splitAmounts = payment['splitPaymentAmounts'] as List<dynamic>?;
 
       if (isSplit && splitAmounts != null) {
-        // Dédupliquer par mode + amount pour éviter les doublons
-        final processedTxs = <String>{};
         for (final splitDetail in splitAmounts) {
           final splitMode = (splitDetail['mode'] as String?) ?? '';
           final splitAmount = (splitDetail['amount'] as num?)?.toDouble() ?? 0.0;
-          final txKey = '${splitMode}_${splitAmount.toStringAsFixed(3)}';
+          final splitIndex = splitDetail['index'];
 
-          if (!processedTxs.contains(txKey) && splitMode.isNotEmpty && splitAmount > 0.01) {
-            processedTxs.add(txKey);
+          if (splitMode.isNotEmpty && splitAmount > 0.01) {
             if (!splitPaymentDetails.containsKey(splitMode)) {
               splitPaymentDetails[splitMode] = [];
             }
+            
+            // Récupérer le timestamp du paiement parent pour l'affichage
+            String timeStr = '—';
+            try {
+              if (payment['timestamp'] != null) {
+                final dt = DateTime.parse(payment['timestamp'].toString()).toLocal();
+                timeStr = "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+              }
+            } catch (e) {
+              // Garder "—" si erreur de parsing
+            }
+
             splitPaymentDetails[splitMode]!.add({
               'amount': splitAmount,
               'table': payment['table']?.toString() ?? '—',
               'clientName': splitDetail['clientName'] as String?,
-              'time': payment['timestamp'] != null
-                  ? DateTime.parse(payment['timestamp']).toLocal().toString().substring(11, 16)
-                  : '—',
+              'time': timeStr,
+              'index': splitIndex, // Optionnel : pour debug ou affichage futur
             });
           }
         }
