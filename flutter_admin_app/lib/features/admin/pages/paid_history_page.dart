@@ -15,11 +15,27 @@ class PaidHistoryPage extends StatefulWidget {
 
 class _PaidHistoryPageState extends State<PaidHistoryPage> {
   String? _selectedTable;
+  String? _selectedServer;
 
   @override
   Widget build(BuildContext context) {
+    // 🆕 Collecter les serveurs uniques depuis les paiements
+    final servers = widget.paidPayments
+        .map((p) => p['server']?.toString() ?? 'unknown')
+        .where((s) => s != 'unknown')
+        .toSet()
+        .toList()
+      ..sort();
+
+    // 🆕 Filtrer les paiements par serveur
+    final filteredPayments = _selectedServer == null
+        ? widget.paidPayments
+        : widget.paidPayments
+            .where((p) => (p['server']?.toString() ?? 'unknown') == _selectedServer)
+            .toList();
+
     final tablesMap = <String, List<Map<String, dynamic>>>{};
-    for (final payment in widget.paidPayments) {
+    for (final payment in filteredPayments) {
       final table = payment['table']?.toString() ?? '?';
       if (!tablesMap.containsKey(table)) {
         tablesMap[table] = [];
@@ -69,96 +85,159 @@ class _PaidHistoryPageState extends State<PaidHistoryPage> {
           ),
         ],
       ),
-      body: sortedTables.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.receipt_long, size: 64, color: Colors.grey.shade300),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Aucun paiement encaissé',
-                    style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-                  ),
-                ],
+      body: Column(
+        children: [
+          // 🆕 Sélecteur de serveur
+          if (servers.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
               ),
-            )
-          : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: sortedTables.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final tableNumber = sortedTables[index];
-                final payments = tablesMap[tableNumber]!;
-                // 🆕 Utiliser le ticket du backend pour les paiements divisés (source de vérité unique)
-                final totalAmount = payments.fold<double>(
-                  0.0,
-                  (sum, p) {
-                    // Pour les paiements divisés, utiliser totalAmount du ticket du backend
-                    if (p['isSplitPayment'] == true && p['ticket'] != null) {
-                      final ticket = p['ticket'] as Map<String, dynamic>?;
-                      final ticketTotalAmount = (ticket?['totalAmount'] as num?)?.toDouble();
-                      if (ticketTotalAmount != null && ticketTotalAmount > 0.01) {
-                        return ticketTotalAmount; // Un seul paiement consolidé, retourner directement
-                      }
-                    }
-                    // Exclure CREDIT du montant encaissé
-                    if (p['paymentMode']?.toString() == 'CREDIT') return sum;
-                    final enteredAmount = (p['enteredAmount'] as num?)?.toDouble();
-                    final amount = (p['amount'] as num?)?.toDouble() ?? 0.0;
-                    return sum + (enteredAmount ?? amount);
-                  },
-                );
-                final server = payments.first['server']?.toString() ?? 'unknown';
-                final firstPayment = payments.first;
-                final lastPayment = payments.last;
-                final firstDate = _formatDate(firstPayment['timestamp']?.toString());
-                final lastDate = _formatDate(lastPayment['timestamp']?.toString());
-
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.green.shade100,
-                    child: Text(
-                      tableNumber,
-                      style: TextStyle(
-                        color: Colors.green.shade700,
-                        fontWeight: FontWeight.bold,
+              child: Row(
+                children: [
+                  const Icon(Icons.filter_list, size: 20, color: Colors.grey),
+                  const SizedBox(width: 12),
+                  const Text('Filtrer par serveur:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 36,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          ChoiceChip(
+                            label: const Text('Tous', style: TextStyle(fontSize: 12)),
+                            selected: _selectedServer == null,
+                            onSelected: (selected) {
+                              if (selected) setState(() => _selectedServer = null);
+                            },
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          const SizedBox(width: 8),
+                          ...servers.map((server) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: ChoiceChip(
+                                label: Text(server, style: const TextStyle(fontSize: 12)),
+                                selected: _selectedServer == server,
+                                onSelected: (selected) {
+                                  setState(() => _selectedServer = selected ? server : null);
+                                },
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                            );
+                          }),
+                        ],
                       ),
                     ),
                   ),
-                  title: Text(
-                    'Table $tableNumber',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(height: 4),
-                      Text('Serveur: $server'),
-                      Text('${payments.length} paiement(s) • $firstDate → $lastDate'),
-                    ],
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _formatCurrency(totalAmount),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.chevron_right, color: Colors.grey),
-                    ],
-                  ),
-                  onTap: () => setState(() => _selectedTable = tableNumber),
-                );
-              },
+                ],
+              ),
             ),
+          Expanded(
+            child: sortedTables.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _selectedServer == null ? Icons.receipt_long : Icons.search_off,
+                          size: 64,
+                          color: Colors.grey.shade300,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _selectedServer == null
+                              ? 'Aucun paiement encaissé'
+                              : 'Aucun encaissement pour ce serveur',
+                          style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: sortedTables.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final tableNumber = sortedTables[index];
+                      final payments = tablesMap[tableNumber]!;
+                      // 🆕 Utiliser le ticket du backend pour les paiements divisés (source de vérité unique)
+                      final totalAmount = payments.fold<double>(
+                        0.0,
+                        (sum, p) {
+                          // Pour les paiements divisés, utiliser totalAmount du ticket du backend
+                          if (p['isSplitPayment'] == true && p['ticket'] != null) {
+                            final ticket = p['ticket'] as Map<String, dynamic>?;
+                            final ticketTotalAmount = (ticket?['totalAmount'] as num?)?.toDouble();
+                            if (ticketTotalAmount != null && ticketTotalAmount > 0.01) {
+                              return ticketTotalAmount; // Un seul paiement consolidé, retourner directement
+                            }
+                          }
+                          // Exclure CREDIT du montant encaissé
+                          if (p['paymentMode']?.toString() == 'CREDIT') return sum;
+                          final enteredAmount = (p['enteredAmount'] as num?)?.toDouble();
+                          final amount = (p['amount'] as num?)?.toDouble() ?? 0.0;
+                          return sum + (enteredAmount ?? amount);
+                        },
+                      );
+                      final server = payments.first['server']?.toString() ?? 'unknown';
+                      final firstPayment = payments.first;
+                      final lastPayment = payments.last;
+                      final firstDate = _formatDate(firstPayment['timestamp']?.toString());
+                      final lastDate = _formatDate(lastPayment['timestamp']?.toString());
+
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.green.shade100,
+                          child: Text(
+                            tableNumber,
+                            style: TextStyle(
+                              color: Colors.green.shade700,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        title: Text(
+                          'Table $tableNumber',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(height: 4),
+                            Text('Serveur: $server'),
+                            Text('${payments.length} paiement(s) • $firstDate → $lastDate'),
+                          ],
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _formatCurrency(totalAmount),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.chevron_right, color: Colors.grey),
+                          ],
+                        ),
+                        onTap: () => setState(() => _selectedTable = tableNumber),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
     );
   }
 

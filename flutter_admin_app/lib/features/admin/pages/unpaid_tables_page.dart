@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import '../widgets/provisional_ticket_dialog.dart';
 
-class UnpaidTablesPage extends StatelessWidget {
+class UnpaidTablesPage extends StatefulWidget {
   final List<Map<String, dynamic>> unpaidTables;
 
   const UnpaidTablesPage({
     super.key,
     required this.unpaidTables,
   });
+
+  @override
+  State<UnpaidTablesPage> createState() => _UnpaidTablesPageState();
+}
+
+class _UnpaidTablesPageState extends State<UnpaidTablesPage> {
+  String? _selectedServer;
 
   String _formatCurrency(double value) {
     return value.toStringAsFixed(2).replaceAllMapped(
@@ -33,6 +40,21 @@ class UnpaidTablesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 🆕 Collecter les serveurs uniques
+    final servers = widget.unpaidTables
+        .map((t) => t['server']?.toString() ?? 'unknown')
+        .where((s) => s != 'unknown')
+        .toSet()
+        .toList()
+      ..sort();
+
+    // 🆕 Filtrer les tables
+    final filteredTables = _selectedServer == null
+        ? widget.unpaidTables
+        : widget.unpaidTables
+            .where((t) => (t['server']?.toString() ?? 'unknown') == _selectedServer)
+            .toList();
+
     return Scaffold(
       appBar: AppBar(
         title: const Row(
@@ -53,8 +75,8 @@ class UnpaidTablesPage extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Center(
               child: Text(
-                '${unpaidTables.length} table(s)',
-                style: TextStyle(
+                '${filteredTables.length} table(s)',
+                style: const TextStyle(
                   fontSize: 16,
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -66,16 +88,73 @@ class UnpaidTablesPage extends StatelessWidget {
       ),
       body: Column(
         children: [
+          // 🆕 Sélecteur de serveur
+          if (servers.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.filter_list, size: 20, color: Colors.grey),
+                  const SizedBox(width: 12),
+                  const Text('Filtrer par serveur:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 36,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          ChoiceChip(
+                            label: const Text('Tous', style: TextStyle(fontSize: 12)),
+                            selected: _selectedServer == null,
+                            onSelected: (selected) {
+                              if (selected) setState(() => _selectedServer = null);
+                            },
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          const SizedBox(width: 8),
+                          ...servers.map((server) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: ChoiceChip(
+                                label: Text(server, style: const TextStyle(fontSize: 12)),
+                                selected: _selectedServer == server,
+                                onSelected: (selected) {
+                                  setState(() => _selectedServer = selected ? server : null);
+                                },
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Expanded(
-            child: unpaidTables.isEmpty
+            child: filteredTables.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.check_circle, size: 64, color: Colors.green.shade300),
+                        Icon(
+                          _selectedServer == null ? Icons.check_circle : Icons.search_off,
+                          size: 64,
+                          color: _selectedServer == null ? Colors.green.shade300 : Colors.grey.shade300,
+                        ),
                         const SizedBox(height: 16),
                         Text(
-                          'Toutes les tables sont encaissées',
+                          _selectedServer == null
+                              ? 'Toutes les tables sont encaissées'
+                              : 'Aucune table pour ce serveur',
                           style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                         ),
                       ],
@@ -83,10 +162,10 @@ class UnpaidTablesPage extends StatelessWidget {
                   )
                 : ListView.separated(
                     padding: const EdgeInsets.all(16),
-                    itemCount: unpaidTables.length,
+                    itemCount: filteredTables.length,
                     separatorBuilder: (_, __) => const Divider(height: 1),
                     itemBuilder: (context, index) {
-                      final table = unpaidTables[index];
+                      final table = filteredTables[index];
                       final tableNumber = table['table']?.toString() ?? '?';
                       final server = table['server']?.toString() ?? 'unknown';
                       final total = (table['total'] as num?)?.toDouble() ?? 0.0;
@@ -176,7 +255,7 @@ class UnpaidTablesPage extends StatelessWidget {
                     },
                   ),
           ),
-          if (unpaidTables.isNotEmpty) ...[
+          if (filteredTables.isNotEmpty) ...[
             const Divider(height: 1),
             Container(
               padding: const EdgeInsets.all(16),
@@ -191,7 +270,7 @@ class UnpaidTablesPage extends StatelessWidget {
                   ),
                   Text(
                     _formatCurrency(
-                      unpaidTables.fold<double>(
+                      filteredTables.fold<double>(
                         0.0,
                         (sum, table) => sum + ((table['total'] as num?)?.toDouble() ?? 0.0),
                       ),

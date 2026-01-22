@@ -76,6 +76,10 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
     ) + ' TND';
   }
 
+  String _formatServiceLabel(int? serviceIndex) {
+    return 'S:${serviceIndex ?? 0}';
+  }
+
   String _formatQuantity(num value) {
     if (value % 1 == 0) {
       return value.toStringAsFixed(0);
@@ -744,34 +748,57 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: InkWell(
+                  onTap: () => _showTipsDetails(context, server),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          server,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              server,
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  _formatCurrency(tipAmount),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.amber.shade700),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.chevron_right,
+                                  size: 16,
+                                  color: Colors.amber.shade700.withOpacity(0.7),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 4),
+                        LinearProgressIndicator(
+                          value: percent / 100,
+                          backgroundColor: Colors.grey.shade200,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.amber.shade300),
+                        ),
+                        const SizedBox(height: 4),
                         Text(
-                          _formatCurrency(tipAmount),
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber.shade700),
+                          '${percent.toStringAsFixed(1)}%',
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    LinearProgressIndicator(
-                      value: percent / 100,
-                      backgroundColor: Colors.grey.shade200,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.amber.shade300),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${percent.toStringAsFixed(1)}%',
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                    ),
-                  ],
+                  ),
                 ),
               );
             }),
@@ -936,6 +963,7 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
               'time': payment['timestamp'] != null
                   ? DateTime.parse(payment['timestamp']).toLocal().toString().substring(11, 16)
                   : '—',
+              'serviceIndex': payment['serviceIndex'] as int?,
             });
           }
         }
@@ -967,6 +995,7 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
           'table': table,
           'time': timeStr,
           'clientName': clientName,
+          'serviceIndex': payment['serviceIndex'] as int?,
         });
       }
     }
@@ -1081,6 +1110,8 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
                     final table = payment['table'] as String? ?? '—';
                     final time = payment['time'] as String? ?? '—';
                     final clientName = payment['clientName'] as String?;
+                    final serviceIndex = payment['serviceIndex'] as int?;
+                    final serviceLabel = _formatServiceLabel(serviceIndex);
 
                     final displayLabel = mode == 'CREDIT' && clientName != null && clientName.isNotEmpty
                         ? '$mode ($clientName)'
@@ -1093,7 +1124,7 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
                         children: [
                           Expanded(
                             child: Text(
-                              'Table $table',
+                              'Table $table • $serviceLabel',
                               style: const TextStyle(fontWeight: FontWeight.w600),
                             ),
                           ),
@@ -1129,6 +1160,156 @@ class _CaDetailsPageState extends State<CaDetailsPage> {
                     onPressed: () => Navigator.of(context).pop(),
                     child: const Text('Fermer'),
                   ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Map<String, dynamic>> _collectTipEntriesForServer(String server) {
+    final paidPayments = (_reportData!['paidPayments'] as List<dynamic>?) ?? [];
+    final normalizedServer = server.trim().toUpperCase();
+    final List<Map<String, dynamic>> entries = [];
+
+    for (final payment in paidPayments) {
+      final paymentServer = (payment['server'] as String?)?.trim().toUpperCase() ?? 'UNKNOWN';
+      if (paymentServer != normalizedServer) continue;
+
+      final tipAmount = (payment['excessAmount'] as num?)?.toDouble() ?? 0.0;
+      if (tipAmount <= 0.01) continue;
+
+      final table = payment['table']?.toString() ?? '—';
+      final timestamp = payment['timestamp'] as String?;
+      final timeStr = timestamp != null
+          ? DateTime.parse(timestamp).toLocal().toString().substring(11, 16)
+          : '—';
+      final serviceIndex = payment['serviceIndex'] as int?;
+
+      entries.add({
+        'table': table,
+        'time': timeStr,
+        'tip': tipAmount,
+        'serviceIndex': serviceIndex,
+      });
+    }
+
+    entries.sort((a, b) {
+      final tipA = (a['tip'] as double);
+      final tipB = (b['tip'] as double);
+      if (tipB.compareTo(tipA) != 0) {
+        return tipB.compareTo(tipA);
+      }
+      final timeA = a['time'] as String?;
+      final timeB = b['time'] as String?;
+      return (timeB ?? '').compareTo(timeA ?? '');
+    });
+
+    return entries;
+  }
+
+  void _showTipsDetails(BuildContext context, String server) {
+    final entries = _collectTipEntriesForServer(server);
+    if (entries.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Aucun pourboire enregistré pour $server.'),
+          backgroundColor: Colors.grey.shade800,
+        ),
+      );
+      return;
+    }
+
+    final total = entries.fold<double>(0.0, (sum, entry) => sum + (entry['tip'] as double));
+    final screenWidth = MediaQuery.of(context).size.width;
+    final dialogWidth = screenWidth > 800 ? 700.0 : screenWidth * 0.95;
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        child: Container(
+          width: dialogWidth,
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+            maxWidth: 700,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade50,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    topRight: Radius.circular(8),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.attach_money, color: Colors.amber.shade700, size: 28),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Pourboires • $server',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.amber.shade800,
+                            ),
+                          ),
+                          Text(
+                            '${entries.length} pourboire(s) • ${_formatCurrency(total)}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.amber.shade800.withOpacity(0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: entries.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (_, index) {
+                    final entry = entries[index];
+                    final table = entry['table'] as String? ?? '—';
+                    final time = entry['time'] as String? ?? '—';
+                    final tip = (entry['tip'] as double);
+                    final serviceLabel = _formatServiceLabel(entry['serviceIndex'] as int?);
+
+                    return ListTile(
+                      dense: true,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 0),
+                      leading: Icon(Icons.table_restaurant, color: Colors.amber.shade700),
+                      title: Text('Table $table • $serviceLabel'),
+                      subtitle: Text('Heure: $time'),
+                      trailing: Text(
+                        _formatCurrency(tip),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.amber.shade700,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
