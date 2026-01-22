@@ -383,6 +383,22 @@ Page de génération et affichage du Rapport X :
 
 ---
 
+## 🚀 Déploiement admin web (Vercel)
+
+- **Commande de build** : `npm run vercel:build`. Elle lance le script `vercel-build.sh` (racine du repo) qui :
+  - clone Flutter stable dans `~/flutter` si nécessaire,
+  - ajoute `~/flutter/bin` au `PATH`, précache les dépendances et exécute `flutter build web`,
+  - produit la sortie dans `build/web`.
+- **Réglages Vercel conseillés**
+  - Framework preset : `Other` (puisque Flutter n’est pas une option native).
+  - Root Directory : `.` ou `./flutter_les_emirs` si vous ne déployez que le sous-projet admin.
+  - Build command : `npm run vercel:build`.
+  - Output Directory : `build/web`.
+- **Variables d’environnement**
+  - `API_BASE_URL` doit pointer vers l’API POS (ex. `https://votre-serveur-pos/api`).
+  - Reproduisez toute autre clé utilisée par l’admin (auth tokens, flags, etc.) depuis `.env` ou le serveur cloud.
+- **Sécurité** : conservez les secrets uniquement dans Vercel (ne les versionnez pas).
+
 ## 📚 Références
 
 - **Vue d'ensemble** : `STRUCTURE_POS.md` (section Dashboard Admin)
