@@ -15,6 +15,7 @@ const adminParse = require('./admin-parse');
 const adminInvoice = require('./admin-invoice');
 const adminReportX = require('./admin-report-x');
 const adminServers = require('./admin-servers');
+const adminInventory = require('./admin-inventory');
 
 // Combiner toutes les routes
 router.use('/', adminAuth);        // Login
@@ -27,5 +28,6 @@ router.use('/', adminParse);       // Parse Menu (POST parse-menu)
 router.use('/', adminInvoice);     // Génération PDF (POST generate-invoice)
 router.use('/', adminReportX);     // Rapport X (GET report-x)
 router.use('/', adminServers);     // Profils serveurs & permissions
+router.use('/', adminInventory);   // Inventaire (GET, PATCH, POST init)
 
 module.exports = router;

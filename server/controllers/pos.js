@@ -5,6 +5,7 @@ const posTransfer = require('./pos-transfer');
 const posPayment = require('./pos-payment');
 const posArchive = require('./pos-archive');
 const posCancellation = require('./pos-cancellation');
+const posPreaddition = require('./pos-preaddition');
 
 // Exporter toutes les fonctions
 module.exports = {
@@ -22,5 +23,10 @@ module.exports = {
 	getArchivedOrdersByServer: posArchive.getArchivedOrdersByServer,
 	
 	// Annulations
-	cancelItems: posCancellation.cancelItems
+	cancelItems: posCancellation.cancelItems,
+	
+	// Pré-additions
+	createPreaddition: posPreaddition.createPreaddition,
+	deletePreaddition: posPreaddition.deletePreaddition,
+	updatePreaddition: posPreaddition.updatePreaddition
 };

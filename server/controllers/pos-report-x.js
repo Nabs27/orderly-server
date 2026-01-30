@@ -7,6 +7,7 @@ const path = require('path');
 const { loadMenu } = require('../utils/menuSync');
 // 🆕 Import du processeur de paiements commun (source de vérité unique)
 const paymentProcessor = require('../utils/payment-processor');
+const historyProcessor = require('../utils/history-processor');
 
 // Charger le menu et créer un mapping itemId → categoryName
 async function loadMenuAndCreateMapping(restaurantId = 'les-emirs') {
@@ -306,7 +307,7 @@ function collectCreditPayments({ server, period, dateFrom, dateTo }) {
 }
 
 // Helper pour extraire et normaliser les paiements d'une commande
-function extractPaymentsFromOrder(order, server, period, dateFrom, dateTo) {
+function extractPaymentsFromOrder(order, server, period, dateFrom, dateTo, orderServiceIndexMap = {}) {
 	const payments = [];
 
 	if (!order.paymentHistory || !Array.isArray(order.paymentHistory)) {
@@ -371,7 +372,8 @@ function extractPaymentsFromOrder(order, server, period, dateFrom, dateTo) {
 			noteName: payment.noteName || 'Note Principale',
 			discountClientName: payment.discountClientName || null,
 			covers: payment.covers || order.covers || 1, // 🆕 Inclure les couverts
-			orderId: order.id // 🆕 Conserver l'ID de la commande pour traçabilité
+			orderId: order.id, // 🆕 Conserver l'ID de la commande pour traçabilité
+			serviceIndex: order.id ? (orderServiceIndexMap[String(order.id)] ?? null) : null
 		};
 		payments.push(paymentNormalized);
 	}
@@ -463,24 +465,55 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 	// Pour les commandes actives, on filtre sur createdAt ou updatedAt (mais les paiements seront filtrés individuellement)
 	// On garde toutes les commandes actives, le filtrage se fera au niveau des paiements
 
-	const allPayments = [];
-	// 🆕 NE PAS collecter les articles ici : ils seront collectés depuis paidPayments après regroupement
-	// Cela évite de compter les articles plusieurs fois pour les paiements divisés
-
-	// Extraire les paiements des commandes archivées
-	for (const order of filteredArchivedOrders) {
-		const payments = extractPaymentsFromOrder(order, server, period, dateFrom, dateTo);
-		allPayments.push(...payments);
-	}
-
-	// 🆕 Extraire les paiements des commandes actives (tables encore ouvertes)
-	for (const order of filteredActiveOrders) {
-		const payments = extractPaymentsFromOrder(order, server, period, dateFrom, dateTo);
-		allPayments.push(...payments);
-	}
-
 	// 🆕 Pour calculateTotals, on combine les deux listes de commandes
 	const allOrdersForTotals = [...filteredArchivedOrders, ...filteredActiveOrders];
+
+	// 🆕 Déterminer le serviceIndex de chaque commande en réutilisant history-processor
+	let orderServiceIndexMap = {};
+	try {
+		const byTable = {};
+		for (const order of allOrdersForTotals) {
+			if (!order) continue;
+			const tableKey = String(order.table || 'UNKNOWN');
+			if (!byTable[tableKey]) {
+				byTable[tableKey] = [];
+			}
+			byTable[tableKey].push(order);
+		}
+
+		for (const sessions of Object.values(byTable)) {
+			const filteredSessions = sessions.filter(o => o && o.id);
+			if (filteredSessions.length === 0) continue;
+			const services = historyProcessor.groupOrdersByService([...filteredSessions]);
+			for (const [serviceKey, serviceSessions] of Object.entries(services)) {
+				const serviceNumber = Number(serviceKey);
+				if (!Number.isFinite(serviceNumber)) continue;
+				for (const session of serviceSessions) {
+					if (session && session.id != null) {
+						orderServiceIndexMap[String(session.id)] = serviceNumber;
+					}
+				}
+			}
+		}
+	} catch (error) {
+		console.error('[report-x] Erreur lors du calcul des services pour le KPI:', error);
+		orderServiceIndexMap = {};
+	}
+
+	const missingServices = allOrdersForTotals
+		.filter(o => o && o.id)
+		.filter(o => orderServiceIndexMap[String(o.id)] == null)
+		.slice(0, 10);
+	if (missingServices.length > 0) {
+		console.log('[report-x] ⚠️ Commandes sans serviceIndex détectées (max 10) :',
+			missingServices.map(o => ({
+				id: o.id,
+				table: o.table,
+				status: o.status,
+				archivedAt: o.archivedAt,
+				createdAt: o.createdAt,
+			})));
+	}
 
 	// 🆕 NOTE: totals et itemsByCategory seront créés APRÈS la création de paidPayments
 	// pour éviter de compter les articles plusieurs fois pour les paiements divisés
@@ -499,6 +532,19 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 			paymentsByMode[mode].total += data.total;
 			paymentsByMode[mode].count += data.count;
 		}
+	}
+
+	const allPayments = [];
+	// 🆕 NE PAS collecter les articles ici : ils seront collectés depuis paidPayments après regroupement
+	// Cela évite de compter les articles plusieurs fois pour les paiements divisés
+	for (const order of filteredArchivedOrders) {
+		const payments = extractPaymentsFromOrder(order, server, period, dateFrom, dateTo, orderServiceIndexMap);
+		allPayments.push(...payments);
+	}
+
+	for (const order of filteredActiveOrders) {
+		const payments = extractPaymentsFromOrder(order, server, period, dateFrom, dateTo, orderServiceIndexMap);
+		allPayments.push(...payments);
 	}
 
 	// 🆕 Filtrer les remises par période (même logique que pour les crédits)
@@ -1082,6 +1128,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				splitPaymentAmounts: act.isSplitPayment
 					? paymentProcessor.getPaymentDetails(payments) // 🆕 SOURCE DE VÉRITÉ UNIQUE
 					: undefined,
+				serviceIndex: payments.length > 0 ? (payments.find(p => p.serviceIndex != null)?.serviceIndex ?? null) : null,
 				// 🆕 Ticket encaissé (format ticket de caisse)
 				ticket: (() => {
 					// 🆕 Calculer le montant total encaissé (exclut CREDIT car c'est une dette différée)
@@ -1251,6 +1298,7 @@ async function buildReportData({ server, period, dateFrom, dateTo, restaurantId 
 				covers: payment.covers || 1,
 				// 🆕 Nom du client pour paiement CREDIT (le frontend lit ce champ)
 				creditClientName: creditClientName,
+				serviceIndex: payment.serviceIndex ?? null,
 				// 🆕 FIX: Ajouter paymentDetails au niveau supérieur pour que la réconciliation fonctionne
 				paymentDetails: [{
 					mode: payment.paymentMode,

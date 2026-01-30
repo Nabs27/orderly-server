@@ -28,6 +28,7 @@ Pour la partie backend, voir `STRUCTURE_SERVEUR.md`.
 - **Source de vérité unique (paiements)** → `STRUCTURE_POS_PAYMENT.md` → Section "Single Source of Truth pour les Paiements" (`payment-processor.js`)
 - **Source de vérité unique (quantités)** → `STRUCTURE_POS_PAYMENT.md` → `_currentAllOrders`, `getAllItemsOrganized()`, `PaymentCalculator`, `PaymentValidationService`
 - **Remises** → `STRUCTURE_POS_PAYMENT.md` → `DiscountSection`, `DiscountClientNameDialog`, `PaymentSummaryDialog`, `payment_service.dart`
+- **Stock / inventaire** → `STRUCTURE_POS_ADMIN.md` → `AdminInventoryPage`, `inventorySync.js`, déduction à l'envoi cuisine dans `orders.js`
 - **Profils serveurs / droits** → `STRUCTURE_POS_ORDER.md` → `AdminServersPage`, `ServerPermissionsService`, `PosOrderActionPanel`
 - **Sous-notes** → `STRUCTURE_POS_ORDER.md` → `AddNoteDialog`, `NoteActions.createSubNote`
 - **Synchronisation tables** → `STRUCTURE_POS_HOME.md` → `OrdersSyncService`, `HomeSocketService`
@@ -62,6 +63,7 @@ Pour la partie backend, voir `STRUCTURE_SERVEUR.md`.
 | Comment voir les KPI du jour ? | Admin | `admin_dashboard_kpi_section.dart` | Clic sur les cartes KPI dans le dashboard |
 | Comment voir l'historique des encaissements ? | Admin | `paid_history_dialog.dart` | Clic sur "Recette encaissée" dans les KPI |
 | Comment générer un rapport X ? | Admin | `report_x_page.dart` | Navigation depuis le dashboard admin |
+| Comment gérer le stock (inventaire) ? | Admin | `admin_inventory_page.dart` | Stock boissons, seuils, alertes, historique ; déduction à l'envoi cuisine via `orders.js` |
 | Comment accéder au dashboard cuisine ? | Dashboard | `dashboard_page.dart` | Route `/dashboard` dans l'app Flutter principale |
 | Comment les clients commandent-ils ? | Client | `STRUCTURE_POS_CLIENT.md` | Application mobile dédiée (`flutter_client_app/`) |
 
@@ -110,7 +112,7 @@ Notes principales (`id = main`) et sous-notes (`id = sub_x`) partagent la même 
 
 🆕 **Source de vérité unique pour les paiements** : Le module `server/utils/payment-processor.js` centralise la déduplication et le calcul des paiements pour garantir la cohérence entre History, KPI et X Report. Les fonctions `deduplicateAndCalculate()` et `calculatePaymentsByMode()` sont utilisées par `pos-report-x.js` et `history-processor.js`. **⚠️ En cours d'intégration complète** : `history-processor.js` doit encore être refactorisé pour utiliser ce module.
 
-🆕 **Commandes client (Architecture "Boîte aux Lettres")** : Les commandes passées depuis l'app mobile client sont déposées dans MongoDB par le serveur Cloud avec `waitingForPos: true`, `processedByPos: false`, `id: null`. Le serveur POS local les aspire automatiquement toutes les 5 secondes via `pullFromMailbox()`, leur attribue un ID local, et les marque comme traitées dans MongoDB. Une fois confirmées, elles sont gérées exactement comme les commandes POS (même structure, même traitement). Voir `STRUCTURE_SERVEUR.md` pour les détails backend.
+🆕 **Commandes client (Architecture "Boîte aux Lettres")** : Les commandes passées depuis l'app mobile client sont déposées dans MongoDB par le serveur Cloud avec `waitingForPos: true`, `processedByPos: false`, `id: null`. Le serveur POS local les aspire automatiquement toutes les 5 secondes via `pullFromMailbox()`, leur attribue un ID local, et les marque comme traitées dans MongoDB. Une fois confirmées par le POS (`confirmOrderByServer`), elles sont gérées exactement comme les commandes POS (même structure, même traitement) et **le stock est déduit à la confirmation** (équivalent envoi cuisine). Voir `STRUCTURE_SERVEUR.md` pour les détails backend.
 
 ---
 
@@ -233,6 +235,13 @@ PosPaymentPage
 
 ---
 
+## 🤖 Utilisation avec l’IA (optimisation tokens)
+
+- **Contexte** : Placer ce fichier (ou la fiche détaillée concernée) en premier dans le contexte pour profiter du prompt caching. Puis ajouter uniquement les fichiers à modifier.
+- **Session complexe** : Après une grosse session, résumer décisions et état dans un petit fichier (ex. `docs/CONTEXT.md` ou section en bas de la fiche). Pour la session suivante, fournir ce résumé au lieu de tout l’historique.
+
+---
+
 ## 📚 Références
 
 - **Home** : `STRUCTURE_POS_HOME.md`
@@ -243,7 +252,11 @@ PosPaymentPage
 - **Dashboard Cuisine** : `STRUCTURE_POS_CUISINE.md`
 - **Serveur** : `STRUCTURE_SERVEUR.md`
 
-**Dernière mise à jour** : 2025-01-03 (Intégration pourboires, single source of truth pour paiements, Dashboard Admin, App Client, Dashboard Cuisine)
+**Dernière mise à jour** : 2025-01-26 (Stock / inventaire admin, déduction à la vente)
+
+### Changements récents (2025-01-26)
+
+- **Stock / inventaire** : Module Admin inventaire (boissons, groupe drinks) : `admin_inventory_page.dart` dans les deux apps (flutter_les_emirs, flutter_admin_app), routes `admin-inventory.js`, `inventorySync.js`. Déduction du stock **à l'envoi cuisine** dans `orders.js` (`deductStockForSale`), pas au paiement — bonne pratique POS pour éviter les ruptures non visibles. Événement Socket `inventory:updated`. Historique des mouvements (Vente / Ajustement / Réception) consultable depuis la page Stock.
 
 ### Changements récents (2025-01-03)
 

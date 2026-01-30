@@ -5,6 +5,7 @@ const dataStore = require('../data');
 const fileManager = require('../utils/fileManager');
 const { getIO } = require('../utils/socket');
 const dbManager = require('../utils/dbManager');
+const inventorySync = require('../utils/inventorySync');
 
 // Créer une commande
 async function createOrder(req, res) {
@@ -52,6 +53,8 @@ async function createOrder(req, res) {
 		paymentHistory: [],
 		// 🆕 Historique des actions (création de notes, ajouts d'articles)
 		orderHistory: [],
+		// 🆕 Pré-additions en attente (tickets de paiement partiel)
+		pendingPreadditions: [],
 		// Structure des notes
 		mainNote: {
 			id: 'main',
@@ -137,6 +140,16 @@ async function createOrder(req, res) {
 			console.error('[orders] ❌ Erreur sauvegarde:', e.message);
 			console.error('[orders] ❌ Stack:', e.stack);
 		});
+
+		// Déduction stock à l'envoi cuisine (bonne pratique POS), pas au paiement
+		const restaurantId = req.body.restaurantId || 'les-emirs';
+		const itemsToDeduct = items.map(it => ({ id: Number(it.id), quantity: Number(it.quantity) || 1 }));
+		try {
+			await inventorySync.deductStockForSale(restaurantId, itemsToDeduct, { userId: assignedServer });
+			if (io) io.emit('inventory:updated', { restaurantId, timestamp: new Date().toISOString() });
+		} catch (e) {
+			console.error('[orders] Erreur déduction stock:', e.message);
+		}
 	}
 	
 	// 📊 Récupérer TOUTES les commandes actives de la table pour l'état complet
@@ -397,11 +410,41 @@ async function confirmOrderByServer(req, res) {
 	// La commande confirmée est maintenant UNIQUEMENT dans le JSON local (source de vérité)
 	if (!dbManager.isCloud) {
 		await fileManager.savePersistedData();
-		console.log(`[orders] 💾 Commande #${order.id} sauvegardée en JSON local (source de vérité)`);
+		console.log('[orders] 💾 Commande #' + order.id + ' sauvegardée en JSON local (source de vérité)');
 	}
 	// 🆕 SERVEUR CLOUD : Ne PAS sauvegarder les commandes confirmées dans MongoDB
 	// Car elles sont gérées par le serveur local (source de vérité)
 	// Le serveur cloud est stateless et ne garde que les commandes en attente
+
+	// Déduction stock à la confirmation (commande client = envoi cuisine équivalent)
+	const restaurantId = req.body.restaurantId || 'les-emirs';
+	const itemsToDeduct = [];
+	if (order.mainNote && Array.isArray(order.mainNote.items)) {
+		for (const it of order.mainNote.items) {
+			const id = Number(it.id);
+			const qty = Number(it.quantity) || 1;
+			if (id) itemsToDeduct.push({ id, quantity: qty });
+		}
+	}
+	if (order.subNotes && Array.isArray(order.subNotes)) {
+		for (const sub of order.subNotes) {
+			if (sub.items) {
+				for (const it of sub.items) {
+					const id = Number(it.id);
+					const qty = Number(it.quantity) || 1;
+					if (id) itemsToDeduct.push({ id, quantity: qty });
+				}
+			}
+		}
+	}
+	if (itemsToDeduct.length > 0) {
+		try {
+			await inventorySync.deductStockForSale(restaurantId, itemsToDeduct, { userId: order.confirmedBy });
+			if (io) io.emit('inventory:updated', { restaurantId, timestamp: new Date().toISOString() });
+		} catch (e) {
+			console.error('[orders] Erreur déduction stock (commande client confirmée):', e.message);
+		}
+	}
 	
 	// 🆕 CORRECTION : Émettre order:new pour apparition dynamique dans le POS
 	// Cela permet à la commande d'apparaître immédiatement dans le plan de table et la page Order

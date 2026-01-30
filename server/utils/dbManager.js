@@ -152,6 +152,7 @@ class DatabaseManager {
 	get counters() { return this.getCollection('counters'); }
 	get serverPermissions() { return this.getCollection('server_permissions'); }
 	get menus() { return this.getCollection('menus'); }
+	get inventory() { return this.getCollection('inventory'); }
 }
 
 // Singleton

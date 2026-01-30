@@ -19,6 +19,9 @@ Décrire la structure du module « Admin Dashboard » : KPI, historique enrichi,
 | Backend Rapport X | `server/controllers/pos-report-x.js` | Génération des données (KPI, historique, rapport X) |
 | Processeur paiements | `server/utils/payment-processor.js` | **SOURCE DE VÉRITÉ UNIQUE** pour déduplication et calculs |
 | Processeur historique | `server/utils/history-processor.js` | Traitement de l'historique des paiements |
+| **Stock / inventaire** | `lib/features/admin/admin_inventory_page.dart` | Gestion du stock (boissons), seuils, alertes, historique des mouvements |
+| Backend inventaire | `server/utils/inventorySync.js`, `server/routes/admin-inventory.js` | Chargement/sauvegarde inventaire, déduction à l'envoi cuisine |
+| Hook déduction stock | `server/controllers/orders.js` | À l'envoi cuisine (createOrder) : `deductStockForSale`, émission `inventory:updated` |
 
 ---
 
@@ -28,6 +31,7 @@ Décrire la structure du module « Admin Dashboard » : KPI, historique enrichi,
 - Afficher l'**historique enrichi** des paiements par table et service
 - Générer et afficher le **Rapport X** (rapport financier détaillé)
 - Garantir la **cohérence des données** entre History, KPI et X Report via `payment-processor.js`
+- Gérer le **stock (inventaire)** par restaurant : boissons (groupe drinks), seuils d’alerte, ajustements manuels, historique des mouvements ; déduction à l'envoi cuisine (bonne pratique POS)
 
 ---
 
@@ -38,6 +42,7 @@ Décrire la structure du module « Admin Dashboard » : KPI, historique enrichi,
 ```
 lib/features/admin/
 ├── admin_dashboard_page.dart          # Page principale
+├── admin_inventory_page.dart          # Page Stock / inventaire (boissons, seuils, historique)
 ├── report_x_page.dart                 # Page Rapport X
 ├── models/
 │   └── kpi_model.dart                 # Modèle de données KPI
@@ -59,10 +64,14 @@ lib/features/admin/
 ```
 server/
 ├── controllers/
-│   └── pos-report-x.js                # Génération rapport X et données KPI
+│   ├── pos-report-x.js                # Génération rapport X et données KPI
+│   └── orders.js                      # Création commande ; à l'envoi cuisine : déduction stock (deductStockForSale)
+├── routes/
+│   └── admin-inventory.js             # GET/PATCH inventaire, POST init, GET history
 └── utils/
     ├── payment-processor.js           # **SOURCE DE VÉRITÉ UNIQUE** pour déduplication
-    └── history-processor.js            # Traitement historique (en cours de refactoring)
+    ├── history-processor.js            # Traitement historique (en cours de refactoring)
+    └── inventorySync.js               # loadInventory, adjustStock, deductStockForSale, initInventoryFromMenu
 ```
 
 ---

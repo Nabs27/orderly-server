@@ -127,6 +127,7 @@ async function transferItems(req, res) {
 	// 🆕 Enregistrer le transfert dans l'historique de la commande source
 	const transferTimestamp = new Date().toISOString();
 	const transferTarget = toTable ? `table ${toTable}` : (createTable ? `nouvelle table ${tableNumber}` : `note ${toNoteId}`);
+	const resolvedNoteName = noteName || 'Client';
 	fromOrder.orderHistory.push({
 		timestamp: transferTimestamp,
 		action: 'items_transferred',
@@ -143,6 +144,7 @@ async function transferItems(req, res) {
 			table: toTable || tableNumber,
 			orderId: toOrderId ? Number(toOrderId) : null,
 			noteId: toNoteId,
+			noteName: resolvedNoteName,
 			total: transferTotal
 		}
 	});

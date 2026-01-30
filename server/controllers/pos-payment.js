@@ -640,6 +640,8 @@ async function payMultiOrders(req, res) {
 	}
 
 	await fileManager.savePersistedData();
+
+	// Stock déduit à l'envoi cuisine (createOrder), pas au paiement — voir orders.js
 	io.emit('table:payment', { table, totalPaid: actualTotalPaid, archivedOrders: archivedIds });
 
 	return res.json({
